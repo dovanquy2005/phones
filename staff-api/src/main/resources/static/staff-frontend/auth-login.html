@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GOODS · Đăng nhập</title>
+  <link rel="stylesheet" href="css/base.css"/>
+  <style>
+    .auth{min-height:100vh; display:grid; place-items:center; padding:20px}
+    .auth-card{background:#fff; border:1px solid var(--color-border); border-radius:16px; width:min(420px,100%); box-shadow:var(--shadow-md)}
+    .auth-card .brand{justify-content:center; padding:18px 0; border-bottom:1px solid var(--color-border)}
+  </style>
+</head>
+<body>
+  <div class="auth">
+    <section class="auth-card">
+      <div class="brand">
+        <img src="assets/logo.svg" class="brand__logo" alt=""/><span class="brand__text">GOODS</span>
+      </div>
+      <div class="card__body">
+        <div class="field"><label>Email</label><input class="input" placeholder="you@brand.com"/></div>
+        <div class="field"><label>Mật khẩu</label><input class="input" placeholder="••••••••"/></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px">
+          <a class="btn btn--primary" href="index.html">Đăng nhập</a>
+          <a href="auth-forgot.html">Quên mật khẩu?</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

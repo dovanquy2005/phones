@@ -1,0 +1,39 @@
+# Java / Spring Boot
+target/
+*.class
+*.log
+*.jar
+*.war
+*.ear
+*.iml
+.idea/
+.project
+.classpath
+.settings/
+.mvn/
+bin/
+
+# Node / React
+node_modules/
+dist/
+build/
+.vscode/
+
+# Python (nếu có tools)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / Secret
+*.env
+.env.*
+application-secret.*
+application-local.*

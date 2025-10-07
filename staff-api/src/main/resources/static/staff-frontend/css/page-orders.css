@@ -1,0 +1,3 @@
+/* page-orders.css */
+.order-filters{display:flex; flex-wrap:wrap; gap:8px}
+.order-filters .chip{cursor:pointer}

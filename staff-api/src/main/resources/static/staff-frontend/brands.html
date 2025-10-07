@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>GOODS · Thương hiệu</title>
+  <link rel="stylesheet" href="css/base.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="index.html" aria-label="GOODS">
+      <img src="assets/logo.svg" alt="" class="brand__logo"/>
+      <span class="brand__text">GOODS</span>
+    </a>
+
+    <form class="search" role="search" aria-label="Tìm kiếm">
+      <span class="input-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
+    </form>
+
+    <div class="header-actions">
+      <a class="btn btn--primary" href="products.html#modal-create">Tạo mới</a>
+      <details class="avatar-menu">
+        <summary class="avatar" aria-label="Tài khoản">
+          <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
+        </summary>
+        <nav class="dropdown" aria-label="Tài khoản">
+          <a href="settings.html">Cài đặt</a>
+          <a href="auth-login.html">Đăng xuất</a>
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Điều hướng">
+      <div class="sidebar__group">
+        <p class="sidebar__heading">Bán hàng</p>
+        <a class="sidebar__link" href="orders.html">Đơn hàng</a>
+        <a class="sidebar__link" href="payments.html">Thanh toán</a>
+        <a class="sidebar__link" href="customers.html">Khách hàng</a>
+        <a class="sidebar__link" href="index.html">Dashboard</a>
+      </div>
+      <div class="sidebar__group">
+        <p class="sidebar__heading">Hàng hóa</p>
+        <a class="sidebar__link" href="products.html">Sản phẩm</a>
+        <a class="sidebar__link" href="inventory.html">Tồn kho / IMEI</a>
+        <a class="sidebar__link" href="categories.html">Danh mục</a>
+        <a class="sidebar__link sidebar__link--active" href="brands.html">Thương hiệu</a>
+      </div>
+      <div class="sidebar__group">
+        <p class="sidebar__heading">Hệ thống</p>
+        <a class="sidebar__link" href="reports.html">Báo cáo</a>
+        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+      </div>
+    </aside>
+    <main class="content">
+      <section class="toolbar">
+        <h1 class="page-title">Thương hiệu</h1>
+      </section>
+      <section class="card">
+        <div class="card__body table-wrap">
+          <table class="table">
+            <thead><tr><th>Tên</th><th>Mã</th></tr></thead>
+            <tbody>
+              
+<tr><td>Apple</td><td>APPLE</td></tr>
+<tr><td>Samsung</td><td>SAMSUNG</td></tr>
+<tr><td>Xiaomi</td><td>XIAOMI</td></tr>
+<tr><td>OPPO</td><td>OPPO</td></tr>
+
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
