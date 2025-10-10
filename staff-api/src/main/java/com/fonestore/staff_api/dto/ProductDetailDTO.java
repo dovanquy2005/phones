@@ -1,24 +1,16 @@
 package com.fonestore.staff_api.dto;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-public record ProductDetailDTO(
-    Long id,
-    String name,
-    String slug,
-    String description,
-    Integer warrantyMonths,
-    boolean active,
-    BigDecimal minPrice,
-    List<VariantDTO> variants
-) {
-    public record VariantDTO(
-        Long skuId,
-        String skuCode,
-        String color,
-        String capacity,
-        BigDecimal price,
-        Boolean active
-    ){}
+import lombok.*; import java.util.List;
+@Data @AllArgsConstructor @NoArgsConstructor
+public class ProductDetailDTO {
+    private Long id;
+    private String name;
+    private String slug;
+    private Long brandId;
+    private String description;
+    private String specsJson;
+    private Boolean isActive;
+    private String imagePath;
+    private Integer quantity;
+    private List<ProductVariantDTO> variants;
+    private List<ProductImageDTO> images;
 }

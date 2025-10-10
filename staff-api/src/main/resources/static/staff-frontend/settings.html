@@ -4,7 +4,11 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>GOODS · Cấu hình & phân quyền</title>
+  
+  <link rel="stylesheet" href="css/page-settings.css"/>
   <link rel="stylesheet" href="css/base.css"/>
+
+  
 </head>
 <body>
   <header class="app-header">
@@ -45,17 +49,16 @@
       </div>
       <div class="sidebar__group">
         <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="inventory.html">Tồn kho / IMEI</a>
-        <a class="sidebar__link" href="categories.html">Danh mục</a>
+        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
         <a class="sidebar__link" href="brands.html">Thương hiệu</a>
       </div>
       <div class="sidebar__group">
         <p class="sidebar__heading">Hệ thống</p>
         <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        <a class="sidebar__link sidebar__link--active" href="settings.html">Cấu hình & phân quyền</a>
+        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
       </div>
     </aside>
+
     <main class="content">
       <section class="toolbar">
         <h1 class="page-title">Cấu hình & phân quyền</h1>
@@ -63,12 +66,16 @@
 
       <section class="card">
         <div class="card__body tabs">
-          <nav class="tabs__list" role="tablist">
+          <!-- TABS -->
+          <nav class="tabs__list" role="tablist" id="tabList">
             <a href="#tab-store" aria-current="page">Cửa hàng</a>
             <a href="#tab-roles">Phân quyền</a>
             <a href="#tab-profile">Hồ sơ</a>
+            <a href="#tab-staff">Nhân viên</a>
           </nav>
-          <div class="tabs__panel" id="tab-store">
+
+          <!-- PANEL: Cửa hàng -->
+          <div class="tabs__panel" id="tab-store" aria-expanded="true">
             <div class="grid grid--2">
               <div class="field"><label>Tên hiển thị</label><input class="input" value="GOODS"/></div>
               <div class="field"><label>Địa chỉ</label><input class="input" value="123 Nguyễn Trãi, Q.5"/></div>
@@ -77,28 +84,57 @@
             </div>
           </div>
 
-          <div class="tabs__panel" id="tab-roles">
+          <!-- PANEL: Phân quyền -->
+          <div class="tabs__panel" id="tab-roles" aria-expanded="false">
             <div class="table-wrap">
               <table class="table">
-                <thead><tr><th>Quyền</th><th>Staff</th><th>Cashier</th><th>Manager</th></tr></thead>
+                <thead><tr><th>Quyền</th><th>Staff</th><th>Manager</th></tr></thead>
                 <tbody>
-                  <tr><td>Xem sản phẩm</td><td>✓</td><td>✓</td><td>✓</td></tr>
-                  <tr><td>Sửa/Thêm sản phẩm</td><td>–</td><td>✓</td><td>✓</td></tr>
-                  <tr><td>Duyệt đơn</td><td>–</td><td>✓</td><td>✓</td></tr>
-                  <tr><td>Cấu hình hệ thống</td><td>–</td><td>–</td><td>✓</td></tr>
+                  <tr><td>Xem sản phẩm</td><td>✓</td><td>✓</td></tr>
+                  <tr><td>Sửa/Thêm sản phẩm</td><td>✓</td><td>✓</td></tr>
+                  <tr><td>Duyệt đơn</td><td>✓</td><td>✓</td></tr>
+                  <tr><td>Cấu hình hệ thống</td><td>–</td><td>✓</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <div class="tabs__panel" id="tab-profile">
+          <!-- PANEL: Hồ sơ -->
+          <div class="tabs__panel" id="tab-profile" aria-expanded="false">
             <div class="grid grid--2">
               <div class="field"><label>Họ tên</label><input class="input" value="Nguyễn Văn NV"/></div>
               <div class="field"><label>Vai trò</label><input class="input" value="Manager" disabled/></div>
               <div class="field" style="grid-column:1/-1"><label>Mô tả</label><textarea placeholder="Ghi chú…"></textarea></div>
             </div>
           </div>
+
+          <!-- PANEL: Nhân viên -->
+          <div class="tabs__panel" id="tab-staff" aria-expanded="false">
+            <div class="toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <h2 style="font-size:16px;margin:0">Danh sách nhân viên</h2>
+              <a class="btn btn--primary" href="#modal-create-staff">Tạo nhân viên</a>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table" aria-label="Danh sách nhân viên">
+                <thead>
+                  <tr>
+                    <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th style="width:1%"></th>
+                  </tr>
+                </thead>
+                <tbody id="staffTable">
+                  <!-- demo row -->
+                  <tr>
+                    <td>Nguyễn Văn A</td><td>a@example.com</td><td>0909000111</td>
+                    <td>Staff</td><td>Hoạt động</td>
+                    <td><a class="btn" href="#modal-create-staff">Sửa</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
+
         <div class="card__footer" style="display:flex;justify-content:end;gap:8px">
           <a class="btn">Hủy</a>
           <a class="btn btn--primary">Lưu</a>
@@ -106,5 +142,66 @@
       </section>
     </main>
   </div>
+
+  <!-- MODAL: Tạo nhân viên -->
+  <div class="modal" id="modal-create-staff" aria-hidden="true">
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="createStaffTitle">
+      <header class="modal__header">
+        <h3 id="createStaffTitle" style="margin:0">Tạo tài khoản nhân viên</h3>
+        <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+      </header>
+
+      <form class="modal__body grid grid--2" id="form-create-staff" method="post" action="/api/staff/users">
+        <div class="field"><label>Họ tên <span style="color:#e11d48">*</span></label>
+          <input class="input" name="full_name" required/>
+        </div>
+        <div class="field"><label>Email <span style="color:#e11d48">*</span></label>
+          <input class="input" type="email" name="email" required/>
+        </div>
+        <div class="field"><label>Số điện thoại</label>
+          <input class="input" name="phone"/>
+        </div>
+        <div class="field"><label>Vai trò</label>
+          <select class="input" name="role">
+            <option value="STAFF">Staff</option>
+            <option value="MANAGER">Manager</option>
+          </select>
+        </div>
+        <div class="field"><label>Mật khẩu <span style="color:#e11d48">*</span></label>
+          <input class="input" type="password" name="password" minlength="6" required/>
+        </div>
+        <div class="field"><label>Trạng thái</label>
+          <select class="input" name="is_active">
+            <option value="1">Hoạt động</option>
+            <option value="0">Tạm khóa</option>
+          </select>
+        </div>
+
+        <div class="field" style="grid-column:1/-1">
+          <label><input type="checkbox" name="send_invite" /> Gửi email kích hoạt tới nhân viên</label>
+        </div>
+      </form>
+
+      <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+        <a class="btn" href="#">Hủy</a>
+        <button class="btn btn--primary" form="form-create-staff" type="submit">Tạo</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- tiny JS: set tab active by hash (default #tab-store) -->
+  <script>
+    (function(){
+      const tabs = document.querySelectorAll('.tabs__panel');
+      const links = document.querySelectorAll('.tabs__list a');
+      function activate(hash){
+        if(!hash) hash = '#tab-store';
+        tabs.forEach(p => p.setAttribute('aria-expanded', p.id === hash.slice(1) ? 'true' : 'false'));
+        links.forEach(a => a.setAttribute('aria-current', a.getAttribute('href') === hash ? 'page' : 'false'));
+      }
+      window.addEventListener('hashchange', () => activate(location.hash));
+      activate(location.hash);
+    })();
+  </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* =========================
-   page-products.css
+   page-products.css (FIXED for 5 columns)
    ========================= */
 
 /* Ảnh thumbnail */
@@ -19,17 +19,17 @@
   .toolbar-filters{ grid-template-columns:2fr 1fr 1fr 1fr auto; }
 }
 
-/* ========== Products table overrides (safe with base.css) ========== */
+/* ===== Products table overrides (safe with base.css) ===== */
 
-/* Bọc bảng để có thể cuộn ngang khi hẹp */
-.table-wrap{ width:100%; overflow:auto; }
+/* Bọc bảng để có thể cuộn ngang khi rất hẹp (nhưng mặc định ẩn) */
+.table-wrap{ width:100%; overflow-x:hidden; }
 
-/* Chỉ áp dụng cho bảng sản phẩm */
+/* Bảng sản phẩm */
 .table.table-products{
   width:100%;
-  border-collapse:collapse !important;  /* override base.css (separate→collapse) */
-  border-spacing:0 !important;          /* override base.css */
-  table-layout:fixed;                   /* khóa layout cho thẳng cột */
+  border-collapse:collapse !important;
+  border-spacing:0 !important;
+  table-layout:fixed; /* khóa layout cho thẳng cột */
 }
 
 /* Header & cell */
@@ -39,30 +39,30 @@
   vertical-align:middle;
 }
 .table.table-products thead th{
-  white-space:nowrap;                   /* tránh header xuống dòng gây lệch */
+  white-space:nowrap;
 }
 
-/* Khai báo bề rộng từng cột */
-.table.table-products colgroup col:nth-child(1){ width:80px; }    /* Ảnh */
-.table.table-products colgroup col:nth-child(2){ width:auto; }    /* Tên */
-.table.table-products colgroup col:nth-child(3){ width:180px; }   /* SKU */
-.table.table-products colgroup col:nth-child(4){ width:140px; }   /* Giá */
-.table.table-products colgroup col:nth-child(5){ width:90px; }    /* Tồn */
-.table.table-products colgroup col:nth-child(6){ width:130px; }   /* TT */
-.table.table-products colgroup col:nth-child(7){ width:180px; }   /* Thao tác */
+/* ====== Khai báo bề rộng 5 cột (Ảnh, Tên, Giá, Trạng thái, Thao tác) ====== */
+.table.table-products thead th:nth-child(1),
+.table.table-products tbody td:nth-child(1){ width:80px; }
 
-/* Căn lề theo cột */
+.table.table-products thead th:nth-child(3),
+.table.table-products tbody td:nth-child(3){
+  width:160px; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
 .table.table-products thead th:nth-child(4),
-.table.table-products tbody td:nth-child(4){ text-align:right; }   /* Giá */
-.table.table-products thead th:nth-child(5),
-.table.table-products tbody td:nth-child(5){ text-align:center; }  /* Tồn */
-.table.table-products thead th:nth-child(6),
-.table.table-products tbody td:nth-child(6){ text-align:center; }  /* TT */
-.table.table-products thead th:nth-child(7){ text-align:right; }   /* Thao tác */
-
-/* Hạn chế tràn chữ phá cột (SKU/giá) */
-.table.table-products tbody td:nth-child(3),
 .table.table-products tbody td:nth-child(4){
+  width:130px; text-align:center;
+}
+
+.table.table-products thead th:nth-child(5),
+.table.table-products tbody td:nth-child(5){
+  width:200px;
+}
+
+/* Cột Tên chiếm phần còn lại, cắt tràn gọn */
+.table.table-products tbody td:nth-child(2){
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
@@ -72,7 +72,7 @@
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
-/* Badge gọn gàng */
+/* Badge trạng thái */
 .badge{
   display:inline-flex; align-items:center; justify-content:center;
   padding:4px 10px; border-radius:999px;
@@ -83,52 +83,43 @@
   border-top:1px solid var(--color-border);
 }
 
-/* Nút thao tác không xuống dòng */
+/* Nút thao tác gọn, không đẩy rộng cột */
 .td-actions{
-  text-align:right; white-space:nowrap;
+  display:flex; gap:8px; justify-content:flex-end;
+  white-space:nowrap; text-align:right;
 }
-.td-actions .btn{ margin-left:6px; }
+.td-actions .btn{ margin-left:0; }
 
 /* Responsive tinh chỉnh */
 @media (max-width:1024px){
-  .table.table-products colgroup col:nth-child(3){ width:160px; }
-  .table.table-products colgroup col:nth-child(4){ width:120px; }
-  .table.table-products colgroup col:nth-child(7){ width:160px; }
+  .table.table-products thead th:nth-child(3),
+  .table.table-products tbody td:nth-child(3){ width:140px; }
+  .table.table-products thead th:nth-child(5),
+  .table.table-products tbody td:nth-child(5){ width:160px; }
 }
 
-.table.table-products thead { border-bottom: 1px solid var(--color-border); }
-.table.table-products tbody tr + tr td { border-top: 1px solid var(--color-border); }
+/* Đường kẻ & zebra theo HÀNG (override base.css theo ô) */
+.table.table-products thead { border-bottom:1px solid var(--color-border); }
 
-/* 1) Tắt kẻ và nền theo ô cho bảng sản phẩm (override base.css) */
 .table.table-products td,
 .table.table-products th{
-  border: 0 !important;
-  background: transparent !important;   /* xoá zebra theo ô */
+  border:0 !important;
+  background:transparent !important;
 }
 
-/* 2) Kẻ 1 đường phân cách cho cả hàng → không còn "đứt" ở cột cuối */
 .table.table-products tbody tr{
-  border-bottom: 1px solid var(--color-border);
+  border-bottom:1px solid var(--color-border);
 }
 .table.table-products tbody tr:last-child{
-  border-bottom: 0;
+  border-bottom:0;
 }
-
-/* 3) Nếu vẫn muốn zebra, áp cho HÀNG thay vì cho ô */
 .table.table-products tbody tr:nth-child(even){
-  background: #fafbff;
+  background:#fafbff;
 }
 
-/* 4) Đảm bảo ô Thao tác không đổi nền khác hàng */
+/* Ô Thao tác không bị nền khác */
 .table.table-products tbody td:last-child{
-  background: inherit !important;
-}
-
-/* 5) Giữ layout cột như trước (nếu chưa có) */
-.table.table-products{
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  table-layout: fixed;
+  background:inherit !important;
 }
 
 

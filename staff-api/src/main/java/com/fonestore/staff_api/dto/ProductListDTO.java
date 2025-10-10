@@ -1,16 +1,12 @@
 package com.fonestore.staff_api.dto;
-
-import java.math.BigDecimal;
-
-public record ProductListDTO(
-    Long id,
-    String name,
-    String brand,
-    String category,
-    String sampleSku,
-    BigDecimal minPrice,
-    Integer qtyInStock,
-    Integer qtyReserved,
-    Integer qtySold,
-    boolean active
-) {}
+import lombok.*;
+@Data @AllArgsConstructor @NoArgsConstructor
+public class ProductListDTO {
+    private Long productId;
+    private String name;
+    private String brandName;
+    private Long minPrice;
+    private Boolean isActive;
+    private String imagePath;
+    private Integer quantity;
+}

@@ -7,23 +7,27 @@
   <link rel="stylesheet" href="css/base.css"/>
   <link rel="stylesheet" href="css/page-products.css"/>
 
-  <!-- Patch CSS để bảng không lệch cột -->
   <style>
     .table-products{width:100%;border-collapse:collapse;table-layout:fixed;}
     .table-products thead th,.table-products tbody td{padding:12px 16px;vertical-align:middle;}
-    .table-products colgroup col:nth-child(1){width:80px;}   /* Ảnh */
-    .table-products colgroup col:nth-child(2){width:auto;}   /* Tên */
-    .table-products colgroup col:nth-child(3){width:180px;}  /* SKU */
-    .table-products colgroup col:nth-child(4){width:140px;text-align:right;} /* Giá */
-    .table-products colgroup col:nth-child(5){width:90px;text-align:center;}  /* Tồn */
-    .table-products colgroup col:nth-child(6){width:130px;text-align:center;} /* TT */
-    .table-products colgroup col:nth-child(7){width:180px;}  /* Thao tác */
-    .product-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;}
+    .table-wrap{overflow-x:auto;}
+    /* 6 cột */
+    .table-products thead th:nth-child(1),.table-products tbody td:nth-child(1){width:80px;}
+    .table-products thead th:nth-child(3),.table-products tbody td:nth-child(3){width:160px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .table-products thead th:nth-child(4),.table-products tbody td:nth-child(4){width:110px;text-align:center;}
+    .table-products thead th:nth-child(5),.table-products tbody td:nth-child(5){width:130px;text-align:center;}
+    .table-products thead th:nth-child(6),.table-products tbody td:nth-child(6){width:220px;}
+    .table-products tbody td:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .product-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;border:1px solid var(--color-border);background:#fff;}
     .helper{font-size:12px;color:#7a869a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .td-actions{ text-align:right; white-space:nowrap; }
+    .td-actions{display:flex;gap:8px;justify-content:flex-end;white-space:nowrap;}
     .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:999px;}
-    .empty{padding:16px;color:#6b7280}
-    .pagination{display:flex;gap:6px;align-items:center}
+    .badge.active{background:#DCFCE7;color:#166534;}
+    .badge.warn{background:#FFEFD5;color:#92400e;}
+    .badge.inactive{background:#FEE2E2;color:#991B1B;}
+    .empty{padding:16px;color:#6b7280;text-align:center;}
+    .toolbar-filters{display:grid;grid-template-columns:1fr 180px 160px auto;gap:12px;align-items:end}
+    .pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;padding:12px 16px}
     .page-btn{padding:6px 10px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;cursor:pointer}
     .page-btn.is-active{background:#111827;color:#fff;border-color:#111827}
     .page-btn[disabled]{opacity:.5;cursor:not-allowed}
@@ -31,485 +35,445 @@
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="index.html" aria-label="GOODS">
-      <img src="assets/logo.svg" alt="" class="brand__logo"/>
-      <span class="brand__text">GOODS</span>
-    </a>
-
-    <form class="search" role="search" aria-label="Tìm kiếm">
-      <span class="input-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
-      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
-    </form>
-
-    <div class="header-actions">
-      <details class="avatar-menu">
-        <summary class="avatar" aria-label="Tài khoản">
-          <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
-        </summary>
-        <nav class="dropdown" aria-label="Tài khoản">
-          <a href="settings.html">Cài đặt</a>
-          <a href="auth-login.html">Đăng xuất</a>
-        </nav>
-      </details>
-    </div>
-  </header>
-
-  <div class="app-shell">
-    <aside class="sidebar" aria-label="Điều hướng">
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Bán hàng</p>
-        <a class="sidebar__link" href="orders.html">Đơn hàng</a>
-        <a class="sidebar__link" href="payments.html">Thanh toán</a>
-        <a class="sidebar__link" href="customers.html">Khách hàng</a>
-        <a class="sidebar__link" href="index.html">Dashboard</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="inventory.html">Tồn kho / IMEI</a>
-        <a class="sidebar__link" href="categories.html">Danh mục</a>
-        <a class="sidebar__link" href="brands.html">Thương hiệu</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hệ thống</p>
-        <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
-      </div>
-    </aside>
-
-    <main class="content">
-      <section class="toolbar">
-        <h1 class="page-title">Sản phẩm</h1>
-        <a class="btn btn--primary" href="#modal-create">Thêm sản phẩm</a>
-      </section>
-
-      <section class="card">
-        <div class="card__body toolbar-filters">
-          <div class="field"><label>Từ khóa</label><input id="f-q" class="input" placeholder="Tên, SKU…"/></div>
-          <div class="field"><label>Thương hiệu</label><select id="f-brand" class="select"><option value="">Tất cả</option><option>Apple</option><option>Samsung</option><option>Xiaomi</option><option>OPPO</option></select></div>
-          <div class="field"><label>Danh mục</label><select id="f-cat" class="select"><option value="">Tất cả</option><option>Điện thoại</option><option>Phụ kiện</option></select></div>
-          <div class="field"><label>Trạng thái</label><select id="f-status" class="select"><option value="">Tất cả</option><option value="ACTIVE">Đang bán</option><option value="INACTIVE">Ngừng bán</option></select></div>
-          <div class="field" style="align-self:end"><button id="btn-filter" class="btn">Lọc</button></div>
-        </div>
-      </section>
-
-      <section class="card" style="margin-top:12px">
-        <div class="card__body table-wrap">
-          <table class="table table-products">
-            <colgroup>
-              <col><col><col><col><col><col><col>
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Ảnh</th>
-                <th>Tên</th>
-                <th>SKU</th>
-                <th>Giá</th>
-                <th>Tồn</th>
-                <th>Tình trạng</th>
-                <th style="text-align:right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody id="rows-products"><!-- JS render --></tbody>
-          </table>
-        </div>
-
-        <div class="card__footer">
-          <div class="pagination"><!-- JS build --></div>
-        </div>
-      </section>
-
-      <!-- Modal: Thêm sản phẩm (chỉ 1 bản, không còn trùng) -->
-      <div id="modal-create" class="modal" aria-hidden="true">
-        <article class="modal__card" role="dialog" aria-modal="true" aria-labelledby="m-title">
-          <header class="modal__header">
-            <strong id="m-title">Thêm sản phẩm</strong>
-            <a href="products.html" class="btn btn--ghost">Đóng</a>
-          </header>
-
-          <form id="form-create" class="modal__body">
-            <div class="grid grid--2">
-              <div class="field">
-                <label for="c-name">Tên</label>
-                <input id="c-name" name="name" class="input" placeholder="VD: iPhone 15 128GB" required/>
-              </div>
-
-              <div class="field">
-                <label for="c-sku">SKU</label>
-                <input id="c-sku" name="sampleSku" class="input" placeholder="VD: IP15-128-BLK" required/>
-              </div>
-
-              <div class="field">
-                <label for="c-price">Giá (VND)</label>
-                <input id="c-price" name="minPrice" class="input" placeholder="21000000" inputmode="numeric" required/>
-              </div>
-
-              <div class="field">
-                <label for="c-status">Trạng thái</label>
-                <select id="c-status" name="status" class="select">
-                  <option value="ACTIVE">Đang bán</option>
-                  <option value="INACTIVE">Ngừng bán</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="c-cat">Danh mục</label>
-                <select id="c-cat" name="category" class="select">
-                  <option value="Điện thoại">Điện thoại</option>
-                  <option value="Phụ kiện">Phụ kiện</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="c-brand">Thương hiệu</label>
-                <select id="c-brand" name="brand" class="select">
-                  <option>Apple</option><option>Samsung</option><option>Xiaomi</option><option>OPPO</option>
-                </select>
-              </div>
-
-              <div class="field">
-                <label for="c-desc">Mô tả</label>
-                <textarea id="c-desc" name="description" placeholder="Mô tả ngắn…"></textarea>
-              </div>
-
-              <div class="field">
-                <label for="c-img">Ảnh đại diện (URL)</label>
-                <input id="c-img" name="imageUrl" class="input" placeholder="https://..."/>
-              </div>
-
-              <div class="field">
-                <label for="c-stock">Số lượng tồn</label>
-                <input id="c-stock" name="qtyInStock" class="input" placeholder="0" inputmode="numeric" value="0"/>
-              </div>
-            </div>
-
-            <p class="helper">Submit sẽ gọi POST /api/products (JSON) rồi reload danh sách.</p>
-
-            <footer class="modal__footer" style="margin-top:12px">
-              <a class="btn" href="products.html">Hủy</a>
-              <button type="submit" class="btn btn--primary">Lưu</button>
-            </footer>
-          </form>
-        </article>
-      </div>
-
-      <!-- Modal view/edit demo (chưa nối API PUT/GET detail) -->
-      <div id="modal-edit" class="modal" aria-hidden="true">
-        <article class="modal__card" role="dialog" aria-modal="true" aria-labelledby="m2">
-          <header class="modal__header">
-            <strong id="m2">Sửa sản phẩm</strong>
-            <a href="products.html" class="btn btn--ghost">Đóng</a>
-          </header>
-          <div class="modal__body">
-            <div class="grid grid--2">
-              <div class="field"><label>Tên</label><input class="input" value="iPhone 15 128GB Black"/></div>
-              <div class="field"><label>SKU</label><input class="input" value="IP15-128-BLK"/></div>
-              <div class="field"><label>Giá (VND)</label><input class="input" value="21000000"/></div>
-              <div class="field"><label>Trạng thái</label><select class="select"><option selected>Đang bán</option><option>Ngừng bán</option></select></div>
-              <div class="field"><label>Danh mục</label><select class="select"><option selected>Điện thoại</option><option>Phụ kiện</option></select></div>
-              <div class="field"><label>Thương hiệu</label><select class="select"><option selected>Apple</option><option>Samsung</option><option>Xiaomi</option><option>OPPO</option></select></div>
-              <div class="field" style="grid-column:1/-1"><label>Mô tả</label><textarea>Hàng VN/A, mới 100%</textarea></div>
-            </div>
-          </div>
-          <footer class="modal__footer">
-            <a class="btn" href="products.html">Hủy</a>
-            <a class="btn btn--primary" href="products.html">Cập nhật</a>
-          </footer>
-        </article>
-      </div>
-
-      <div id="modal-view" class="modal" aria-hidden="true">
-        <article class="modal__card" role="dialog" aria-modal="true" aria-labelledby="m3">
-          <header class="modal__header">
-            <strong id="m3">Chi tiết sản phẩm</strong>
-            <a href="products.html" class="btn btn--ghost">Đóng</a>
-          </header>
-          <div class="modal__body">
-            <div class="grid grid--2">
-              <div class="field"><label>Tên</label><input class="input" value="iPhone 15 128GB Black" disabled/></div>
-              <div class="field"><label>SKU</label><input class="input" value="IP15-128-BLK" disabled/></div>
-              <div class="field" style="grid-column:1/-1"><label>Mô tả</label><textarea disabled>Hàng VN/A, mới 100%</textarea></div>
-            </div>
-          </div>
-          <footer class="modal__footer">
-            <a class="btn" href="products.html#modal-edit">Chỉnh sửa</a>
-            <a class="btn btn--primary" href="products.html">Đóng</a>
-          </footer>
-        </article>
-      </div>
-    </main>
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="GOODS">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/><span class="brand__text">GOODS</span>
+  </a>
+  <form class="search" role="search" aria-label="Tìm kiếm nhanh">
+    <span class="input-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+    <input class="input" id="q-quick" placeholder="Tìm theo tên sản phẩm…"/>
+  </form>
+  <div class="header-actions">
+    <details class="avatar-menu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="settings.html">Cài đặt</a>
+        <a href="auth-login.html">Đăng xuất</a>
+      </nav>
+    </details>
   </div>
+</header>
 
-  <!-- ===== Scripts ===== -->
-  <script>
-    // ==== Config phân trang ====
-    const PAGE_SIZE = 10;       // 10 dòng/trang
-    let currentPage = 1;        // 1-based cho UI
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Điều hướng">
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Bán hàng</p>
+      <a class="sidebar__link" href="orders.html">Đơn hàng</a>
+      <a class="sidebar__link" href="payments.html">Thanh toán</a>
+      <a class="sidebar__link" href="customers.html">Khách hàng</a>
+      <a class="sidebar__link" href="index.html">Dashboard</a>
+    </div>
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Hàng hóa</p>
+      <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+    </div>
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Hệ thống</p>
+      <a class="sidebar__link" href="reports.html">Báo cáo</a>
+      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+    </div>
+  </aside>
 
-    // ==== Helpers ====
-    const fmtVND = n => (n ?? 0).toLocaleString("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0});
-    const thumb  = sku => "https://placehold.co/64x64?text=IMG";
-    const badge  = q => q<=0 ? 'badge--danger">Hết' : (q<=3 ? 'badge--warn">Sắp hết' : 'badge--success">Đang bán');
-    const qs = (s, r=document) => r.querySelector(s);
+  <main class="content">
+    <section class="toolbar">
+      <h1 class="page-title">Sản phẩm</h1>
+      <a class="btn btn--primary" href="#modal-create" id="btn-open-create">+ Thêm sản phẩm</a>
+    </section>
 
-    function renderRows(list){
-      const tbody = qs("#rows-products");
-      if (!list || list.length === 0){
-        tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Không có dữ liệu</div></td></tr>`;
-        return;
-      }
-      tbody.innerHTML = list.map(p => `
+    <!-- BỘ LỌC -->
+    <section class="card">
+      <div class="card__body toolbar-filters">
+        <div class="field">
+          <label>Từ khóa</label>
+          <input id="f-q" class="input" placeholder="Tên sản phẩm…"/>
+        </div>
+        <div class="field">
+          <label>Thương hiệu</label>
+          <select id="f-brand" class="select"><option value="">Tất cả</option></select>
+        </div>
+        <div class="field">
+          <label>Trạng thái</label>
+          <select id="f-status" class="select">
+            <option value="">Tất cả</option>
+            <option value="selling">Đang bán</option>
+            <option value="out">Hết hàng</option>
+            <option value="off">Ngừng bán</option>
+          </select>
+        </div>
+        <div class="field"><button id="btn-filter" class="btn">Lọc</button></div>
+      </div>
+    </section>
+
+    <!-- DANH SÁCH -->
+    <section class="card" style="margin-top:12px">
+      <div class="card__body table-wrap">
+        <table class="table table-products">
+          <thead>
+          <tr>
+            <th>Ảnh</th><th>Tên</th><th>Giá</th><th>Số lượng</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th>
+          </tr>
+          </thead>
+          <tbody id="rows-products"><tr><td colspan="6" class="empty">Đang tải...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card__footer"><div class="pagination" id="pager"></div></div>
+    </section>
+
+    <!-- MODAL: THÊM / SỬA -->
+    <div id="modal-create" class="modal" aria-hidden="true">
+      <article class="modal__card" role="dialog" aria-modal="true">
+        <header class="modal__header">
+          <strong id="m-title">Thêm sản phẩm</strong>
+          <a href="products.html" class="btn btn--ghost">Đóng</a>
+        </header>
+        <form id="form-create" class="modal__body">
+          <input type="hidden" id="edit-id"/>
+          <div class="grid grid--2">
+            <div class="field"><label>Tên</label><input id="c-name" class="input" required/></div>
+            <div class="field"><label>Slug</label><input id="c-slug" class="input" placeholder="iphone-15-128gb"/></div>
+            <div class="field"><label>Thương hiệu (ID)</label><input id="c-brand" type="number" class="input" required/></div>
+            <div class="field"><label>Giá (VND)</label><input id="c-price" class="input" type="number" min="0" required/></div>
+            <div class="field"><label>Số lượng</label><input id="c-quantity" class="input" type="number" min="0" value="0" required/></div>
+            <div class="field"><label>Màu sắc</label><input id="c-color" class="input"/></div>
+            <div class="field"><label>Dung lượng</label><input id="c-capacity" class="input"/></div>
+            <div class="field" style="grid-column:1/-1"><label>Mô tả</label><textarea id="c-desc" class="input"></textarea></div>
+
+            <!-- Chọn ảnh từ thư mục -->
+            <div class="field">
+              <label>Ảnh đại diện</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <img id="c-img-preview" src="assets/logo.svg" style="width:48px;height:48px;border-radius:8px;border:1px solid var(--color-border);object-fit:cover"/>
+                <input id="c-img" type="hidden"/>
+                <a class="btn" href="#modal-pick-image" id="btn-open-image">Chọn từ thư mục</a>
+              </div>
+              <small class="helper">Từ thư mục: <code>staff-frontend/assets/products/</code></small>
+            </div>
+
+            <div class="field"><label>Trạng thái</label>
+              <select id="c-active" class="input">
+                <option value="true" selected>Đang bán</option>
+                <option value="false">Ngừng bán</option>
+              </select>
+            </div>
+          </div>
+          <footer class="modal__footer" style="margin-top:12px">
+            <a class="btn" href="products.html">Hủy</a>
+            <button type="submit" class="btn btn--primary">Lưu</button>
+          </footer>
+        </form>
+      </article>
+    </div>
+
+    <!-- MODAL: XEM CHI TIẾT -->
+    <div id="modal-view" class="modal" aria-hidden="true">
+      <article class="modal__card" role="dialog" aria-modal="true">
+        <header class="modal__header">
+          <strong>Chi tiết sản phẩm</strong>
+          <a href="products.html" class="btn btn--ghost">Đóng</a>
+        </header>
+        <div class="modal__body">
+          <div class="grid grid--2">
+            <div class="field"><label>Tên</label><input id="v-name" class="input" disabled/></div>
+            <div class="field"><label>Slug</label><input id="v-slug" class="input" disabled/></div>
+            <div class="field"><label>Thương hiệu (ID)</label><input id="v-brand" class="input" disabled/></div>
+            <div class="field"><label>Trạng thái</label><input id="v-status" class="input" disabled/></div>
+            <div class="field"><label>Giá (min)</label><input id="v-price" class="input" disabled/></div>
+            <div class="field"><label>Số lượng</label><input id="v-quantity" class="input" disabled/></div>
+            <div class="field"><label>Biến thể đầu</label><input id="v-variant" class="input" disabled/></div>
+            <div class="field" style="grid-column:1/-1"><label>Mô tả</label><textarea id="v-desc" class="input" disabled></textarea></div>
+            <div class="field" style="grid-column:1/-1"><img id="v-img" style="max-width:240px;border-radius:12px"/></div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- MODAL: CHỌN ẢNH -->
+    <div id="modal-pick-image" class="modal" aria-hidden="true">
+      <article class="modal__card" role="dialog" aria-modal="true" style="max-width:820px">
+        <header class="modal__header">
+          <strong>Chọn ảnh</strong>
+          <a href="products.html#modal-create" class="btn btn--ghost">Đóng</a>
+        </header>
+        <div class="modal__body">
+          <div id="grid-images" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;"></div>
+        </div>
+      </article>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const API_BASE = window.location.origin;
+  const API_PRODUCTS = API_BASE + '/api/products';
+  const API_ASSETS   = API_BASE + '/api/assets/products';
+
+  const qs = s => document.querySelector(s);
+  const fmtVND = n => (n ?? 0).toLocaleString("vi-VN",{style:"currency",currency:"VND",maximumFractionDigits:0});
+
+  const PAGE_SIZE = 10;
+  let allData = [], filtered = [], currentPage = 1;
+
+  async function fetchJSON(url, opts){ const r = await fetch(url, opts); if(!r.ok) throw new Error(r.status+' '+r.statusText); return r.json(); }
+  const toImgUrl = (p)=> !p ? `${API_BASE}/staff-frontend/assets/products/placeholder.jpg`
+                           : /^https?:\/\//i.test(p) ? p : `${API_BASE}/${String(p).replace(/^\/+/, '')}`;
+
+  /* ---------- IMAGE PICKER (ONE ID ONLY: #grid-images) ---------- */
+  document.getElementById('btn-open-image').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    window.location.hash = '#modal-pick-image';
+    const grid = document.getElementById('grid-images');
+    grid.innerHTML = 'Đang tải ảnh...';
+    try{
+      const files = await fetchJSON(API_ASSETS);
+      grid.innerHTML = files.map(p => `
+        <button type="button" data-pick="${p}" style="padding:6px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;display:flex;flex-direction:column;gap:6px;align-items:center">
+          <img src="${toImgUrl(p)}" style="width:96px;height:96px;object-fit:cover;border-radius:8px;border:1px solid #eee" onerror="this.onerror=null;this.src='${API_BASE}/staff-frontend/assets/products/placeholder.jpg'">
+          <span style="font-size:12px;max-width:96px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.split('/').pop()}</span>
+        </button>
+      `).join('');
+    }catch(err){ grid.innerHTML = `<div class="empty">Không tải được ảnh: ${err}</div>`; }
+  });
+
+  // Chọn ảnh: set hidden + preview rồi quay lại form
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-pick]');
+    if(!btn) return;
+    const path = btn.dataset.pick;
+    qs('#c-img').value = path;
+    qs('#c-img-preview').src = toImgUrl(path);
+    window.location.hash = '#modal-create';
+  });
+
+  /* ---------- LOAD + FILTER ---------- */
+  async function loadProducts(){
+    const tbody = qs('#rows-products');
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Đang tải...</td></tr>';
+    try{
+      allData = await fetchJSON(API_PRODUCTS);
+      const brands = Array.from(new Set(allData.map(x=>x.brandName).filter(Boolean))).sort();
+      qs('#f-brand').innerHTML = ['<option value="">Tất cả</option>', ...brands.map(b=>`<option>${b}</option>`)].join('');
+      applyFilter();
+    }catch(err){
+      tbody.innerHTML = `<tr><td colspan="6" class="empty">Lỗi tải: ${err}</td></tr>`;
+    }
+  }
+
+  function applyFilter(){
+    const q = (qs('#f-q').value || qs('#q-quick').value || '').trim().toLowerCase();
+    const brand = qs('#f-brand').value;
+    const fstatus = qs('#f-status').value; // '', 'selling', 'out', 'off'
+
+    filtered = allData.filter(p=>{
+      const nameOK = !q || (p.name?.toLowerCase().includes(q) || p.brandName?.toLowerCase().includes(q));
+      const brandOK = !brand || p.brandName === brand;
+
+      const quantity = Number(p.quantity ?? 0);
+      const effSelling = p.isActive === true && quantity > 0;
+      const effOut     = p.isActive === true && quantity <= 0;
+      const effOff     = p.isActive === false;
+
+      const statusOK =
+        fstatus === '' ||
+        (fstatus === 'selling' && effSelling) ||
+        (fstatus === 'out'     && effOut)     ||
+        (fstatus === 'off'     && effOff);
+
+      return nameOK && brandOK && statusOK;
+    });
+
+    currentPage = 1;
+    renderPage();
+  }
+
+  function renderPage(){
+    const tbody = qs('#rows-products');
+    if(!filtered.length){
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>';
+      qs('#pager').innerHTML = '';
+      return;
+    }
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if(currentPage > totalPages) currentPage = totalPages;
+    const pageItems = filtered.slice((currentPage-1)*PAGE_SIZE, (currentPage)*PAGE_SIZE);
+
+    tbody.innerHTML = pageItems.map(p=>{
+      const qtt = Number(p.quantity ?? 0);
+      const isSelling = p.isActive === true && qtt > 0;
+      const isOut     = p.isActive === true && qtt <= 0;
+      const imgUrl    = toImgUrl(p.imagePath || (p.images?.[0]?.filePath ?? ''));
+
+      const badge = isSelling
+        ? `<span class="badge active">Đang bán</span>`
+        : (p.isActive === false ? `<span class="badge inactive">Ngừng bán</span>`
+                                : `<span class="badge warn">Hết hàng</span>`);
+
+      return `
         <tr>
-          <td><img class="product-thumb" src="${thumb(p.sampleSku)}" alt=""></td>
-          <td>${p.name ?? "-"}<div class="helper">${p.brand ?? "-"} • ${p.category ?? "-"}</div></td>
-          <td>${p.sampleSku ?? "-"}</td>
+          <td><img class="product-thumb" src="${imgUrl}" onerror="this.onerror=null;this.src='assets/logo.svg';" alt=""/></td>
+          <td>${p.name}<div class="helper">${p.brandName ?? ''}</div></td>
           <td style="text-align:right">${fmtVND(p.minPrice)}</td>
-          <td style="text-align:center">${p.qtyInStock ?? 0}</td>
-          <td style="text-align:center"><span class="badge ${badge(p.qtyInStock)}"></span></td>
+          <td style="text-align:center">${qtt}</td>
+          <td style="text-align:center">${badge}</td>
           <td class="td-actions">
-            <button class="btn btn--sm" data-action="view"   data-id="${p.productId}">Xem</button>
-            <button class="btn btn--sm" data-action="edit"   data-id="${p.productId}">Sửa</button>
-            <button class="btn btn--sm btn--danger" data-action="delete" data-id="${p.productId}">Xóa</button>
+            <button class="btn btn--sm" data-view="${p.productId}">Xem</button>
+            <button class="btn btn--sm" data-edit="${p.productId}">Sửa</button>
+            <button class="btn btn--sm btn--danger" data-del="${p.productId}">Xóa</button>
           </td>
-        </tr>
-      `).join("");
-    }
+        </tr>`;
+    }).join('');
 
-    function buildPager(curr, totalPages, totalItems){
-      const pag = qs(".pagination");
-      const btn = (label, goto, disabled=false, active=false) =>
-        `<button class="page-btn ${active?'is-active':''}" data-goto="${goto}" ${disabled?'disabled':''}>${label}</button>`;
+    // pager
+    const pager = qs('#pager');
+    const btn = (label, go, disabled=false, active=false)=>
+      `<button class="page-btn ${active?'is-active':''}" data-go="${go}" ${disabled?'disabled':''}>${label}</button>`;
+    let html = '';
+    html += btn('«','prev', currentPage===1);
+    const max=7;
+    let startIdx = Math.max(1, currentPage - Math.floor(max/2));
+    let endIdx   = Math.min(totalPages, startIdx + max - 1);
+    if(endIdx - startIdx + 1 < max) startIdx = Math.max(1, endIdx - max + 1);
+    for(let i=startIdx;i<=endIdx;i++) html += btn(String(i), String(i), false, i===currentPage);
+    html += btn('»','next', currentPage===totalPages);
+    html += `<span class="pagination-info">Trang ${currentPage}/${totalPages} · Tổng ${filtered.length}</span>`;
+    pager.innerHTML = html;
+  }
 
-      let html = '';
-      html += btn('«', 'prev', curr===1);
+  document.addEventListener('click', (e)=>{
+    const el = e.target.closest('.page-btn'); if(!el) return;
+    const go = el.dataset.go;
+    if(go==='prev' && currentPage>1) currentPage--;
+    else if(go==='next') currentPage++;
+    else if(!isNaN(+go)) currentPage = +go;
+    renderPage();
+  });
 
-      // hiển thị dải trang gọn (7 nút tối đa)
-      const max = 7;
-      let start = Math.max(1, curr - Math.floor(max/2));
-      let end   = Math.min(totalPages, start + max - 1);
-      if (end - start + 1 < max) start = Math.max(1, end - max + 1);
+  qs('#btn-filter').onclick = ()=> applyFilter();
+  qs('#q-quick').addEventListener('input', ()=> applyFilter());
 
-      for (let i=start; i<=end; i++) html += btn(String(i), String(i), false, i===curr);
+  /* ---------- CRUD ---------- */
+  async function createProduct(body){
+    return fetchJSON(API_PRODUCTS,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }
+  async function updateProduct(id,body){
+    return fetchJSON(`${API_PRODUCTS}/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  }
+  async function deleteProduct(id){
+    const r = await fetch(`${API_PRODUCTS}/${id}`,{method:'DELETE'}); if(!r.ok) throw new Error(r.status);
+  }
+  async function getDetail(id){ return fetchJSON(`${API_PRODUCTS}/${id}`); }
 
-      html += btn('»', 'next', curr===totalPages);
-      html += `<span class="pagination-info">Trang ${curr}/${totalPages || 1} · Tổng ${totalItems || 0}</span>`;
-      pag.innerHTML = html;
-    }
+  // auto-slug
+  qs('#c-name').addEventListener('input', e=>{
+    const slug = e.target.value.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-');
+    if(!qs('#edit-id').value) qs('#c-slug').value = slug;
+  });
 
-    // click pager
-    document.addEventListener("click", (e)=>{
-      const el = e.target.closest(".page-btn");
-      if(!el) return;
-      const goto = el.dataset.goto;
-      if (goto === 'prev' && currentPage > 1) currentPage--;
-      else if (goto === 'next') currentPage++;
-      else if (!isNaN(+goto)) currentPage = +goto;
-      loadPage(currentPage);
-    });
+  // mở modal thêm
+  function openCreate(){
+    qs('#m-title').textContent = 'Thêm sản phẩm';
+    qs('#edit-id').value = '';
+    qs('#form-create').reset();
+    qs('#c-quantity').value = 0;
+    qs('#c-img').value = '';
+    qs('#c-img-preview').src = 'assets/logo.svg';
+    window.location.hash = '#modal-create';
+  }
+  document.getElementById('btn-open-create').addEventListener('click', openCreate);
 
-    async function loadPage(page1based){
-      const tbody = qs("#rows-products");
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Đang tải dữ liệu…</div></td></tr>`;
-      try{
-        const params = new URLSearchParams({
-          page: String(page1based-1), size: String(PAGE_SIZE),
-          q: qs('#f-q')?.value?.trim() || '',
-          brand: qs('#f-brand')?.value || '',
-          category: qs('#f-cat')?.value || '',
-          status: qs('#f-status')?.value || ''
-        });
-        const res = await fetch(`/api/products?${params.toString()}`);
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json(); // Page<ProductListDTO>
+  // mở modal sửa
+  async function openEdit(id){
+    const p = await getDetail(id);
+    qs('#m-title').textContent = 'Sửa sản phẩm';
+    qs('#edit-id').value = id;
+    qs('#c-name').value = p.name || '';
+    qs('#c-slug').value = p.slug || '';
+    qs('#c-brand').value = p.brandId || '';
+    qs('#c-desc').value = p.description || '';
+    qs('#c-color').value = p.variants?.[0]?.color || '';
+    qs('#c-capacity').value = p.variants?.[0]?.capacity || '';
+    qs('#c-price').value = p.variants?.[0]?.listPrice || 0;
+    const chosen = p.images?.[0]?.filePath || p.imagePath || '';
+    qs('#c-img').value = chosen;
+    qs('#c-img-preview').src = toImgUrl(chosen);
+    qs('#c-active').value = p.isActive ? 'true' : 'false';
+    qs('#c-quantity').value = p.quantity ?? 0;
+    window.location.hash = '#modal-create';
+  }
 
-        renderRows(data.content);
-        currentPage = (data.number ?? 0) + 1;
-        buildPager(currentPage, data.totalPages || 1, data.totalElements || 0);
-      }catch(err){
-        tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Lỗi tải dữ liệu: ${String(err)}</div></td></tr>`;
+  // xem chi tiết (trạng thái theo isActive & quantity)
+  async function openView(id){
+    const p = await getDetail(id);
+    const qtt = Number(p.quantity ?? 0);
+    const eff = p.isActive === true && qtt > 0 ? 'Đang bán' : (p.isActive === false ? 'Ngừng bán' : 'Hết hàng');
+
+    qs('#v-name').value = p.name || '';
+    qs('#v-slug').value = p.slug || '';
+    qs('#v-brand').value = p.brandId || '';
+    qs('#v-status').value = eff;                           // <-- sửa theo yêu cầu
+    qs('#v-price').value = (p.variants?.length ? fmtVND(p.variants[0].listPrice) : fmtVND(0));
+    qs('#v-variant').value = (p.variants?.length ? `${p.variants[0].color||'-'} • ${p.variants[0].capacity||'-'}` : '-');
+    qs('#v-desc').value = p.description || '';
+    qs('#v-quantity').value = qtt;
+    const img = p.images?.[0]?.filePath ? toImgUrl(p.images[0].filePath) : (p.imagePath ? toImgUrl(p.imagePath) : 'assets/logo.svg');
+    qs('#v-img').src = img;
+    window.location.hash = '#modal-view';
+  }
+
+  // bắt các nút thao tác
+  document.addEventListener('click', async (e)=>{
+    const del=e.target.closest('[data-del]'); const edit=e.target.closest('[data-edit]'); const view=e.target.closest('[data-view]');
+    if(view){ openView(view.dataset.view); }
+    if(edit){ openEdit(edit.dataset.edit); }
+    if(del){
+      if(confirm('Xóa sản phẩm này?')){
+        try{ await deleteProduct(del.dataset.del); await loadProducts(); }
+        catch(err){ alert('Xóa thất bại: '+err); }
       }
     }
+  });
 
-    // Filter click
-    qs('#btn-filter').addEventListener('click', (e)=>{ e.preventDefault(); loadPage(1); });
-
-    // ====== CREATE (POST) ======
-    function toInt(v, def=0){
-      const n = Number(String(v ?? '').replace(/[^\d.-]/g,'')); 
-      return Number.isFinite(n) ? n : def;
+  // submit form
+  qs('#form-create').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const id = qs('#edit-id').value.trim();
+    const body = {
+      brandId: Number(qs('#c-brand').value),
+      name: qs('#c-name').value.trim(),
+      slug: qs('#c-slug').value.trim(),
+      description: qs('#c-desc').value.trim(),
+      specsJson: "{}",
+      isActive: qs('#c-active').value==='true',
+      imagePath: qs('#c-img').value,
+      quantity: Number(qs('#c-quantity').value || 0)
+    };
+    if(id){
+      body.addColor     = qs('#c-color').value.trim();
+      body.addCapacity  = qs('#c-capacity').value.trim();
+      body.addListPrice = Number(qs('#c-price').value || 0);
+      try{ await updateProduct(id, body); alert('Đã cập nhật!'); window.location.hash=''; await loadProducts(); }
+      catch(err){ alert('Lỗi cập nhật: '+err); }
+    }else{
+      body.firstColor     = qs('#c-color').value.trim();
+      body.firstCapacity  = qs('#c-capacity').value.trim();
+      body.firstListPrice = Number(qs('#c-price').value || 0);
+      try{ await createProduct(body); alert('Đã thêm mới!'); window.location.hash=''; await loadProducts(); }
+      catch(err){ alert('Lỗi thêm mới: '+err); }
     }
+  });
 
-    async function createProduct(payload){
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if(!res.ok){
-        const t = await res.text().catch(()=> '');
-        throw new Error(`HTTP ${res.status} ${t}`);
-      }
-      return res.json().catch(()=> ({}));
-    }
-
-    qs('#form-create').addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const f = e.currentTarget;
-
-      const payload = {
-        name       : f.name.value?.trim(),
-        sampleSku  : f.sampleSku.value?.trim(),
-        brand      : f.brand.value?.trim(),
-        category   : f.category.value?.trim(),
-        minPrice   : toInt(f.minPrice.value, 0),
-        qtyInStock : toInt(f.qtyInStock.value, 0),
-        status     : f.status.value,
-        description: f.description.value?.trim(),
-        imageUrl   : f.imageUrl.value?.trim()
-      };
-
-      if(!payload.name || !payload.sampleSku){
-        alert('Vui lòng nhập Tên và SKU'); 
-        return;
-      }
-
-      const submitBtn = f.querySelector('button[type="submit"]');
-      const prevText = submitBtn.textContent;
-      submitBtn.disabled = true; submitBtn.textContent = 'Đang lưu...';
-
-      try{
-        await createProduct(payload);
-        window.location.hash = '';   // thoát modal :target
-        f.reset();
-        await loadPage(1);
-      }catch(err){
-        alert('Lỗi khi lưu: ' + String(err));
-      }finally{
-        submitBtn.disabled = false; submitBtn.textContent = prevText;
-      }
-    });
-
-    // ====== DELETE (tùy chọn, nếu backend có DELETE /api/products/{id}) ======
-    document.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('button[data-action="delete"]');
-      if(!btn) return;
-      const id = btn.getAttribute('data-id');
-      if(!id) return;
-      if(!confirm('Xóa sản phẩm #' + id + '?')) return;
-      try{
-        const res = await fetch(`/api/products/${id}`, { method:'DELETE' });
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        await loadPage(currentPage);
-      }catch(err){
-        alert('Không xóa được: ' + String(err));
-      }
-    });
-
-    document.addEventListener("DOMContentLoaded", () => loadPage(1));
-  </script>
-
-  <!-- ===== ADDED SCRIPT: XEM + SỬA (không sửa gì code gốc, chỉ bổ sung) ===== -->
-  <script>
-    // Dùng chung:
-    function pick(v, alt){ return (v!==undefined && v!==null) ? v : alt; }
-
-    async function fetchDetail(id){
-      const res = await fetch('/api/products/' + id);
-      if(!res.ok) throw new Error('HTTP ' + res.status);
-      return res.json();
-    }
-
-    async function updateProduct(id, payload){
-      const res = await fetch('/api/products/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type':'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if(!res.ok){
-        const t = await res.text().catch(()=> '');
-        throw new Error('HTTP ' + res.status + ' ' + t);
-      }
-      return res.json().catch(()=> ({}));
-    }
-
-    // === Xem chi tiết ===
-    document.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('button[data-action="view"]'); if(!btn) return;
-      const id = btn.dataset.id;
-      try{
-        const d = await fetchDetail(id);
-        const modal = document.getElementById('modal-view');
-        const inputs = modal.querySelectorAll('.grid .field .input'); // [name, sku]
-        const textarea = modal.querySelector('.grid textarea');
-
-        if(inputs[0]) inputs[0].value = pick(d.name,'');
-        if(inputs[1]) inputs[1].value = pick(d.sampleSku ?? d.sku,'');
-        if(textarea)  textarea.value  = pick(d.description ?? '', '');
-
-        window.location.hash = '#modal-view';
-      }catch(err){ alert('Không xem được chi tiết: ' + String(err)); }
-    });
-
-    // === Mở form SỬA (đổ dữ liệu) ===
-    document.addEventListener('click', async (e)=>{
-      const btn = e.target.closest('button[data-action="edit"]'); if(!btn) return;
-      const id = btn.dataset.id;
-      try{
-        const d = await fetchDetail(id);
-        const modal = document.getElementById('modal-edit');
-        modal.dataset.id = id; // lưu id để submit
-
-        const inputs  = modal.querySelectorAll('.grid .field .input'); // [name, sku, price]
-        const selects = modal.querySelectorAll('.grid .field select'); // [status, category, brand]
-        const textarea= modal.querySelector('.grid textarea');
-
-        if(inputs[0]) inputs[0].value = pick(d.name,'');
-        if(inputs[1]) inputs[1].value = pick(d.sampleSku ?? d.sku,'');
-        if(inputs[2]) inputs[2].value = pick(d.price ?? d.minPrice ?? 0, 0);
-
-        if(selects[0]) selects[0].value = pick(d.status ?? 'ACTIVE', 'ACTIVE');
-        if(selects[1]) selects[1].value = pick(d.category ?? '', '');
-        if(selects[2]) selects[2].value = pick(d.brand ?? '', '');
-
-        if(textarea) textarea.value = pick(d.description ?? '', '');
-
-        window.location.hash = '#modal-edit';
-      }catch(err){ alert('Không tải được chi tiết: ' + String(err)); }
-    });
-
-    // === Submit SỬA (PUT) — nút "Cập nhật" là <a>, không phải <button>, nên bắt click và preventDefault
-    document.addEventListener('click', async (e)=>{
-      const submitA = e.target.closest('#modal-edit .modal__footer .btn.btn--primary'); if(!submitA) return;
-      e.preventDefault();
-      const modal = document.getElementById('modal-edit');
-      const id = modal.dataset.id;
-      if(!id){ alert('Thiếu ID sản phẩm'); return; }
-
-      const inputs  = modal.querySelectorAll('.grid .field .input'); // [name, sku, price]
-      const selects = modal.querySelectorAll('.grid .field select'); // [status, category, brand]
-      const textarea= modal.querySelector('.grid textarea');
-
-      const payload = {
-        name      : inputs[0]?.value?.trim() ?? '',
-        sampleSku : inputs[1]?.value?.trim() ?? '',
-        minPrice  : (function(v){ const n=Number(String(v??'').replace(/[^\d.-]/g,'')); return Number.isFinite(n)?n:0; })(inputs[2]?.value),
-        status    : selects[0]?.value ?? 'ACTIVE',
-        category  : selects[1]?.value ?? '',
-        brand     : selects[2]?.value ?? '',
-        description: textarea?.value?.trim() ?? ''
-      };
-
-      try{
-        submitA.textContent = 'Đang cập nhật...'; submitA.setAttribute('aria-busy','true');
-        await updateProduct(id, payload);
-        window.location.hash = '';
-        await loadPage(currentPage);
-      }catch(err){ alert('Cập nhật thất bại: ' + String(err)); }
-      finally{ submitA.textContent = 'Cập nhật'; submitA.removeAttribute('aria-busy'); }
-    });
-  </script>
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    await loadProducts();
+    qs('#q-quick').addEventListener('keyup', (e)=>{ if(e.key==='Enter') applyFilter(); });
+  });
+</script>
 </body>
 </html>

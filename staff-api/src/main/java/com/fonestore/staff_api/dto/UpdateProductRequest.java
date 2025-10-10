@@ -1,12 +1,16 @@
 package com.fonestore.staff_api.dto;
-
-public record UpdateProductRequest(
-    Long brandId,
-    Long catId,
-    String name,
-    String slug,
-    String description,
-    String specsJson,
-    Integer warrantyMonths,
-    Boolean active
-) {}
+import lombok.Data;
+@Data
+public class UpdateProductRequest {
+    private String name;
+    private String slug;
+    private Long brandId;
+    private String description;
+    private String specsJson;
+    private Boolean isActive;
+    private String imagePath;
+    private String addColor;
+    private String addCapacity;
+    private Long addListPrice;
+    private Integer quantity;
+}
