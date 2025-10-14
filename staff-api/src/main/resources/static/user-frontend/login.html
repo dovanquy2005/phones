@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Đăng nhập — fonestore</title>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+  <style>
+    .auth-wrap{min-height:calc(100vh - var(--header-h) - 120px);display:flex;align-items:center;justify-content:center}
+    .auth-card{width:100%;max-width:520px}
+    .auth-title{text-align:center;margin-bottom:12px}
+    .auth-sub{color:var(--muted);text-align:center;margin-bottom:16px}
+    .error-box{display:none;margin-top:12px}
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span></a>
+    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section auth-wrap">
+  <div class="card p-16 auth-card">
+    <h1 class="h1 auth-title">Chào mừng trở lại</h1>
+    <p class="auth-sub">Đăng nhập để theo dõi đơn hàng và mua sắm nhanh hơn</p>
+
+    <div id="login-error" class="alert error-box"></div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label class="label" for="email">Email</label>
+        <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="field mt-16">
+        <label class="label" for="password">Mật khẩu</label>
+        <input id="password" class="input" type="password" placeholder="••••••••" minlength="6" autocomplete="current-password" required>
+      </div>
+      <div class="row mt-16" style="justify-content:space-between;width:100%">
+        <label class="row"><input id="remember" type="checkbox"> <span>Ghi nhớ tôi</span></label>
+        <a class="muted" href="#">Quên mật khẩu?</a>
+      </div>
+      <button id="login-btn" class="btn btn-primary btn-block mt-24" type="submit">Đăng nhập</button>
+    </form>
+
+    <p class="auth-sub" style="margin-top:16px">Chưa có tài khoản? <a href="register.html" style="text-decoration:underline">Đăng ký</a></p>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section">
+    <div class="copyright">© 2025 fonestore — All rights reserved.</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const BASE_URL = window.location.origin;
+  const LOGIN_ENDPOINT = `${BASE_URL}/api/auth/login`;
+
+  const elForm = document.getElementById('login-form');
+  const elBtn  = document.getElementById('login-btn');
+  const elErr  = document.getElementById('login-error');
+
+  function setAuth({token, user}, remember) {
+    const storage = remember ? localStorage : sessionStorage;
+    storage.setItem('fs_token', token);
+    storage.setItem('fs_user', JSON.stringify(user || {}));
+    // Xóa ở kho còn lại để tránh lệch trạng thái
+    (remember ? sessionStorage : localStorage).removeItem('fs_token');
+    (remember ? sessionStorage : localStorage).removeItem('fs_user');
+  }
+
+  function pickToken(obj) {
+    if (!obj) return null;
+    return obj.token || obj.accessToken || obj.jwt || null;
+  }
+
+  // Nếu đã đăng nhập thì đẩy về trang chủ
+  try {
+    const hasToken = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token');
+    if (hasToken) window.location.replace('index.html');
+  } catch {}
+
+  elForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    elErr.style.display = 'none';
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const remember = document.getElementById('remember').checked;
+
+    if (!email || !password) {
+      elErr.textContent = 'Vui lòng nhập email và mật khẩu.'; elErr.style.display = '';
+      return;
+    }
+
+    elBtn.disabled = true; elBtn.textContent = 'Đang đăng nhập...';
+    try {
+      const res = await fetch(LOGIN_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const msg = await res.text().catch(()=> '');
+        throw new Error(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
+      }
+
+      const data = await res.json().catch(()=> ({}));
+      const token = pickToken(data);
+      const user = data.user || { email, name: data.name || email };
+
+      if (!token) throw new Error('Phản hồi không có token.');
+
+      setAuth({ token, user }, remember);
+      window.location.href = 'index.html';
+    } catch (err) {
+      elErr.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+      elErr.style.display = '';
+      elBtn.disabled = false; elBtn.textContent = 'Đăng nhập';
+    }
+  });
+})();
+</script>
+</body>
+</html>

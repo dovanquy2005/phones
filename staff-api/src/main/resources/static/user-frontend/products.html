@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Sản phẩm — fonestore</title>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+</head>
+<body>
+
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input class="input" id="q" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section">
+  <nav class="breadcrumbs"><a href="index.html">Trang chủ</a><span class="sep">/</span><span>Sản phẩm</span></nav>
+  <h1 class="h1">Tất cả sản phẩm</h1>
+
+  <div class="layout-2col mt-24">
+    <aside class="sidebar">
+      <div class="filter-group">
+        <div class="title">Thương hiệu</div>
+        <ul class="muted" id="brand-filters">
+          <li><label><input type="checkbox" value="Apple"> Apple</label></li>
+          <li><label><input type="checkbox" value="Samsung"> Samsung</label></li>
+          <li><label><input type="checkbox" value="Xiaomi"> Xiaomi</label></li>
+          <li><label><input type="checkbox" value="OPPO"> OPPO</label></li>
+          <li><label><input type="checkbox" value="vivo"> vivo</label></li>
+        </ul>
+      </div>
+      <div class="filter-group">
+        <div class="title">Khoảng giá</div>
+        <div class="row">
+          <input class="input" id="priceMin" placeholder="Từ">
+          <input class="input" id="priceMax" placeholder="Đến">
+        </div>
+        <div class="row mt-16">
+          <button class="chip" data-min="0" data-max="2000000">≤ 2tr</button>
+          <button class="chip" data-min="2000000" data-max="5000000">2–5tr</button>
+          <button class="chip" data-min="5000000" data-max="10000000">5–10tr</button>
+          <button class="chip" data-min="10000000" data-max="">≥ 10tr</button>
+        </div>
+      </div>
+      <div class="alert">Filter tạm thời áp dụng ở client (MVP).</div>
+    </aside>
+
+    <section>
+      <div class="space-between mb-16">
+        <div class="muted" id="countText">Hiển thị 0 / 0 sản phẩm</div>
+        <div class="row">
+          <label for="sort" class="muted">Sắp xếp</label>
+          <select id="sort" class="select">
+            <option value="newest">Mới nhất</option>
+            <option value="price,asc">Giá tăng dần</option>
+            <option value="price,desc">Giá giảm dần</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Grid đổ dữ liệu động -->
+      <div class="grid grid-cols-4" id="product-grid"></div>
+
+      <!-- Phân trang -->
+      <nav class="pagination" id="pagination"></nav>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section">
+    <div class="cols">
+      <div><div class="h3">Liên hệ</div><p class="muted">123 Fone Street, Hà Nội<br>Hotline: 09xx xxx xxx<br>Email: support@fonestore.com</p></div>
+      <div><div class="h3">Chính sách</div><ul><li><a href="policy.html">Giao hàng</a></li><li><a href="policy.html">Đổi trả</a></li><li><a href="policy.html">Bảo hành</a></li></ul></div>
+      <div><div class="h3">Hỗ trợ</div><ul><li><a href="help.html">FAQ</a></li><li><a href="help.html">Hướng dẫn mua</a></li></ul></div>
+      <div><div class="h3">Kết nối</div><div class="row"><span class="badge">Facebook</span><span class="badge">YouTube</span><span class="badge">Zalo</span></div></div>
+    </div>
+    <div class="copyright">© 2025 fonestore — All rights reserved.</div>
+  </div>
+</footer>
+<script>
+(() => {
+  // === Backend base ===
+  const BASE_URL = window.location.origin; // ví dụ http://localhost:9090
+
+  // === State ===
+  let page = 1, size = 12, total = 0;
+  let productsCache = [];
+  let q = '', sort = 'newest', priceMin = '', priceMax = '';
+  let brands = new Set();
+
+  const gridEl = document.getElementById('product-grid');
+  const countTextEl = document.getElementById('countText');
+  const paginationEl = document.getElementById('pagination');
+  const sortEl = document.getElementById('sort');
+  const qEl = document.getElementById('q');
+  const brandFiltersEl = document.getElementById('brand-filters');
+  const priceMinEl = document.getElementById('priceMin');
+  const priceMaxEl = document.getElementById('priceMax');
+  const quickChips = document.querySelectorAll('.chip');
+
+  function money(n){ return (n==null||isNaN(n)) ? '' :
+    Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'}); }
+
+  // ✅ Ưu tiên ảnh từ backend (ProductListDTO.imageUrl)
+  function pickImg(p) {
+    const u = p?.imageUrl;
+    if (!u) return '/staff-frontend/assets/logo.svg'; // fallback có thật
+    if (u.startsWith('http') || u.startsWith('/')) return u;
+    if (u.startsWith('products/')) return '/staff-frontend/assets/' + u;
+    return '/staff-frontend/assets/' + u;
+  }
+
+
+
+  function pickPrice(p){ return p?.minPrice ?? p?.price ?? p?.priceNow ?? null; }
+  function pickBrand(p){ return p?.brand ?? p?.manufacturer ?? ''; }
+
+  function apiSortParam(){
+    if (sort==='price,asc') return 'price,asc';
+    if (sort==='price,desc') return 'price,desc';
+    return '';
+  }
+
+  function buildApiUrl() {
+    const params = new URLSearchParams();
+    params.set('page', String(page-1)); // Spring 0-based
+    params.set('size', String(size));
+    const s = apiSortParam(); if (s) params.set('sort', s);
+    if (q) params.set('q', q);
+    if (priceMin) params.set('minPrice', priceMin);
+    if (priceMax) params.set('maxPrice', priceMax);
+    if (brands.size) params.set('brand', Array.from(brands).join(','));
+    return `${BASE_URL}/api/public/products?`+params.toString();
+  }
+
+  async function fetchProducts(){
+    const res = await fetch(buildApiUrl());
+    if(!res.ok) throw new Error('Fetch products failed: '+res.status);
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      productsCache = data.slice(); total = data.length;
+      return pageSlice(productsCache, page, size);
+    } else if (data?.content) {
+      total = Number(data.totalElements ?? data.content.length);
+      return data.content;
+    } else {
+      total = Array.isArray(data.items) ? data.items.length : 0;
+      return Array.isArray(data.items) ? pageSlice(data.items, page, size) : [];
+    }
+  }
+
+  function pageSlice(arr,p,sz){ const s=(p-1)*sz; return arr.slice(s,s+sz); }
+
+  function clientFilter(arr){
+    return arr.filter(p=>{
+      const price = Number(pickPrice(p)??0);
+      const brand = pickBrand(p);
+      if (brands.size && !brands.has(brand)) return false;
+      if (priceMin && !(price >= Number(priceMin))) return false;
+      if (priceMax && !(price <= Number(priceMax))) return false;
+      if (q && !(String(p?.name||'').toLowerCase().includes(q.toLowerCase()))) return false;
+      return true;
+    });
+  }
+
+  function renderProducts(list){
+    gridEl.innerHTML='';
+    if(!list.length){ gridEl.innerHTML='<div class="muted">Không có sản phẩm phù hợp.</div>'; return; }
+    const frag = document.createDocumentFragment();
+    list.forEach(p=>{
+      const id = p.id ?? p.productId ?? p.skuId ?? '';
+      const el = document.createElement('article');
+      el.className='prod-card';
+      const imgUrl = pickImg(p);
+      el.innerHTML = `
+        <img class="prod-thumb" src="${imgUrl}" alt="${p.name||'Điện thoại'}"
+             onerror="this.src='/staff-frontend/assets/products/logo.svg'"/>
+        <div class="prod-title">${p.name||'(Không tên)'}</div>
+        <div class="price"><div class="price-now">${money(pickPrice(p))}</div></div>
+        <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>
+      `;
+      frag.appendChild(el);
+    });
+    gridEl.appendChild(frag);
+  }
+
+  function renderCount(shown){ countTextEl.textContent=`Hiển thị ${shown} / ${total} sản phẩm`; }
+
+  function renderPagination(){
+    const totalPages = total ? Math.max(1, Math.ceil(total/size)) : 1;
+    paginationEl.innerHTML=''; if (totalPages<=1) return;
+    const mk=(label,tgt,act=false,dis=false)=>{
+      const a=document.createElement('a');
+      a.className='page-btn'+(act?' active':'')+(dis?' disabled':'');
+      a.href='#'; a.textContent=label;
+      if(!dis) a.onclick=e=>{e.preventDefault(); if(tgt!==page){page=tgt; load(); window.scrollTo({top:0,behavior:'smooth'});} };
+      return a;
+    };
+    paginationEl.appendChild(mk('«', Math.max(1,page-1), false, page===1));
+    const maxBtn=Math.min(7, Math.ceil(total/size));
+    for(let i=1;i<=maxBtn;i++) paginationEl.appendChild(mk(String(i), i, i===page));
+    if (Math.ceil(total/size)>7){ const s=document.createElement('span'); s.className='page-btn muted'; s.textContent='...'; paginationEl.appendChild(s);
+      paginationEl.appendChild(mk(String(Math.ceil(total/size)), Math.ceil(total/size), Math.ceil(total/size)===page)); }
+    paginationEl.appendChild(mk('»', Math.max(1, Math.min(page+1, Math.ceil(total/size))), false, page===Math.ceil(total/size)));
+  }
+
+  async function load(){
+    try{
+      const raw = await fetchProducts();
+      let list = productsCache.length ? productsCache.slice() : raw.slice();
+      if (sort==='price,asc')  list.sort((a,b)=>(pickPrice(a)??0)-(pickPrice(b)??0));
+      if (sort==='price,desc') list.sort((a,b)=>(pickPrice(b)??0)-(pickPrice(a)??0));
+      list = clientFilter(list);
+      if (productsCache.length){ total=list.length; list = pageSlice(list, page, size); }
+      renderProducts(list); renderCount(list.length); renderPagination();
+    }catch(e){
+      console.error(e);
+      gridEl.innerHTML='<div class="alert">Không tải được danh sách sản phẩm.</div>';
+      paginationEl.innerHTML=''; countTextEl.textContent='Hiển thị 0 / 0 sản phẩm';
+    }
+  }
+
+  // events
+  document.getElementById('sort').onchange=()=>{sort=sortEl.value; page=1; load();};
+  qEl.onkeydown=(e)=>{ if(e.key==='Enter'){ q=qEl.value.trim(); page=1; load(); } };
+  brandFiltersEl.onchange=()=>{ brands=new Set([...brandFiltersEl.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value)); page=1; load(); };
+  quickChips.forEach(btn=>btn.onclick=()=>{ priceMin=btn.dataset.min||''; priceMax=btn.dataset.max||''; priceMinEl.value=priceMin; priceMaxEl.value=priceMax; page=1; load(); });
+  priceMinEl.onchange=()=>{ priceMin=priceMinEl.value; page=1; load(); };
+  priceMaxEl.onchange=()=>{ priceMax=priceMaxEl.value; page=1; load(); };
+
+  load();
+})();
+</script>
+
+</body>
+</html>

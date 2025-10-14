@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Đăng ký — fonestore</title>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+  <style>
+    .auth-wrap{min-height:calc(100vh - var(--header-h) - 120px);display:flex;align-items:center;justify-content:center}
+    .auth-card{width:100%;max-width:520px}
+    .auth-title{text-align:center;margin-bottom:12px}
+    .auth-sub{color:var(--muted);text-align:center;margin-bottom:16px}
+    .error-box{display:none;margin-top:12px}
+    .ok-box{display:none;margin-top:12px;background:var(--green-100);color:var(--green-900)}
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span></a>
+    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section auth-wrap">
+  <div class="card p-16 auth-card" role="form" aria-labelledby="registerTitle">
+    <h1 id="registerTitle" class="h1 auth-title">Tạo tài khoản</h1>
+    <p class="auth-sub">Đăng ký để đặt hàng nhanh hơn và theo dõi đơn</p>
+
+    <div id="reg-error" class="alert error-box"></div>
+    <div id="reg-ok" class="alert ok-box"></div>
+
+    <!-- novalidate để không bị chặn submit ngầm -->
+    <form id="reg-form" novalidate>
+      <div class="grid grid-cols-2">
+        <div class="field">
+          <label class="label" for="fullName">Họ và tên</label>
+          <input id="fullName" class="input" placeholder="Nguyễn Văn A" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label class="label" for="phone">Số điện thoại</label>
+          <input id="phone" class="input" inputmode="numeric" pattern="[0-9]{9,11}" placeholder="09xxxxxxxx" autocomplete="tel" required>
+          <small class="help">9–11 số, chỉ nhập số</small>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label class="label" for="email">Email</label>
+          <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label class="label" for="password">Mật khẩu</label>
+          <input id="password" class="input" type="password" minlength="6" maxlength="64" placeholder="••••••••" autocomplete="new-password" required>
+          <small class="help">Tối thiểu 6 ký tự</small>
+        </div>
+        <div class="field">
+          <label class="label" for="confirm">Nhập lại mật khẩu</label>
+          <input id="confirm" class="input" type="password" minlength="6" maxlength="64" placeholder="••••••••" autocomplete="new-password" required>
+          <small class="help">Nhập lại giống mật khẩu</small>
+        </div>
+      </div>
+
+      <div class="row mt-16" style="justify-content:space-between;width:100%">
+        <label class="row">
+          <input id="agree" type="checkbox" required>
+          <span>Tôi đồng ý với <a href="policy.html" style="text-decoration:underline">Điều khoản & Chính sách</a></span>
+        </label>
+      </div>
+
+      <button id="reg-btn" class="btn btn-primary btn-block mt-24" type="submit">Đăng ký</button>
+
+      <p class="auth-sub" style="margin-top:16px">
+        Đã có tài khoản? <a href="login.html" style="text-decoration:underline">Đăng nhập</a>
+      </p>
+    </form>
+
+    <div class="alert mt-16">Sau khi đăng ký, bạn có thể cập nhật địa chỉ nhận hàng trong hồ sơ cá nhân.</div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section"><div class="copyright">© 2025 fonestore — All rights reserved.</div></div>
+</footer>
+
+<script>
+(() => {
+  const BASE_URL = window.location.origin;
+  const REGISTER_ENDPOINT = `${BASE_URL}/api/auth/register`;
+  const LOGIN_ENDPOINT    = `${BASE_URL}/api/auth/login`; // fallback
+
+  const $ = id => document.getElementById(id);
+  const elForm = $('reg-form'), elBtn = $('reg-btn'), elErr = $('reg-error'), elOk = $('reg-ok');
+
+  const showErr = msg => { elErr.textContent = msg; elErr.style.display = ''; };
+  const hideErr = () => { elErr.style.display = 'none'; };
+  const showOk  = msg => { elOk.textContent = msg; elOk.style.display = ''; };
+
+  function setAuth({token, user}) {
+    localStorage.setItem('fs_token', token);
+    localStorage.setItem('fs_user', JSON.stringify(user || {}));
+    sessionStorage.removeItem('fs_token'); sessionStorage.removeItem('fs_user');
+  }
+  const pickToken = obj => obj?.token || obj?.accessToken || obj?.jwt || null;
+
+  // Đảm bảo click vào nút sẽ thật sự submit form
+  elBtn.addEventListener('click', (e) => {
+    if (elBtn.disabled) return;
+    elForm.requestSubmit(); // đảm bảo phát sinh submit event
+  });
+
+  elForm.addEventListener('submit', async (e) => {
+    e.preventDefault(); hideErr(); elOk.style.display = 'none';
+
+    const name  = $('fullName').value.trim();
+    const phone = $('phone').value.trim();
+    const email = $('email').value.trim();
+    const pass  = $('password').value;
+    const conf  = $('confirm').value;
+    const agree = $('agree').checked;
+
+    // Tự validate nhanh
+    if (!name || !phone || !email || !pass || !conf) return showErr('Vui lòng điền đầy đủ thông tin.');
+    if (!/^[0-9]{9,11}$/.test(phone)) return showErr('Số điện thoại phải gồm 9–11 chữ số.');
+    if (pass.length < 6) return showErr('Mật khẩu tối thiểu 6 ký tự.');
+    if (pass !== conf) return showErr('Mật khẩu nhập lại không khớp.');
+    if (!agree) return showErr('Bạn cần đồng ý Điều khoản & Chính sách.');
+
+    elBtn.disabled = true; elBtn.textContent = 'Đang tạo tài khoản...';
+    try {
+      const res = await fetch(REGISTER_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ fullName: name, phone, email, password: pass })
+      });
+      if (!res.ok) throw new Error((await res.text().catch(()=>'')) || 'Đăng ký thất bại.');
+
+      const data  = await res.json().catch(()=> ({}));
+      const token = pickToken(data);
+      const user  = data.user || { name, email, phone };
+
+      if (token) { // BE trả token → đăng nhập luôn
+        setAuth({ token, user });
+        window.location.href = 'index.html';
+        return;
+      }
+
+      // Fallback auto-login (nếu BE cho)
+      try {
+        const r = await fetch(LOGIN_ENDPOINT, {
+          method: 'POST', headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        if (r.ok) {
+          const d = await r.json().catch(()=> ({}));
+          const tk = pickToken(d);
+          if (tk) { setAuth({ token: tk, user: d.user || user }); window.location.href = 'index.html'; return; }
+        }
+      } catch {}
+
+      showOk('Đăng ký thành công! Vui lòng đăng nhập.');
+      setTimeout(()=> location.href='login.html', 1200);
+    } catch (err) {
+      showErr(err.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      elBtn.disabled = false; elBtn.textContent = 'Đăng ký';
+    }
+  });
+})();
+</script>
+</body>
+</html>

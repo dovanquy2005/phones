@@ -1,5 +1,6 @@
 package com.fonestore.staff_api.entity;
-import jakarta.persistence.*; import lombok.Getter; import lombok.Setter;
+import jakarta.persistence.*; 
+import lombok.Getter; import lombok.Setter;
 @Entity @Table(name = "product_images") @Getter @Setter
 public class ProductImage {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -9,3 +10,4 @@ public class ProductImage {
     @Column(name = "sort_order") private Integer sortOrder = 0;
     @Column(name = "alt_text") private String altText;
 }
+

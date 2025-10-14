@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Thanh toán — fonestore</title>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+</head>
+<body>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section">
+  <h1 class="h1">Thanh toán</h1>
+
+  <div class="grid" style="grid-template-columns: 1fr 360px; gap:24px">
+    <!-- Form thông tin -->
+    <form id="checkout-form" class="card p-16" novalidate>
+      <div class="grid grid-cols-2">
+        <div class="field">
+          <label class="label" for="fullName">Họ và tên</label>
+          <input class="input" id="fullName" placeholder="VD: Nguyễn Văn A" required>
+        </div>
+        <div class="field">
+          <label class="label" for="email">Email</label>
+          <input class="input" id="email" type="email" placeholder="email@domain.com" required>
+        </div>
+        <div class="field">
+          <label class="label" for="phone">Số điện thoại</label>
+          <input class="input" id="phone" placeholder="09xxxxxxxx" pattern="[0-9]{9,11}" required>
+          <small class="help">9–11 số, chỉ chứa 0–9</small>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label class="label" for="address">Địa chỉ nhận hàng</label>
+          <input class="input" id="address" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" required>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label class="label" for="note">Ghi chú</label>
+          <textarea class="textarea" id="note" rows="3" placeholder="(Không bắt buộc)"></textarea>
+        </div>
+      </div>
+
+      <div class="mt-16">
+        <div class="label">Phương thức thanh toán</div>
+        <label class="row mt-8">
+          <input type="radio" name="pay" value="COD" checked>
+          <span>COD (khi nhận hàng)</span>
+        </label>
+      </div>
+
+      <div id="form-error" class="alert mt-16" style="display:none"></div>
+      <button id="btn-order" class="btn btn-primary mt-24" type="submit">Đặt hàng</button>
+    </form>
+
+    <!-- Tóm tắt đơn hàng -->
+    <aside>
+      <div class="summary" id="summary">
+        <div class="h3">Tóm tắt đơn hàng</div>
+        <div id="summary-items" class="mt-8"></div>
+        <hr class="sep">
+        <div class="row"><span>Tạm tính</span><span id="sum-sub">0₫</span></div>
+        <div class="row"><span>Phí vận chuyển</span><span id="sum-ship">0₫</span></div>
+        <div class="row total"><span>Tổng cộng</span><span id="sum-total">0₫</span></div>
+        <p class="help" id="ship-help">Miễn phí ship cho đơn từ 5.000.000₫</p>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section">
+    <div class="copyright">© 2025 fonestore</div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // ====== Config & helpers ======
+  const BASE_URL = window.location.origin;
+  const CART_KEY = 'fonestore_cart_v2';          // key giỏ hàng thống nhất
+  const FREE_SHIP_THRESHOLD = 5_000_000;
+  const SHIP_FEE = 30_000;
+
+  const money = n => (Number(n||0)).toLocaleString('vi-VN', { style:'currency', currency:'VND' });
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n||0)));
+
+  // Chuẩn hoá cart item giống trang giỏ hàng
+  function loadCart(){
+    const tryParse = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
+    let arr = tryParse(CART_KEY);
+    if (!arr.length) arr = tryParse('fonestore_cart'); // fallback key cũ nếu có
+
+    return arr.map(x => ({
+      id: x.id ?? x.productId ?? x.skuId ?? x.product_id,
+      name: x.name ?? '(Không tên)',
+      price: Number(x.price ?? x.priceNow ?? x.minPrice ?? 0),
+      qty: clamp(x.qty ?? x.quantity ?? 1, 1, 99),
+      imageUrl: x.imageUrl ?? x.thumbnailUrl ?? x.cover ?? x.image ?? null,
+      variant: (x.variant ?? x.variantText ?? [x.color, x.capacity].filter(Boolean).join(' • ')) || '',
+      slug: x.slug ?? '',
+    })).filter(i => i.id != null);
+  }
+
+  function saveCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+
+  // ====== Render summary ======
+  const elItems = document.getElementById('summary-items');
+  const elSub   = document.getElementById('sum-sub');
+  const elShip  = document.getElementById('sum-ship');
+  const elTotal = document.getElementById('sum-total');
+  const elHelp  = document.getElementById('ship-help');
+  const elForm  = document.getElementById('checkout-form');
+  const elBtn   = document.getElementById('btn-order');
+  const elErr   = document.getElementById('form-error');
+
+  let cart = loadCart();
+
+  function renderSummary(){
+    elItems.innerHTML = '';
+    if (!cart.length){
+      elItems.innerHTML = '<div class="alert">Giỏ hàng trống. <a href="products.html">Tiếp tục mua sắm</a>.</div>';
+      elSub.textContent = money(0);
+      elShip.textContent = money(0);
+      elTotal.textContent = money(0);
+      elHelp.textContent = 'Hãy thêm sản phẩm trước khi đặt hàng.';
+      elBtn.disabled = true;               // chỉ khoá nút đặt hàng
+      return;
+    }
+
+    let sub = 0;
+    const frag = document.createDocumentFragment();
+    cart.forEach(it => {
+      const line = it.price * it.qty;
+      sub += line;
+      const row = document.createElement('div');
+      row.className = 'row';
+      const name = it.variant ? `${it.name} — ${it.variant}` : it.name;
+      row.innerHTML = `<span>${name} × ${it.qty}</span><span>${money(line)}</span>`;
+      frag.appendChild(row);
+    });
+    elItems.appendChild(frag);
+
+    const shipping = sub >= FREE_SHIP_THRESHOLD ? 0 : SHIP_FEE;
+    elSub.textContent   = money(sub);
+    elShip.textContent  = shipping === 0 ? '0₫' : money(shipping);
+    elTotal.textContent = money(sub + shipping);
+    elHelp.textContent  = 'Miễn phí ship cho đơn từ 5.000.000₫';
+    elBtn.disabled = false;
+  }
+
+  // ====== Submit order ======
+  async function createOrder(){
+    // Payload đúng DTO public: items [{skuId, qty, unitPrice}]
+    const items = cart.map(it => ({
+      skuId: it.id,
+      qty: it.qty,
+      unitPrice: it.price
+    }));
+
+    const payload = { items };
+
+    const res = await fetch(`${BASE_URL}/api/public/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      const txt = await res.text().catch(()=> '');
+      throw new Error(`Đặt hàng thất bại (${res.status}). ${txt}`);
+    }
+    return await res.json().catch(()=> ({}));
+  }
+
+  // Prefill form từ localStorage
+  (function prefill(){
+    const g = id => document.getElementById(id);
+    g('fullName').value = localStorage.getItem('fs_checkout_name') || '';
+    g('email').value    = localStorage.getItem('fs_checkout_email') || '';
+    g('phone').value    = localStorage.getItem('fs_checkout_phone') || '';
+    g('address').value  = localStorage.getItem('fs_checkout_address') || '';
+  })();
+
+  // Validate & submit
+  elForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    elErr.style.display = 'none';
+
+    if(!cart.length){
+      elErr.textContent = 'Giỏ hàng đang trống.';
+      elErr.style.display = '';
+      return;
+    }
+    if(!elForm.reportValidity()){
+      elErr.textContent = 'Vui lòng điền đầy đủ và đúng thông tin.';
+      elErr.style.display = '';
+      return;
+    }
+
+    // Lưu thông tin khách cho lần sau
+    localStorage.setItem('fs_checkout_name',    document.getElementById('fullName').value.trim());
+    localStorage.setItem('fs_checkout_email',   document.getElementById('email').value.trim());
+    localStorage.setItem('fs_checkout_phone',   document.getElementById('phone').value.trim());
+    localStorage.setItem('fs_checkout_address', document.getElementById('address').value.trim());
+
+    elBtn.disabled = true; elBtn.textContent = 'Đang đặt hàng...';
+    try{
+      const order = await createOrder();
+      saveCart([]); // clear cart
+      const oid = encodeURIComponent(order?.id ?? '');
+      window.location.href = `order-success.html${oid ? ('?orderId='+oid) : ''}`;
+    }catch(err){
+      elErr.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
+      elErr.style.display = '';
+      elBtn.disabled = false; elBtn.textContent = 'Đặt hàng';
+    }
+  });
+
+  // Khởi tạo
+  renderSummary();
+
+  // Nếu giỏ hàng thay đổi ở tab khác -> cập nhật tóm tắt
+  window.addEventListener('storage', (e) => {
+    if (e.key === CART_KEY){
+      cart = loadCart();
+      renderSummary();
+    }
+  });
+})();
+</script>
+</body>
+</html>

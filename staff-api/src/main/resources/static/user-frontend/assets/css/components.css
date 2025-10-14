@@ -1,0 +1,19 @@
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.space-between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mt-16{margin-top:16px}.mt-24{margin-top:24px}.mb-8{margin-bottom:8px}.mb-16{margin-bottom:16px}
+.p-16{padding:16px}.py-8{padding-block:8px}.text-right{text-align:right}.hidden{display:none}
+.kicker{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+hr.sep{border:0;border-top:1px solid var(--border);margin:16px 0}
+.qty{display:inline-flex;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.qty button{width:36px;height:36px;border:0;background:#fff}
+.qty input{width:44px;text-align:center;border:0}
+.sidebar .filter-group .row .input{flex:1;min-width:0}
+.sidebar .filter-group .row{width:100%}
+
+
+/* Auth page helpers */
+.auth-wrap{min-height:calc(100vh - var(--header-h) - 120px);display:flex;align-items:center;justify-content:center}
+.auth-card{width:100%;max-width:440px}
+.auth-title{text-align:center;margin-bottom:12px}
+.auth-sub{color:var(--muted);text-align:center;margin-bottom:16px}
+.text-center{text-align:center}

@@ -10,11 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Service
+@Service("staffProductService")
 @RequiredArgsConstructor
 public class ProductService {
 
-    private final ProductRepository productRepository;
+    private final StaffProductRepository productRepository;
     private final BrandRepository brandRepository;
     private final ProductVariantRepository variantRepository;
     private final ProductImageRepository imageRepository;

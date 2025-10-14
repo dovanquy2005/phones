@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400">
+  <rect width="100%" height="100%" fill="#e5e7eb"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" 
+        font-family="system-ui, -apple-system, Segoe UI, Roboto" font-size="40" fill="#111827">Hero</text>
+</svg>

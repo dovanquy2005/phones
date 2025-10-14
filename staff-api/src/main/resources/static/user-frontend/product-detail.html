@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Chi tiết sản phẩm — fonestore</title>
+  <link rel="stylesheet" href="/assets/css/base.css"/>
+  <link rel="stylesheet" href="/assets/css/components.css"/>
+  <style>
+    /* tinh chỉnh nhỏ cho phần giá & stepper */
+    .price-wrap { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+    .price-now.big { font-size: 28px; line-height: 1.1; }
+    .price-old { text-decoration: line-through; opacity:.6; }
+    .stock { font-size: 13px; padding: 2px 8px; border-radius: 999px; background:#f3f4f6; }
+    .stock.ok { color:#057a55; background:#ecfdf5; }        /* xanh */
+    .stock.low { color:#92400e; background:#fffbeb; }       /* vàng */
+    .stock.out { color:#991b1b; background:#fef2f2; }       /* đỏ */
+    .qty { display:flex; align-items:center; gap:8px; }
+    .qty button { width:36px; height:36px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; }
+    .qty input { width:64px; height:36px; border:1px solid #e5e7eb; border-radius:8px; text-align:center; }
+    .btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .toast {
+      position: fixed; right: 16px; bottom: 16px; background:#111827; color:white;
+      border-radius: 12px; padding: 10px 14px; box-shadow: 0 6px 20px rgba(0,0,0,.2); display:none;
+    }
+    .specs-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px 16px; }
+    .spec-name { color:#6b7280; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="/assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a id="cartBadge" href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section" id="main">
+  <nav class="breadcrumbs">
+    <a href="index.html">Trang chủ</a><span class="sep">/</span>
+    <a href="products.html">Sản phẩm</a><span class="sep">/</span>
+    <span id="bc-name">Đang tải…</span>
+  </nav>
+
+  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:24px">
+    <section>
+      <!-- ✅ chỉ 1 ảnh cover -->
+      <img id="cover" class="prod-thumb" src="/staff-frontend/assets/logo.svg" alt="Ảnh sản phẩm"
+           onerror="this.onerror=null; this.src='/staff-frontend/assets/logo.svg'">
+    </section>
+
+    <section>
+      <h1 class="h1" id="name">Đang tải…</h1>
+      <div class="muted mb-16" id="short">—</div>
+
+      <div class="h3">Giá</div>
+      <div class="price-wrap mb-8">
+        <div class="price-now big" id="priceNow">Đang cập nhật</div>
+        <div class="price-old" id="priceOld" style="display:none"></div>
+        <span class="stock" id="stockPill">—</span>
+      </div>
+      <p class="muted" id="variantText" style="margin:6px 0 0"></p>
+
+      <div class="row mb-16" style="gap:12px; align-items:center">
+        <div class="qty">
+          <button id="decBtn" aria-label="Giảm">−</button>
+          <input id="qtyInput" aria-label="Số lượng" inputmode="numeric" value="1">
+          <button id="incBtn" aria-label="Tăng">+</button>
+        </div>
+        <button id="addBtn" class="btn btn-primary">Thêm vào giỏ</button>
+      </div>
+
+      <hr class="sep">
+      <h2 class="h2">Thông số kỹ thuật</h2>
+      <div id="specs" class="specs-grid"><div class="muted">Đang cập nhật…</div></div>
+
+      <h2 class="h2 mt-24">Mô tả chi tiết</h2>
+      <p class="muted" id="desc">—</p>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section">
+    <div class="copyright">© 2025 fonestore — All rights reserved.</div>
+  </div>
+</footer>
+
+<div id="toast" class="toast">Đã thêm vào giỏ hàng</div>
+
+<script>
+(() => {
+  const BASE_URL = window.location.origin;
+
+  // ===== Helpers =====
+  const $ = (s) => document.querySelector(s);
+  const money = (n) => (n==null || isNaN(n)) ? '' :
+    Number(n).toLocaleString('vi-VN', { style:'currency', currency:'VND' });
+
+  const getId = () => new URLSearchParams(location.search).get('id');
+
+  function toImg(u){
+    if(!u) return '/staff-frontend/assets/logo.svg';
+    if (u.startsWith('http') || u.startsWith('/')) return u;
+    if (u.startsWith('products/')) return '/staff-frontend/assets/' + u;
+    return '/staff-frontend/assets/' + u;
+  }
+
+  function showToast(msg='Đã thêm vào giỏ hàng'){
+    const t = $('#toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 1600);
+  }
+
+  function readCart(){
+    try { return JSON.parse(localStorage.getItem('cart') || '[]'); }
+    catch { return []; }
+  }
+
+  function writeCart(cart){
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+  }
+
+  function updateCartBadge(){
+    const cart = readCart();
+    const totalQty = cart.reduce((sum, it) => sum + (Number(it.qty)||0), 0);
+    const el = $('#cartBadge');
+    el.textContent = totalQty ? `Giỏ hàng (${totalQty})` : 'Giỏ hàng';
+  }
+
+  function renderSpecs(specsJson){
+    const el = $('#specs'); el.innerHTML = '';
+    let obj = {};
+    try { obj = typeof specsJson === 'string' ? JSON.parse(specsJson || '{}') : (specsJson || {}); }
+    catch { obj = {}; }
+    const entries = Object.entries(obj);
+    if (!entries.length){
+      el.innerHTML = '<div class="muted">Đang cập nhật.</div>';
+      return;
+    }
+    const labels = {
+      screen:'Màn hình', display:'Màn hình',
+      chip:'Chip', cpu:'CPU',
+      ram:'RAM', storage:'Bộ nhớ', rom:'Bộ nhớ',
+      rearCamera:'Camera sau', backCamera:'Camera sau',
+      frontCamera:'Camera trước', selfie:'Camera trước',
+      battery:'Pin', charge:'Sạc',
+      os:'Hệ điều hành', size:'Kích thước',
+      weight:'Khối lượng', refreshRate:'Tần số quét', sim:'SIM'
+    };
+    const fmt = (k)=> labels[k] ?? k.replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const frag = document.createDocumentFragment();
+    entries.forEach(([k,v])=>{
+      const kEl = document.createElement('div'); kEl.className='spec-name'; kEl.textContent = fmt(k);
+      const vEl = document.createElement('div'); vEl.textContent = String(v ?? '');
+      frag.appendChild(kEl); frag.appendChild(vEl);
+    });
+    el.appendChild(frag);
+  }
+
+  // ===== Page logic =====
+  let product = null;
+  let stock = 0;
+
+  async function load(){
+    const id = getId();
+    if(!id){
+      $('#main').innerHTML = '<div class="alert">Thiếu tham số id.</div>';
+      return;
+    }
+    const res = await fetch(`${BASE_URL}/api/public/products/${encodeURIComponent(id)}`);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const p = await res.json();
+    product = p;
+
+    // Breadcrumb + header
+    $('#bc-name').textContent = p.name || 'Sản phẩm';
+    $('#name').textContent = p.name || 'Sản phẩm';
+    $('#short').textContent = p.slug || '';
+    $('#desc').textContent = p.description || '';
+
+    // Ảnh
+    const cover = $('#cover');
+    cover.src = toImg(p.imageUrl);
+    cover.onerror = () => { cover.onerror = null; cover.src = '/staff-frontend/assets/logo.svg'; };
+
+    // Giá + tồn
+    const price = (p.price ?? p.minPrice ?? p.priceNow);
+    $('#priceNow').textContent = price ? money(price) : 'Liên hệ';
+    // (nếu bạn có thêm p.priceOld / p.discountPercent → hiển thị ở đây)
+    $('#priceOld').style.display = 'none';
+
+    stock = Number(p.quantity ?? 0);
+    const pill = $('#stockPill');
+    if (stock <= 0) { pill.textContent = 'Tạm hết hàng'; pill.className = 'stock out'; }
+    else if (stock <= 5) { pill.textContent = `Còn ${stock}`; pill.className = 'stock low'; }
+    else { pill.textContent = 'Còn hàng'; pill.className = 'stock ok'; }
+
+    $('#variantText').textContent = ''; // nếu sau này có biến thể thì set tại đây
+
+    // Specs
+    renderSpecs(p.specsJson);
+
+    // Stepper init
+    const qtyInput = $('#qtyInput');
+    if (stock <= 0) {
+      qtyInput.value = 0;
+      qtyInput.disabled = true;
+      $('#decBtn').disabled = true;
+      $('#incBtn').disabled = true;
+      $('#addBtn').disabled = true;
+    } else {
+      qtyInput.value = 1;
+      qtyInput.disabled = false;
+      $('#decBtn').disabled = false;
+      $('#incBtn').disabled = false;
+      $('#addBtn').disabled = false;
+    }
+  }
+
+  // ===== Events =====
+  $('#decBtn').addEventListener('click', () => {
+    const el = $('#qtyInput');
+    let v = Number(el.value || 1);
+    v = Math.max(1, v - 1);
+    el.value = v;
+  });
+
+  $('#incBtn').addEventListener('click', () => {
+    const el = $('#qtyInput');
+    let v = Number(el.value || 1);
+    const max = stock > 0 ? stock : 99;
+    v = Math.min(max, v + 1);
+    el.value = v;
+  });
+
+  $('#qtyInput').addEventListener('input', () => {
+    const el = $('#qtyInput');
+    let v = parseInt(String(el.value).replace(/[^\d]/g,''), 10);
+    if (isNaN(v)) v = 1;
+    const max = stock > 0 ? stock : 99;
+    v = Math.max(1, Math.min(max, v));
+    el.value = v;
+  });
+
+  $('#addBtn').addEventListener('click', () => {
+    if (!product) return;
+    if (stock <= 0) { showToast('Sản phẩm tạm hết hàng'); return; }
+    const qty = Number($('#qtyInput').value || 1);
+    if (qty <= 0) return;
+
+    const cart = readCart();
+    const idx = cart.findIndex(it => String(it.id) === String(product.id));
+    const price = (product.price ?? product.minPrice ?? product.priceNow) || 0;
+
+    if (idx >= 0) {
+      cart[idx].qty = Math.min((cart[idx].qty || 0) + qty, stock || 999);
+    } else {
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: price,
+        qty: Math.min(qty, stock || 999),
+        imageUrl: toImg(product.imageUrl)
+      });
+    }
+    writeCart(cart);
+    showToast('Đã thêm vào giỏ hàng');
+  });
+
+  // init
+  updateCartBadge();
+  load().catch(err => {
+    console.error(err);
+    $('#main').innerHTML = '<div class="alert">Không tải được dữ liệu sản phẩm.</div>';
+  });
+})();
+</script>
+</body>
+</html>
