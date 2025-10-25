@@ -5,93 +5,291 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>fonestore · Đơn hàng</title>
   <link rel="stylesheet" href="css/base.css"/>
-  <link rel="stylesheet" href="css/page-orders.css"/>
+  <link rel="icon" href="/user-frontend/assets/img/logo.svg" type="image/svg+xml">
+  <style>
+    .table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    .table thead th,.table tbody td{padding:12px 16px;border-bottom:1px solid var(--color-border)}
+    .table-wrap{overflow-x:auto;}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .page-title{margin:0}
+    .order-filters{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:500}
+    .chip.is-active{background:#111827;color:#fff;border-color:#111827}
+    .chip--success{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+    .chip--warn{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+    .chip--danger{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 10px;border-radius:999px}
+    .badge--success{background:#dcfce7;color:#166534}
+    .badge--warn{background:#fff7ed;color:#9a3412}
+    .badge--danger{background:#fee2e2;color:#991b1b}
+    .badge--neutral{background:#e0e7ff;color:#3730a3}
+    .td-actions{display:flex;justify-content:flex-end}
+    .empty{padding:16px;color:#6b7280;text-align:center;}
+    .grid{display:grid;gap:12px}
+    .grid--2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media (max-width:720px){ .grid--2{grid-template-columns:1fr} }
+
+    /* Search inline (ở body) */
+    .search-inline{
+      display:flex;align-items:center;gap:8px;margin:8px 0 12px;
+      background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;
+    }
+    .search-inline input{flex:1;border:none;outline:none;background:transparent;font-size:14px}
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="index.html" aria-label="fonestore">
-      <img src="assets/logo.svg" alt="" class="brand__logo"/>
-      <span class="brand__text">fonestore</span>
-    </a>
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="fonestore">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/>
+    <span class="brand__text">fonestore</span>
+  </a>
 
-    <form class="search" role="search" aria-label="Tìm kiếm">
-      <span class="input-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
-      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
-    </form>
+  <!-- ĐÃ BỎ form search khỏi header -->
 
-    <div class="header-actions">
-      <a class="btn btn--primary" href="products.html#modal-create">Tạo mới</a>
-      <details class="avatar-menu">
-        <summary class="avatar" aria-label="Tài khoản">
-          <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
-        </summary>
-        <nav class="dropdown" aria-label="Tài khoản">
-          <a href="settings.html">Cài đặt</a>
-          <a href="auth-login.html">Đăng xuất</a>
-        </nav>
-      </details>
-    </div>
-  </header>
-
-  <div class="app-shell">
-        <aside class="sidebar" aria-label="Điều hướng">
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Bán hàng</p>
-        <a class="sidebar__link" href="orders.html">Đơn hàng</a>
-        <a class="sidebar__link" href="payments.html">Thanh toán</a>
-        <a class="sidebar__link" href="customers.html">Khách hàng</a>
-        <a class="sidebar__link" href="index.html">Dashboard</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="brands.html">Thương hiệu</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hệ thống</p>
-        <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
-      </div>
-    </aside>
-    <main class="content">
-      <section class="toolbar">
-        <h1 class="page-title">Đơn hàng</h1>
-      </section>
-
-      <section class="card">
-        <div class="card__body">
-          <div class="order-filters">
-            <span class="chip chip--neutral">Tất cả</span>
-            <span class="chip chip--success">Đã thanh toán</span>
-            <span class="chip chip--warn">Chờ giao</span>
-            <span class="chip chip--danger">Hủy</span>
-            <span class="chip">COD</span>
-          </div>
-        </div>
-        <div class="card__body" style="border-top:1px solid var(--color-border)">
-          <div class="grid grid--2">
-            <div class="field"><label>Từ ngày</label><input class="input" placeholder="YYYY-MM-DD"/></div>
-            <div class="field"><label>Đến ngày</label><input class="input" placeholder="YYYY-MM-DD"/></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="card" style="margin-top:12px">
-        <div class="card__body table-wrap">
-          <table class="table">
-            <thead><tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>Trạng thái</th><th>Ngày</th><th></th></tr></thead>
-            <tbody>
-              <tr><td>OD-000128</td><td>Nguyễn Văn A</td><td>21.900.000₫</td><td><span class="badge badge--success">Đã thanh toán</span></td><td>06/10/2025</td><td class="td-actions"><a class="btn btn--sm" href="#">In hóa đơn</a></td></tr>
-              <tr><td>OD-000127</td><td>Trần B</td><td>8.490.000₫</td><td><span class="badge badge--warn">Chờ giao</span></td><td>06/10/2025</td><td class="td-actions"><a class="btn btn--sm" href="#">In hóa đơn</a></td></tr>
-              <tr><td>OD-000126</td><td>Phạm C</td><td>26.990.000₫</td><td><span class="badge badge--danger">Hủy</span></td><td>05/10/2025</td><td class="td-actions"><a class="btn btn--sm" href="#">In hóa đơn</a></td></tr>
-              <tr><td>OD-000125</td><td>Lê D</td><td>12.490.000₫</td><td><span class="badge badge--neutral">COD</span></td><td>05/10/2025</td><td class="td-actions"><a class="btn btn--sm" href="#">In hóa đơn</a></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+  <div class="header-actions">
+    <details class="avatar-menu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="settings.html">Cài đặt</a>
+        <a href="auth-login.html" id="btn-logout">Đăng xuất</a>
+      </nav>
+    </details>
   </div>
+</header>
+
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Điều hướng">
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Bán hàng</p>
+      <a class="sidebar__link sidebar__link--active" href="orders.html">Đơn hàng</a>
+      <a class="sidebar__link" href="payments.html">Thanh toán</a>
+      <a class="sidebar__link" href="customers.html">Khách hàng</a>
+      <a class="sidebar__link" href="index.html">Dashboard</a>
+    </div>
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Hàng hóa</p>
+      <a class="sidebar__link" href="products.html">Sản phẩm</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+    </div>
+    <div class="sidebar__group">
+      <p class="sidebar__heading">Hệ thống</p>
+      <a class="sidebar__link" href="reports.html">Báo cáo</a>
+      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <section class="toolbar">
+      <h1 class="page-title">Đơn hàng</h1>
+    </section>
+
+    <!-- Ô tìm kiếm đã chuyển xuống body -->
+    <div class="search-inline" role="search" aria-label="Tìm kiếm đơn hàng">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke-linecap="round"/>
+      </svg>
+      <input id="q-body" placeholder="Tìm mã đơn / khách / SĐT…"/>
+    </div>
+
+    <section class="card">
+      <div class="card__body">
+        <div class="order-filters" id="status-chips" role="tablist" aria-label="Bộ lọc trạng thái">
+          <button class="chip is-active" data-status="">Tất cả</button>
+          <button class="chip" data-status="PAID">Đã thanh toán</button>
+          <button class="chip" data-status="PENDING">Chờ giao</button>
+          <button class="chip" data-status="CANCELED">Hủy</button>
+          <button class="chip" data-status="COD">COD</button>
+        </div>
+      </div>
+      <div class="card__body" style="border-top:1px solid var(--color-border)">
+        <div class="grid grid--2">
+          <div class="field"><label>Từ ngày</label><input id="from-date" class="input" type="date"/></div>
+          <div class="field"><label>Đến ngày</label><input id="to-date" class="input" type="date"/></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:12px">
+      <div class="card__body table-wrap">
+        <table class="table">
+          <thead>
+            <tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>Trạng thái</th><th>Ngày</th><th style="width:150px;text-align:right"></th></tr>
+          </thead>
+          <tbody id="rows-orders">
+            <tr><td colspan="6" class="empty">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ===== Helpers ===== */
+const API_BASE   = location.origin;
+const API_ORDERS = API_BASE + '/api/orders';
+const qs = s => document.querySelector(s);
+const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.') + '₫';
+const fmtDate = s => {
+  if (!s) return '';
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yy = d.getFullYear();
+  return `${dd}/${mm}/${yy}`;
+};
+function badgeHtml(status){
+  switch((status||'').toUpperCase()){
+    case 'PAID':     return '<span class="badge badge--success">Đã thanh toán</span>';
+    case 'PENDING':  return '<span class="badge badge--warn">Chờ giao</span>';
+    case 'CANCELED': return '<span class="badge badge--danger">Hủy</span>';
+    case 'COD':      return '<span class="badge badge--neutral">COD</span>';
+    default:         return `<span class="badge">${status||'-'}</span>`;
+  }
+}
+const getToken = () => localStorage.getItem('accessToken') || '';
+if (!getToken()) location.href = '/staff-frontend/auth-login.html';
+
+async function apiFetch(url, opts={}){
+  const headers = new Headers(opts.headers || {});
+  const token = getToken();
+  if (token) headers.set('Authorization','Bearer '+token);
+  if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
+    headers.set('Content-Type','application/json');
+  }
+  const res = await fetch(url,{...opts, headers});
+  if (!res.ok){
+    let detail=''; try{ const j=await res.json(); detail=j.message||j.error||''; }catch{}
+    if (res.status===401){ alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; }
+    throw new Error(`HTTP ${res.status}${detail?': '+detail:''}`);
+  }
+  return res.status===204 ? null : res.json();
+}
+
+/* ===== State ===== */
+let allOrders = [];
+let filters = { status:'', from:null, to:null, q:'' };
+
+/* ===== Render ===== */
+function renderRows(list){
+  const tb = qs('#rows-orders');
+  if (!list.length){
+    tb.innerHTML = `<tr><td colspan="6" class="empty">Không có đơn hàng</td></tr>`;
+    return;
+  }
+  tb.innerHTML = list.map(o=>{
+    let customer = o.customerName || o.customer || '';
+    if (!customer && typeof o.addressSnapshot === 'string'){
+      try{ const snap = JSON.parse(o.addressSnapshot); customer = snap.name || ''; }catch{}
+    }
+    const code = o.code || `OD-${String(o.orderId ?? o.id).padStart(6,'0')}`;
+    const total = fmtVND(o.total ?? (o.subtotal - (o.discount||0) + (o.shippingFee||0)));
+    const date  = fmtDate(o.createdAt || o.created_at);
+    const status= o.status || '';
+    return `
+      <tr>
+        <td>${code}</td>
+        <td>${customer||'-'}</td>
+        <td>${total}</td>
+        <td>${badgeHtml(status)}</td>
+        <td>${date}</td>
+        <td class="td-actions">
+          <button class="btn btn--sm" data-print="${o.orderId ?? o.id}">In hóa đơn</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ===== Load & Filter ===== */
+async function loadOrders(){
+  const tb = qs('#rows-orders');
+  tb.innerHTML = `<tr><td colspan="6" class="empty">Đang tải…</td></tr>`;
+  let url = API_ORDERS;
+  const params = new URLSearchParams();
+  if (filters.status) params.set('status', filters.status);
+  if (filters.from) params.set('from', filters.from);
+  if (filters.to) params.set('to', filters.to);
+  if (filters.q) params.set('q', filters.q);
+  if ([...params.keys()].length) url += `?${params.toString()}`;
+
+  try{
+    const raw = await apiFetch(url);
+    const arr = Array.isArray(raw) ? raw
+              : Array.isArray(raw?.content) ? raw.content
+              : Array.isArray(raw?.items) ? raw.items : [];
+    allOrders = arr.map(o=>({
+      id: o.id ?? o.orderId,
+      orderId: o.orderId ?? o.id,
+      code: o.code,
+      customerName: o.customerName,
+      addressSnapshot: o.addressSnapshot ?? o.address_snapshot,
+      status: (o.status||'').toUpperCase(),
+      subtotal: o.subtotal,
+      discount: o.discount,
+      shippingFee: o.shippingFee ?? o.shipping_fee,
+      total: o.total,
+      createdAt: o.createdAt ?? o.created_at
+    }));
+    renderRows(applyClientFilter(allOrders));
+  }catch(err){
+    console.error(err);
+    tb.innerHTML = `<tr><td colspan="6" class="empty">Lỗi tải: ${err.message}</td></tr>`;
+  }
+}
+function applyClientFilter(src){
+  return src.filter(o=>{
+    const q = (filters.q||'').trim().toLowerCase();
+    const inStatus = !filters.status || o.status===filters.status;
+    const inQ = !q || (String(o.code||'').toLowerCase().includes(q) ||
+                       String(o.customerName||'').toLowerCase().includes(q) ||
+                       (typeof o.addressSnapshot==='string' && o.addressSnapshot.toLowerCase().includes(q)));
+    let inDate = true;
+    if (filters.from){ inDate = inDate && new Date(o.createdAt) >= new Date(filters.from+'T00:00:00'); }
+    if (filters.to){   inDate = inDate && new Date(o.createdAt) <= new Date(filters.to+'T23:59:59'); }
+    return inStatus && inQ && inDate;
+  });
+}
+
+/* ===== Events ===== */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const logout = qs('#btn-logout'); logout?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+
+  // Chips trạng thái
+  document.getElementById('status-chips').addEventListener('click', (e)=>{
+    const chip = e.target.closest('.chip'); if (!chip) return;
+    document.querySelectorAll('#status-chips .chip').forEach(c=>c.classList.remove('is-active'));
+    chip.classList.add('is-active');
+    filters.status = chip.dataset.status || '';
+    renderRows(applyClientFilter(allOrders));
+  });
+
+  // Ngày
+  document.getElementById('from-date').addEventListener('change', (e)=>{
+    filters.from = e.target.value || null; renderRows(applyClientFilter(allOrders));
+  });
+  document.getElementById('to-date').addEventListener('change', (e)=>{
+    filters.to = e.target.value || null; renderRows(applyClientFilter(allOrders));
+  });
+
+  // Tìm nhanh (ở body)
+  document.getElementById('q-body').addEventListener('input', (e)=>{
+    filters.q = e.target.value || ''; renderRows(applyClientFilter(allOrders));
+  });
+
+  // In hoá đơn
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-print]'); if (!btn) return;
+    const id = btn.dataset.print;
+    window.open(`/staff-frontend/invoice.html?orderId=${encodeURIComponent(id)}`,'_blank');
+    // Hoặc: window.open(`${API_ORDERS}/${id}/invoice`,'_blank');
+  });
+
+  await loadOrders();
+});
+</script>
 </body>
 </html>

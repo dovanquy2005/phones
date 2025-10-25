@@ -4,40 +4,36 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Chi tiết sản phẩm — fonestore</title>
-  <link rel="stylesheet" href="/assets/css/base.css"/>
-  <link rel="stylesheet" href="/assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
   <style>
-    /* tinh chỉnh nhỏ cho phần giá & stepper */
-    .price-wrap { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-    .price-now.big { font-size: 28px; line-height: 1.1; }
-    .price-old { text-decoration: line-through; opacity:.6; }
-    .stock { font-size: 13px; padding: 2px 8px; border-radius: 999px; background:#f3f4f6; }
-    .stock.ok { color:#057a55; background:#ecfdf5; }        /* xanh */
-    .stock.low { color:#92400e; background:#fffbeb; }       /* vàng */
-    .stock.out { color:#991b1b; background:#fef2f2; }       /* đỏ */
-    .qty { display:flex; align-items:center; gap:8px; }
-    .qty button { width:36px; height:36px; border-radius:8px; border:1px solid #e5e7eb; background:#fff; }
-    .qty input { width:64px; height:36px; border:1px solid #e5e7eb; border-radius:8px; text-align:center; }
-    .btn[disabled] { opacity:.5; cursor:not-allowed; }
-    .toast {
-      position: fixed; right: 16px; bottom: 16px; background:#111827; color:white;
-      border-radius: 12px; padding: 10px 14px; box-shadow: 0 6px 20px rgba(0,0,0,.2); display:none;
-    }
-    .specs-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px 16px; }
-    .spec-name { color:#6b7280; font-weight:600; }
+    .page{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .cover{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:16px;box-shadow:var(--shadow-md);background:#fff}
+    .price-wrap{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+    .price-now.big{font-size:28px;line-height:1.1}
+    .stock{font-size:13px;padding:2px 8px;border-radius:999px;background:#f3f4f6}
+    .stock.ok{color:#057a55;background:#ecfdf5}.stock.low{color:#92400e;background:#fffbeb}.stock.out{color:#991b1b;background:#fef2f2}
+    .qty{display:flex;align-items:center;gap:8px}.qty button{width:36px;height:36px;border-radius:8px;border:1px solid var(--color-border);background:#fff}
+    .qty input{width:64px;height:36px;border:1px solid var(--color-border);border-radius:8px;text-align:center}
+    .rel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+    .rel-card{background:#fff;border:1px solid var(--color-border);border-radius:16px;padding:12px;text-decoration:none;color:inherit}
+    .rel-card img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:12px;background:#fff}
+    .rel-title{font-weight:600;margin:8px 0 4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .rel-price{font-weight:700}
+    .toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.2);display:none}
   </style>
 </head>
 <body>
-
 <header class="header">
   <div class="container inner">
     <a class="brand" href="index.html">
-      <img src="/assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a id="cartBadge" href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -48,29 +44,20 @@
   <nav class="breadcrumbs">
     <a href="index.html">Trang chủ</a><span class="sep">/</span>
     <a href="products.html">Sản phẩm</a><span class="sep">/</span>
-    <span id="bc-name">Đang tải…</span>
+    <span id="bc-name" class="muted">Đang tải…</span>
   </nav>
 
-  <div class="grid" style="grid-template-columns: 1fr 1fr; gap:24px">
-    <section>
-      <!-- ✅ chỉ 1 ảnh cover -->
-      <img id="cover" class="prod-thumb" src="/staff-frontend/assets/logo.svg" alt="Ảnh sản phẩm"
-           onerror="this.onerror=null; this.src='/staff-frontend/assets/logo.svg'">
-    </section>
-
+  <div class="page">
+    <section><img id="cover" class="cover" src="assets/img/placeholder.png" alt="Ảnh sản phẩm"></section>
     <section>
       <h1 class="h1" id="name">Đang tải…</h1>
-      <div class="muted mb-16" id="short">—</div>
-
-      <div class="h3">Giá</div>
+      <div class="muted mb-16" id="brand">—</div>
+      <div class="h3">Giá bán</div>
       <div class="price-wrap mb-8">
         <div class="price-now big" id="priceNow">Đang cập nhật</div>
-        <div class="price-old" id="priceOld" style="display:none"></div>
         <span class="stock" id="stockPill">—</span>
       </div>
-      <p class="muted" id="variantText" style="margin:6px 0 0"></p>
-
-      <div class="row mb-16" style="gap:12px; align-items:center">
+      <div class="row mb-16" style="gap:12px;align-items:center">
         <div class="qty">
           <button id="decBtn" aria-label="Giảm">−</button>
           <input id="qtyInput" aria-label="Số lượng" inputmode="numeric" value="1">
@@ -78,214 +65,217 @@
         </div>
         <button id="addBtn" class="btn btn-primary">Thêm vào giỏ</button>
       </div>
-
       <hr class="sep">
       <h2 class="h2">Thông số kỹ thuật</h2>
-      <div id="specs" class="specs-grid"><div class="muted">Đang cập nhật…</div></div>
-
+      <div id="specs" class="grid" style="grid-template-columns:1fr 1fr;gap:10px 16px">
+        <div class="muted">Đang cập nhật…</div>
+      </div>
       <h2 class="h2 mt-24">Mô tả chi tiết</h2>
       <p class="muted" id="desc">—</p>
     </section>
   </div>
+
+  <section class="mt-32">
+    <div class="space-between">
+      <h2 class="h2">Sản phẩm liên quan</h2>
+      <a class="btn btn-ghost" href="products.html">Xem tất cả</a>
+    </div>
+    <div id="related" class="rel-grid"><div class="muted">Đang tải…</div></div>
+  </section>
 </main>
 
-<footer class="footer">
-  <div class="container section">
-    <div class="copyright">© 2025 fonestore — All rights reserved.</div>
-  </div>
-</footer>
-
+<footer class="footer"><div class="container section"><div class="copyright">© 2025 fonestore</div></div></footer>
 <div id="toast" class="toast">Đã thêm vào giỏ hàng</div>
 
 <script>
 (() => {
   const BASE_URL = window.location.origin;
+  const PLACEHOLDER='assets/img/placeholder.png';
+  const $=s=>document.querySelector(s);
+  const money=n=>(n==null||isNaN(n))?'':Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'});
 
-  // ===== Helpers =====
-  const $ = (s) => document.querySelector(s);
-  const money = (n) => (n==null || isNaN(n)) ? '' :
-    Number(n).toLocaleString('vi-VN', { style:'currency', currency:'VND' });
+  const getId=()=>new URLSearchParams(location.search).get('id');
 
-  const getId = () => new URLSearchParams(location.search).get('id');
+  // ---- Cart helpers
+  function readCart(){try{return JSON.parse(localStorage.getItem('cart')||'[]')}catch{return[]}}
+  function saveCart(a){localStorage.setItem('cart',JSON.stringify(a));updateBadge();}
+  function updateBadge(){const t=readCart().reduce((s,it)=>s+(+it.qty||0),0);const el=$('#cartBadge');if(el)el.textContent=t?`Giỏ hàng (${t})`:'Giỏ hàng';}
 
-  function toImg(u){
-    if(!u) return '/staff-frontend/assets/logo.svg';
-    if (u.startsWith('http') || u.startsWith('/')) return u;
-    if (u.startsWith('products/')) return '/staff-frontend/assets/' + u;
-    return '/staff-frontend/assets/' + u;
-  }
+  function showToast(msg='Đã thêm vào giỏ hàng'){const t=$('#toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',1600);}
 
-  function showToast(msg='Đã thêm vào giỏ hàng'){
-    const t = $('#toast');
-    t.textContent = msg;
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 1600);
-  }
+  function toImg(u){ if(!u) return PLACEHOLDER; if(u.startsWith('http')||u.startsWith('/')) return u; return `/${u}`; }
 
-  function readCart(){
-    try { return JSON.parse(localStorage.getItem('cart') || '[]'); }
-    catch { return []; }
-  }
+  // ---- Price resolver (đã fix thiếu giá)
+function pickPrice(p) {
+  // 1) tiện ích parse số (kể cả "12.990.000" hay "12,990,000")
+  const toNum = (v) => {
+    if (v == null) return null;
+    if (typeof v === 'number') return isFinite(v) ? v : null;
+    if (typeof v === 'string') {
+      const s = v.replace(/[^\d.-]/g,''); // bỏ ký tự tiền tệ, dấu chấm/ngăn cách
+      if (!s || s === '-' || s === '.' ) return null;
+      const n = Number(s);
+      return isFinite(n) ? n : null;
+    }
+    return null;
+  };
 
-  function writeCart(cart){
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartBadge();
-  }
+  // 2) danh sách khóa “có mùi giá”
+  const priceKeys = [
+    'price','priceNow','salePrice','finalPrice','currentPrice','unitPrice',
+    'minPrice','maxPrice','priceMin','priceMax',
+    'gia','giaBan','giaKhuyenMai',
+    // snake_case:
+    'price_now','sale_price','final_price','current_price','unit_price',
+    'min_price','max_price','price_min','price_max'
+  ];
 
-  function updateCartBadge(){
-    const cart = readCart();
-    const totalQty = cart.reduce((sum, it) => sum + (Number(it.qty)||0), 0);
-    const el = $('#cartBadge');
-    el.textContent = totalQty ? `Giỏ hàng (${totalQty})` : 'Giỏ hàng';
-  }
-
-  function renderSpecs(specsJson){
-    const el = $('#specs'); el.innerHTML = '';
-    let obj = {};
-    try { obj = typeof specsJson === 'string' ? JSON.parse(specsJson || '{}') : (specsJson || {}); }
-    catch { obj = {}; }
-    const entries = Object.entries(obj);
-    if (!entries.length){
-      el.innerHTML = '<div class="muted">Đang cập nhật.</div>';
+  // 3) gom ứng viên giá từ object (đệ quy)
+  const candidates = [];
+  const visit = (obj, depth=0) => {
+    if (!obj || depth > 5) return; // tránh vòng lặp quá sâu
+    if (Array.isArray(obj)) {
+      obj.forEach(it => visit(it, depth+1));
       return;
     }
-    const labels = {
-      screen:'Màn hình', display:'Màn hình',
-      chip:'Chip', cpu:'CPU',
-      ram:'RAM', storage:'Bộ nhớ', rom:'Bộ nhớ',
-      rearCamera:'Camera sau', backCamera:'Camera sau',
-      frontCamera:'Camera trước', selfie:'Camera trước',
-      battery:'Pin', charge:'Sạc',
-      os:'Hệ điều hành', size:'Kích thước',
-      weight:'Khối lượng', refreshRate:'Tần số quét', sim:'SIM'
-    };
-    const fmt = (k)=> labels[k] ?? k.replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-    const frag = document.createDocumentFragment();
+    if (typeof obj === 'object') {
+      for (const [k, v] of Object.entries(obj)) {
+        const key = String(k).toLowerCase();
+        // nếu key có chữ 'price' hoặc 'gia' -> coi như giá
+        if (priceKeys.includes(key) || /price|gia/i.test(k)) {
+          const n = toNum(v);
+          if (n != null) candidates.push(n);
+        }
+        // duyệt sâu: nhiều BE lồng biến thể vào productVariants/variants/variantPrices...
+        if (v && (typeof v === 'object')) visit(v, depth+1);
+      }
+    }
+  };
+  visit(p);
+
+  // 4) nếu chưa có, thử đặc biệt cho mảng biến thể phổ biến
+  const varPaths = ['variants','productVariants','variantPrices','items','options'];
+  varPaths.forEach(path => {
+    const arr = p && Array.isArray(p[path]) ? p[path] : null;
+    if (arr) arr.forEach(it => visit(it, 1));
+  });
+
+  // 5) lọc >0 và lấy min
+  const valid = candidates.filter(n => typeof n === 'number' && n > 0);
+  if (!valid.length) return null;
+  return Math.min(...valid);
+}
+// --- HẾT HÀM pickPrice MỚI ---
+
+  function renderSpecs(specsJson){
+    const el=$('#specs'); el.innerHTML='';
+    let obj={}; try{obj=typeof specsJson==='string'?JSON.parse(specsJson||'{}'):(specsJson||{});}catch{obj={};}
+    const entries=Object.entries(obj);
+    if(!entries.length){el.innerHTML='<div class="muted">Đang cập nhật.</div>';return;}
+    const labels={screen:'Màn hình',display:'Màn hình',chip:'Chip',cpu:'CPU',ram:'RAM',storage:'Bộ nhớ',rom:'Bộ nhớ',rearCamera:'Camera sau',frontCamera:'Camera trước',battery:'Pin',charge:'Sạc',os:'Hệ điều hành'};
+    const fmt=k=>labels[k]??k.replace(/[_-]/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const frag=document.createDocumentFragment();
     entries.forEach(([k,v])=>{
-      const kEl = document.createElement('div'); kEl.className='spec-name'; kEl.textContent = fmt(k);
-      const vEl = document.createElement('div'); vEl.textContent = String(v ?? '');
-      frag.appendChild(kEl); frag.appendChild(vEl);
+      const a=document.createElement('div');a.className='muted';a.textContent=fmt(k);
+      const b=document.createElement('div');b.textContent=String(v??'');
+      frag.append(a,b);
     });
     el.appendChild(frag);
   }
 
-  // ===== Page logic =====
-  let product = null;
-  let stock = 0;
+  let product=null, stock=0;
 
-  async function load(){
-    const id = getId();
-    if(!id){
-      $('#main').innerHTML = '<div class="alert">Thiếu tham số id.</div>';
-      return;
-    }
-    const res = await fetch(`${BASE_URL}/api/public/products/${encodeURIComponent(id)}`);
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const p = await res.json();
-    product = p;
+  async function loadProduct(){
+    const id=getId(); if(!id){$('#main').innerHTML='<div class="alert">Thiếu tham số id.</div>';return;}
+    const res=await fetch(`${BASE_URL}/api/products/${encodeURIComponent(id)}`); if(!res.ok) throw new Error('HTTP '+res.status);
+    const p=await res.json();
 
-    // Breadcrumb + header
-    $('#bc-name').textContent = p.name || 'Sản phẩm';
-    $('#name').textContent = p.name || 'Sản phẩm';
-    $('#short').textContent = p.slug || '';
-    $('#desc').textContent = p.description || '';
+    const brandVal=(p.brandName??p.brand??p.manufacturer??p?.brand?.name??'').toString().trim();
+    $('#bc-name').textContent=p.name||'Sản phẩm';
+    $('#name').textContent=p.name||'Sản phẩm';
+    $('#brand').textContent=brandVal;
+    $('#desc').textContent=p.description||'(Chưa có mô tả)';
 
-    // Ảnh
-    const cover = $('#cover');
-    cover.src = toImg(p.imageUrl);
-    cover.onerror = () => { cover.onerror = null; cover.src = '/staff-frontend/assets/logo.svg'; };
+    const image = toImg(p.imagePath??p.imageUrl);
+    $('#cover').src=image; $('#cover').onerror=()=>{$('#cover').onerror=null;$('#cover').src=PLACEHOLDER;};
 
-    // Giá + tồn
-    const price = (p.price ?? p.minPrice ?? p.priceNow);
-    $('#priceNow').textContent = price ? money(price) : 'Liên hệ';
-    // (nếu bạn có thêm p.priceOld / p.discountPercent → hiển thị ở đây)
-    $('#priceOld').style.display = 'none';
+    const price = pickPrice(p);
+    $('#priceNow').textContent = (price!=null) ? money(price) : 'Liên hệ';
 
-    stock = Number(p.quantity ?? 0);
-    const pill = $('#stockPill');
-    if (stock <= 0) { pill.textContent = 'Tạm hết hàng'; pill.className = 'stock out'; }
-    else if (stock <= 5) { pill.textContent = `Còn ${stock}`; pill.className = 'stock low'; }
-    else { pill.textContent = 'Còn hàng'; pill.className = 'stock ok'; }
+    stock=Number(p.quantity??p.stock??0);
+    const pill=$('#stockPill');
+    if(stock<=0){pill.textContent='Tạm hết hàng';pill.className='stock out';}
+    else if(stock<=5){pill.textContent=`Còn ${stock}`;pill.className='stock low';}
+    else {pill.textContent='Còn hàng';pill.className='stock ok';}
 
-    $('#variantText').textContent = ''; // nếu sau này có biến thể thì set tại đây
-
-    // Specs
     renderSpecs(p.specsJson);
 
-    // Stepper init
-    const qtyInput = $('#qtyInput');
-    if (stock <= 0) {
-      qtyInput.value = 0;
-      qtyInput.disabled = true;
-      $('#decBtn').disabled = true;
-      $('#incBtn').disabled = true;
-      $('#addBtn').disabled = true;
-    } else {
-      qtyInput.value = 1;
-      qtyInput.disabled = false;
-      $('#decBtn').disabled = false;
-      $('#incBtn').disabled = false;
-      $('#addBtn').disabled = false;
+    product={...p,_brandNorm:brandVal.toLowerCase(),_price:price,_image:image};
+    initQty();
+  }
+
+  function initQty(){
+    const el=$('#qtyInput');
+    if((stock||0)<=0){
+      el.value=0;el.disabled=true;$('#decBtn').disabled=true;$('#incBtn').disabled=true;$('#addBtn').disabled=true;
+    }else{
+      el.value=1;el.disabled=false;$('#decBtn').disabled=false;$('#incBtn').disabled=false;$('#addBtn').disabled=false;
     }
   }
 
-  // ===== Events =====
-  $('#decBtn').addEventListener('click', () => {
-    const el = $('#qtyInput');
-    let v = Number(el.value || 1);
-    v = Math.max(1, v - 1);
-    el.value = v;
-  });
+  $('#decBtn').onclick=()=>{const el=$('#qtyInput');el.value=Math.max(1,Number(el.value||1)-1)};
+  $('#incBtn').onclick=()=>{const el=$('#qtyInput');el.value=Math.min(stock||99,Number(el.value||1)+1)};
+  $('#qtyInput').oninput=e=>{let v=parseInt(String(e.target.value).replace(/[^\d]/g,''),10);if(isNaN(v)||v<=0)v=1;e.target.value=Math.min(stock||99,v)};
 
-  $('#incBtn').addEventListener('click', () => {
-    const el = $('#qtyInput');
-    let v = Number(el.value || 1);
-    const max = stock > 0 ? stock : 99;
-    v = Math.min(max, v + 1);
-    el.value = v;
-  });
+  $('#addBtn').onclick=()=>{
+    if(!product) return;
+    if((stock||0)<=0){showToast('Sản phẩm tạm hết hàng');return;}
+    const qty=Number($('#qtyInput').value||1);
+    const id=product.productId??product.id;
+    const price = Number(product._price ?? 0);
+    const image = product._image;
+    const cart=readCart();
+    const idx=cart.findIndex(it=>String(it.id)===String(id));
+    if(idx>=0){ cart[idx].qty=Math.min((cart[idx].qty||0)+qty,stock||999); }
+    else{ cart.push({id,name:product.name,price,qty:Math.min(qty,stock||999),imageUrl:image,variant:''}); }
+    saveCart(cart); showToast('Đã thêm vào giỏ hàng');
+  };
 
-  $('#qtyInput').addEventListener('input', () => {
-    const el = $('#qtyInput');
-    let v = parseInt(String(el.value).replace(/[^\d]/g,''), 10);
-    if (isNaN(v)) v = 1;
-    const max = stock > 0 ? stock : 99;
-    v = Math.max(1, Math.min(max, v));
-    el.value = v;
-  });
-
-  $('#addBtn').addEventListener('click', () => {
-    if (!product) return;
-    if (stock <= 0) { showToast('Sản phẩm tạm hết hàng'); return; }
-    const qty = Number($('#qtyInput').value || 1);
-    if (qty <= 0) return;
-
-    const cart = readCart();
-    const idx = cart.findIndex(it => String(it.id) === String(product.id));
-    const price = (product.price ?? product.minPrice ?? product.priceNow) || 0;
-
-    if (idx >= 0) {
-      cart[idx].qty = Math.min((cart[idx].qty || 0) + qty, stock || 999);
-    } else {
-      cart.push({
-        id: product.id,
-        name: product.name,
-        price: price,
-        qty: Math.min(qty, stock || 999),
-        imageUrl: toImg(product.imageUrl)
+  async function loadRelated(){
+    try{
+      const r=await fetch(`${BASE_URL}/api/products`);
+      if(!r.ok) throw new Error();
+      const all=await r.json();
+      const norm=s=>(s??'').toString().trim().toLowerCase();
+      const current=norm(product?._brandNorm??product?.brandName??product?.brand??product?.manufacturer??product?.brand?.name);
+      let same=(all||[]).filter(it=> String(it.productId??it.id)!==String(product.productId??product.id) && norm(it.brandName??it.brand??it.manufacturer??it?.brand?.name)===current );
+      if(!same.length) same=(all||[]).filter(it=> String(it.productId??it.id)!==String(product.productId??product.id));
+      same=same.slice(0,8);
+      const wrap=$('#related'); wrap.innerHTML='';
+      same.forEach(p=>{
+        const relPrice = pickPrice(p);
+        const a=document.createElement('a'); a.className='rel-card'; a.href=`product-detail.html?id=${encodeURIComponent(p.productId??p.id)}`;
+        a.innerHTML=`
+          <img loading="lazy" src="${toImg(p.imagePath??p.imageUrl)}" onerror="this.onerror=null;this.src='assets/img/placeholder.png'">
+          <div class="rel-title">${p.name||''}</div>
+          <div class="rel-price">${relPrice!=null?money(relPrice):''}</div>`;
+        wrap.appendChild(a);
       });
+    }catch{
+      $('#related').innerHTML='<div class="muted">Không tải được danh sách liên quan.</div>';
     }
-    writeCart(cart);
-    showToast('Đã thêm vào giỏ hàng');
-  });
+  }
 
-  // init
-  updateCartBadge();
-  load().catch(err => {
-    console.error(err);
-    $('#main').innerHTML = '<div class="alert">Không tải được dữ liệu sản phẩm.</div>';
+  updateBadge();
+  Promise.resolve().then(loadProduct).then(loadRelated).catch(err=>{
+    $('#main').innerHTML='<div class="alert">Không tải được dữ liệu sản phẩm.</div>'; console.error(err)
   });
 })();
 </script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
 </body>
 </html>

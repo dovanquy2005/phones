@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Chi tiết đơn hàng — fonestore</title>
+
+  <!-- CSS gốc -->
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+
+  <style>
+    /* ========= SCOPED (không rò rỉ) ========= */
+    .order-page{
+      --sheet-pad: 20px;
+      --bg:#f6f7fb;--card:#fff;--bd:#e5e7eb;--ink:#0f172a;--muted:#667085;--brand:#2740ff;
+      --shadow:0 4px 14px rgba(17,24,39,.06);
+      --table-head:#fafbfc;
+      --tbl-pad:14px;
+    }
+    .order-page body{background:var(--bg);color:var(--ink)}
+    .order-page .container-narrow{max-width:1200px;margin:0 auto}
+    .order-page .sheet{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);padding:var(--sheet-pad)}
+    .order-page .muted{color:var(--muted)}
+    .order-page .wrap{min-height:calc(100vh - 64px - 120px)}
+    .order-page .num{white-space:nowrap;font-variant-numeric:tabular-nums}
+    .order-page .ta-r{text-align:right}.order-page .ta-c{text-align:center}
+    .order-page .nowrap{white-space:nowrap}
+
+    /* Header 1 dòng */
+    .order-page .order-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .order-page .oh-title{font-size:22px;font-weight:800;color:#111827;white-space:nowrap}
+    .order-page .oh-sep{color:var(--muted);user-select:none}
+    .order-page .oh-meta{color:var(--muted);white-space:nowrap}
+    .order-page .status{padding:6px 12px;border-radius:999px;font-weight:800;line-height:1;border:1px solid var(--bd);white-space:nowrap}
+    .order-page .st--PENDING{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+    .order-page .st--PAID,.order-page .st--COMPLETED,.order-page .st--DELIVERED{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .order-page .st--SHIPPED{background:#eef6ff;color:#0c63d6;border-color:#cfe4ff}
+    .order-page .st--CANCELLED,.order-page .st--FAILED{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+
+    /* Divider full-bleed */
+    .order-page .divider{height:1px;background:var(--bd);margin:16px calc(-1 * var(--sheet-pad))}
+
+    /* Summary */
+    .order-page .summary{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media (max-width:900px){.order-page .summary{grid-template-columns:1fr}}
+    .order-page .sum-box{border:1px dashed var(--bd);border-radius:12px;padding:16px}
+    .order-page .sum-title{font-size:15px;font-weight:900;margin:0 0 10px;color:#111827}
+    .order-page .sum-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+    .order-page .sum-row+.sum-row{border-top:1px solid var(--bd)}
+    .order-page .sum-label{color:var(--muted)}
+    .order-page .sum-grand{font-size:20px;font-weight:900}
+
+    .order-page .addr-grid{display:grid;grid-template-columns:120px 1fr;row-gap:8px;column-gap:10px}
+    .order-page .addr-grid .lbl{color:var(--muted);font-weight:700}
+    .order-page .addr-grid > div{word-break:break-word}
+    @media (max-width:520px){.order-page .addr-grid{grid-template-columns:100px 1fr}}
+
+    /* ===== Bảng thống nhất (.tbl) ===== */
+    .order-page .table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+    .order-page .tbl{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+    .order-page .tbl thead th{background:var(--table-head);color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:12px;text-align:left}
+    .order-page .tbl th,.order-page .tbl td{padding:var(--tbl-pad) var(--tbl-pad);vertical-align:middle}
+    .order-page .tbl tbody tr + tr td{border-top:1px solid var(--bd)}
+    .order-page .tbl tbody tr:hover td{background:#fbfcff}
+    .order-page .section-title{font-size:15px;margin:0 0 8px;color:#111827;font-weight:900;padding-left:var(--tbl-pad)}
+
+    /* Ưu tiên căn phải/giữa cho cả TH & TD (khắc phục lệch header) */
+    .order-page .tbl th.ta-r, .order-page .tbl td.ta-r { text-align:right; }
+    .order-page .tbl th.ta-c, .order-page .tbl td.ta-c { text-align:center; }
+
+    /* Cột % cố định cho 2 bảng để giàn đều */
+    .order-page .col-method{width:22% !important}
+    .order-page .col-status{width:16% !important}
+    .order-page .col-amount{width:16% !important}
+    .order-page .col-txn{width:22% !important}
+    .order-page .col-time{width:24% !important}
+
+    .order-page .col-carrier{width:16% !important}
+    .order-page .col-track{width:18% !important}
+    .order-page .col-shipstt{width:18% !important}
+    .order-page .col-fee{width:12% !important}
+    .order-page .col-created{width:18% !important}
+    .order-page .col-updated{width:18% !important}
+
+    /* ===== ORDER LINES (thiết kế mới) ===== */
+    .order-page .order-lines{display:flex;flex-direction:column;gap:16px}
+    .order-page .line{
+      display:grid;
+      grid-template-columns:72px 1fr 100px 140px 150px; /* img | info | qty | unit | total */
+      align-items:center;
+      gap:16px;
+      padding:12px 0;
+      border-bottom:1px solid var(--bd);
+    }
+    .order-page .line:last-child{border-bottom:none}
+    @media(max-width:840px){
+      .order-page .line{grid-template-columns:72px 1fr 70px 100px 110px;font-size:14px}
+    }
+    .order-page .line-img{width:72px;height:72px;border-radius:12px;object-fit:cover;background:#f8fafc;display:block}
+    .order-page .line-info{display:flex;flex-direction:column;gap:4px;min-width:0}
+    .order-page .line-name{font-weight:700;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .order-page .line-name a{text-decoration:none;color:inherit}
+    .order-page .line-name a:hover{text-decoration:underline}
+    .order-page .sku{font-size:12px;color:var(--muted)}
+    .order-page .attrs{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+    .order-page .attr{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;padding:2px 8px}
+    .order-page .price-meta{font-size:13px;color:var(--muted);margin-top:4px}
+    .order-page .old-price{text-decoration:line-through;opacity:.6;margin-right:6px}
+
+    /* Chips trạng thái */
+    .order-page .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;border:1px solid var(--bd);background:#f6f7ff;color:#3b4ad9;white-space:nowrap}
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section wrap order-page">
+  <div class="container-narrow">
+    <div style="margin-bottom:16px"><a href="orders.html">← Quay lại danh sách</a></div>
+
+    <!-- 1 CARD DUY NHẤT -->
+    <section class="sheet">
+
+      <!-- Header 1 dòng -->
+      <div class="order-head">
+        <span class="oh-title" id="ohTitle">Đơn hàng #—</span>
+        <span class="oh-sep">·</span>
+        <span id="hdrStatus" class="status">—</span>
+        <span class="oh-sep">·</span>
+        <span class="oh-meta" id="hdrCode">Mã đơn: #—</span>
+        <span class="oh-sep">·</span>
+        <span class="oh-meta" id="hdrCreated">Ngày tạo: —</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Summary strip -->
+      <div class="summary">
+        <div class="sum-box">
+          <h3 class="sum-title">Tổng kết</h3>
+          <div class="sum-row"><div class="sum-label">Tạm tính</div><div id="sumSub" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-label">Giảm giá</div><div id="sumDis" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-label">Phí vận chuyển</div><div id="sumShip" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-grand">Tổng cộng</div><div class="sum-grand num" id="sumTotal">—</div></div>
+        </div>
+
+        <div class="sum-box">
+          <h3 class="sum-title">Địa chỉ giao hàng</h3>
+          <div class="addr-grid">
+            <div class="lbl">Tên</div>     <div id="addrName">—</div>
+            <div class="lbl">SĐT</div>     <div id="addrPhone">—</div>
+            <div class="lbl">Địa chỉ</div> <div id="addrLine">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Sản phẩm (thiết kế mới) -->
+      <h3 class="section-title">Sản phẩm</h3>
+      <div class="order-lines">
+        <div id="lines"><div class="muted">Đang tải…</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Thanh toán -->
+      <h3 class="section-title">Thanh toán</h3>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th class="col-method">Phương thức</th>
+              <th class="col-status">Trạng thái</th>
+              <th class="ta-r col-amount">Số tiền</th>
+              <th class="col-txn">Mã giao dịch</th>
+              <th class="col-time">Thời gian</th>
+            </tr>
+          </thead>
+          <tbody id="payments">
+            <tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Vận chuyển -->
+      <h3 class="section-title">Vận chuyển</h3>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th class="col-carrier">ĐVVC</th>
+              <th class="col-track">Mã vận đơn</th>
+              <th class="col-shipstt">Trạng thái</th>
+              <th class="ta-r col-fee">Phí</th>
+              <th class="col-created">Tạo lúc</th>
+              <th class="col-updated">Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody id="ships">
+            <tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Ghi chú -->
+      <h3 class="section-title">Ghi chú</h3>
+      <div id="note" class="muted">—</div>
+
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container section"><div class="copyright">© 2025 fonestore</div></div>
+</footer>
+
+<script>
+(function(){
+  const API = "http://localhost:9090";
+  const qs = new URLSearchParams(location.search);
+  const orderId = qs.get('id');
+  if(!orderId){ location.replace('orders.html'); return; }
+
+  const $ = id => document.getElementById(id);
+  const VND = n => (Number(n||0)).toLocaleString('vi-VN') + ' đ';
+  const DT  = v => {
+    if(!v) return '';
+    if(typeof v === 'number'){ if(v < 1e12) v *= 1000; return new Date(v).toLocaleString('vi-VN'); }
+    const d = new Date(v); return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN');
+  };
+  const PLACEHOLDER = 'assets/img/placeholder.png';
+
+  // Header
+  $('ohTitle').textContent = `Đơn hàng #${orderId}`;
+  $('hdrCode').textContent = `Mã đơn: #${orderId}`;
+
+  fetch(`${API}/api/public/orders/${encodeURIComponent(orderId)}?t=${Date.now()}`)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(o => {
+      // Trạng thái
+      const s = String(o.status||'').toUpperCase();
+      const sEl = $('hdrStatus');
+      sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='PAID'?'Đã thanh toán':
+                         s==='DELIVERED'?'Đã giao': s==='SHIPPED'?'Đang giao':
+                         s==='CANCELLED'?'Đã hủy': s==='FAILED'?'Thất bại': (o.status||'—'));
+      sEl.className = 'status st--'+s.replace(/\s+/g,'_');
+
+      // Ngày tạo
+      const created = o.createdAt ?? o.created_at ?? o.createdDate ?? o.created_on;
+      $('hdrCreated').textContent = `Ngày tạo: ${DT(created)}`;
+
+      // ===== SẢN PHẨM (list) =====
+      const lines = Array.isArray(o.lines) ? o.lines : (Array.isArray(o.orderLines)?o.orderLines:[]);
+      $('lines').innerHTML = lines.length ? lines.map(l=>{
+        const name = l.productName || l.name || 'Sản phẩm';
+        const pid  = l.productId ?? l.pid ?? l.product_id ?? '';
+        const href = pid ? `product.html?id=${encodeURIComponent(pid)}` : '#';
+        const sku  = l.sku ?? l.skuId ?? l.variantCode ?? '';
+        const img  = l.image || l.thumbnail || l.thumbUrl || l.picture || PLACEHOLDER;
+
+        // Thuộc tính biến thể (fallback)
+        const color = l.color || l.variantColor || l.attributes?.color;
+        const ram   = l.ram   || l.variantRam   || l.attributes?.ram;
+        const rom   = l.rom   || l.variantRom   || l.attributes?.rom;
+        const condition = l.condition || l.grade;
+
+        const attrs = [color && `Màu: ${color}`, ram && `RAM ${ram}`, rom && `ROM ${rom}`, condition && `Tình trạng: ${condition}`]
+                      .filter(Boolean).map(v=>`<div class="attr">${v}</div>`).join('');
+
+        const qty  = Number(l.qty ?? l.quantity ?? 0);
+        const unit = Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0);
+        const total= unit * qty;
+        const old  = Number(l.oldPrice ?? l.originalPrice ?? 0);
+
+        // IMEI/Serial
+        let imeis = [];
+        if (Array.isArray(l.imeis)) imeis = l.imeis;
+        else if (typeof l.imei === 'string' && l.imei.trim()) imeis = [l.imei];
+        const imeiBlock = imeis.length ? `<div class="price-meta">IMEI: ${imeis.join(', ')}</div>` : '';
+
+        /* onerror → placeholder để tránh icon vỡ */
+        const imgTag = `<img src="${img}" loading="lazy" class="line-img" alt=""
+                           onerror="this.onerror=null;this.src='${PLACEHOLDER}';">`;
+
+        return `
+        <div class="line">
+          ${imgTag}
+          <div class="line-info">
+            <div class="line-name"><a href="${href}" target="_blank" rel="noopener">${name}</a></div>
+            <div class="sku">SKU #${sku || '—'}</div>
+            ${attrs ? `<div class="attrs">${attrs}</div>` : ''}
+            <div class="price-meta">
+              ${old && old>unit ? `<span class="old-price">${old.toLocaleString('vi-VN')} đ</span>` : ''}
+            </div>
+            ${imeiBlock}
+          </div>
+          <div class="ta-c">${qty}</div>
+          <div class="ta-r num">${unit.toLocaleString('vi-VN')} đ</div>
+          <div class="ta-r num">${total.toLocaleString('vi-VN')} đ</div>
+        </div>`;
+      }).join('') : '<div class="muted">Không có sản phẩm.</div>';
+
+      // ===== TỔNG KẾT =====
+      const clientSub = lines.reduce((s,l)=> s + Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0) * Number(l.qty ?? l.quantity ?? 0), 0);
+      const subtotal  = (o.subtotal!=null) ? o.subtotal : clientSub;
+      const discount  = o.discount ?? o.promotionDiscount ?? o.voucherDiscount ?? 0;
+      const shipFee   = o.shippingFee ?? o.shipping_fee ?? 0;
+      const total     = (o.total!=null) ? o.total : (subtotal - discount + shipFee);
+
+      $('sumSub').textContent   = VND(subtotal);
+      $('sumDis').textContent   = VND(discount);
+      $('sumShip').textContent  = VND(shipFee);
+      $('sumTotal').textContent = VND(total);
+
+      // ===== Ghi chú =====
+      $('note').textContent = (o.note && String(o.note).trim()) ? o.note : '—';
+
+      // ===== Địa chỉ =====
+      const setAddr = (name, phone, addr) => {
+        $('addrName').textContent  = name  || '—';
+        $('addrPhone').textContent = phone || '—';
+        $('addrLine').textContent  = addr  || '—';
+      };
+      let snap = o.addressSnapshot ?? o.shippingAddress ?? o.address;
+      if(typeof snap === 'string'){
+        try{
+          const a = JSON.parse(snap);
+          setAddr(a.name||a.fullname||a.fullName, a.phone||a.tel, a.address||[a.line1,a.line2,a.city,a.province,a.postalCode].filter(Boolean).join(', '));
+        }catch{ setAddr(null,null,snap); }
+      }else if(typeof snap === 'object' && snap){
+        setAddr(snap.name||snap.fullname||snap.fullName, snap.phone||snap.tel, snap.address||[snap.line1,snap.line2,snap.city,snap.province,snap.postalCode].filter(Boolean).join(', '));
+      }else{
+        setAddr(null,null,null);
+      }
+
+      // ===== Payments =====
+      const payments = Array.isArray(o.payments)? o.payments : [];
+      document.getElementById('payments').innerHTML = payments.length ? payments.map(p=>`
+        <tr>
+          <td class="col-method">${p.method || p.provider || '—'}</td>
+          <td class="col-status ta-c"><span class="pill">${p.status || '—'}</span></td>
+          <td class="col-amount num ta-r">${VND(p.amount)}</td>
+          <td class="col-txn">${p.txnRef || p.txnId || p.transactionId || ''}</td>
+          <td class="col-time nowrap">${DT(p.createdAt || p.paidAt)}</td>
+        </tr>`).join('') : '<tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>';
+
+      // ===== Shipments =====
+      const ships = Array.isArray(o.shipments)? o.shipments : [];
+      document.getElementById('ships').innerHTML = ships.length ? ships.map(s=>`
+        <tr>
+          <td class="col-carrier">${s.carrier || s.provider || '—'}</td>
+          <td class="col-track">${s.trackingNo || s.tracking || '—'}</td>
+          <td class="col-shipstt ta-c"><span class="pill">${s.status || '—'}</span></td>
+          <td class="col-fee num ta-r">${VND(s.fee)}</td>
+          <td class="col-created nowrap">${DT(s.createdAt)}</td>
+          <td class="col-updated nowrap">${DT(s.updatedAt)}</td>
+        </tr>`).join('') : '<tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>';
+    })
+    .catch(err=>{
+      console.error(err);
+      alert('Không tải được chi tiết đơn hàng. Vui lòng thử lại.');
+      location.replace('orders.html');
+    });
+})();
+</script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
+</body>
+</html>

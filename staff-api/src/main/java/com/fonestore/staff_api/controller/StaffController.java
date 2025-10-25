@@ -1,12 +1,15 @@
 package com.fonestore.staff_api.controller;
 
+
 import com.fonestore.staff_api.dto.staff.StaffCreateRequest;
 import com.fonestore.staff_api.dto.staff.StaffResponse;
+
 import com.fonestore.staff_api.service.StaffService;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Qualifier;
+
+
 
 import org.springframework.data.domain.Page;
 
@@ -17,7 +20,7 @@ import org.springframework.data.domain.Sort;
 @RequestMapping("/api/staff")
 public class StaffController {
     private final StaffService service;
-    public StaffController(@Qualifier("staffStaffService") StaffService service) { this.service = service; }
+    public StaffController(StaffService service) { this.service = service; }
 
     @PostMapping public StaffResponse create(@RequestBody StaffCreateRequest r) { return service.create(r); }
 

@@ -1,13 +1,22 @@
 <!doctype html>
 <html lang="vi"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Hỗ trợ — fonestore</title><link rel="stylesheet" href="assets/css/base.css"/><link rel="stylesheet" href="assets/css/components.css"/></head>
+<title>Hỗ trợ — fonestore</title><link rel="stylesheet" href="assets/css/base.css"/><link rel="stylesheet" href="assets/css/components.css"/>  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+</head>
 <body>
-<header class="header"><div class="container inner">
-  <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span></a>
-  <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
-  <nav class="nav"><a href="products.html">Sản phẩm</a><a href="cart.html" class="badge badge-cart">Giỏ hàng</a><a href="login.html">Đăng nhập</a>
-      <a href="help.html">Hỗ trợ</a></nav>
-</div></header>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
 <main class="container section">
   <h1 class="h1">FAQ — Câu hỏi thường gặp</h1>
   <div class="card p-16">
@@ -17,4 +26,10 @@
   </div>
 </main>
 <footer class="footer"><div class="container section"><div class="copyright">© 2025 fonestore</div></div></footer>
+  <script src="assets/js/auth.js"></script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
 </body></html>

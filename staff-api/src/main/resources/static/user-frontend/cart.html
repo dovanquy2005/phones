@@ -3,9 +3,78 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Thanh toán — fonestore</title>
+  <title>Chi tiết đơn hàng — fonestore</title>
+
+  <!-- CSS gốc (không đổi) -->
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+
+  <style>
+    /* =============================
+       SCOPED STYLES — ORDER PAGE ONLY
+       Không ảnh hưởng CSS toàn site
+    ============================== */
+    .order-page{
+      --sheet-pad: 20px;
+      --bg:#f6f7fb;--card:#fff;--bd:#e5e7eb;--ink:#0f172a;--muted:#667085;--brand:#2740ff;
+      --shadow:0 4px 14px rgba(17,24,39,.06);
+      --table-head:#fafbfc;
+      --tbl-pad:14px; /* pad cho ô bảng + canh tiêu đề section */
+    }
+    .order-page body{background:var(--bg);color:var(--ink)}
+    .order-page .container-narrow{max-width:1200px;margin:0 auto}
+    .order-page .sheet{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);padding:var(--sheet-pad)}
+    .order-page .muted{color:var(--muted)}
+    .order-page .wrap{min-height:calc(100vh - 64px - 120px)}
+
+    /* Header 1 dòng (chỉ style nội bộ) */
+    .order-page .order-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .order-page .oh-title{font-size:22px;font-weight:800;color:#111827;white-space:nowrap}
+    .order-page .oh-sep{color:var(--muted);user-select:none}
+    .order-page .oh-meta{color:var(--muted);white-space:nowrap}
+    .order-page .status{padding:6px 12px;border-radius:999px;font-weight:800;line-height:1;border:1px solid var(--bd);white-space:nowrap}
+    .order-page .st--PENDING{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+    .order-page .st--PAID,.order-page .st--COMPLETED,.order-page .st--DELIVERED{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .order-page .st--SHIPPED{background:#eef6ff;color:#0c63d6;border-color:#cfe4ff}
+    .order-page .st--CANCELLED,.order-page .st--FAILED{background:#fef2f2;color:#991b1b;border-color:#fecaca}
+
+    /* Divider full-bleed theo padding card */
+    .order-page .divider{height:1px;background:var(--bd);margin:16px calc(-1 * var(--sheet-pad))}
+
+    /* Strip: Tổng kết + Địa chỉ */
+    .order-page .summary{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+    @media (max-width:900px){.order-page .summary{grid-template-columns:1fr}}
+    .order-page .sum-box{border:1px dashed var(--bd);border-radius:12px;padding:16px}
+    .order-page .sum-title{font-size:15px;font-weight:900;margin:0 0 10px;color:#111827}
+    .order-page .sum-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+    .order-page .sum-row+.sum-row{border-top:1px solid var(--bd)}
+    .order-page .sum-label{color:var(--muted)}
+    .order-page .sum-grand{font-size:20px;font-weight:900}
+    .order-page .num{white-space:nowrap;font-variant-numeric:tabular-nums}
+
+    .order-page .addr-grid{display:grid;grid-template-columns:120px 1fr;row-gap:8px;column-gap:10px}
+    .order-page .addr-grid .lbl{color:var(--muted);font-weight:700}
+    .order-page .addr-grid > div{word-break:break-word}
+    @media (max-width:520px){.order-page .addr-grid{grid-template-columns:100px 1fr}}
+
+    /* BẢNG THỐNG NHẤT (scoped) */
+    .order-page .table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
+    .order-page .tbl{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+    .order-page .tbl thead th{background:var(--table-head);color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:12px;text-align:left}
+    .order-page .tbl th,.order-page .tbl td{padding:var(--tbl-pad) var(--tbl-pad);vertical-align:middle}
+    .order-page .tbl tbody tr + tr td{border-top:1px solid var(--bd)}
+    .order-page .tbl tbody tr:hover td{background:#fbfcff}
+    .order-page .ta-r{text-align:right}.order-page .ta-c{text-align:center}
+
+    /* Tiêu đề section canh cùng lề ô bảng */
+    .order-page .section-title{font-size:15px;margin:0 0 8px;color:#111827;font-weight:900;padding-left:var(--tbl-pad)}
+
+    /* Tên sản phẩm & SKU */
+    .order-page .prod-name{font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .order-page .sku{font-size:12px;color:var(--muted);margin-top:4px}
+    .order-page .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;border:1px solid var(--bd);background:#f6f7ff;color:#3b4ad9;white-space:nowrap}
+  </style>
 </head>
 <body>
 <header class="header">
@@ -13,374 +82,275 @@
     <a class="brand" href="index.html">
       <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
   </div>
 </header>
 
-<main class="container section">
-  <h1 class="h1">Thanh toán</h1>
+<main class="container section wrap order-page">
+  <div class="container-narrow">
+    <div style="margin-bottom:16px"><a href="orders.html">← Quay lại danh sách</a></div>
 
-  <div class="grid" style="grid-template-columns: 1fr 360px; gap:24px">
-    <!-- Form thông tin -->
-    <form id="checkout-form" class="card p-16" novalidate>
-      <div class="grid grid-cols-2">
-        <div class="field">
-          <label class="label" for="fullName">Họ và tên</label>
-          <input class="input" id="fullName" placeholder="VD: Nguyễn Văn A" required>
-        </div>
-        <div class="field">
-          <label class="label" for="email">Email</label>
-          <input class="input" id="email" type="email" placeholder="email@domain.com" required>
-        </div>
-        <div class="field">
-          <label class="label" for="phone">Số điện thoại</label>
-          <input class="input" id="phone" placeholder="09xxxxxxxx" pattern="[0-9]{9,11}" required>
-          <small class="help">9–11 số, chỉ chứa 0–9</small>
-        </div>
-        <div class="field" style="grid-column:1/-1">
-          <label class="label" for="address">Địa chỉ nhận hàng</label>
-          <input class="input" id="address" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành" required>
-        </div>
-        <div class="field" style="grid-column:1/-1">
-          <label class="label" for="note">Ghi chú</label>
-          <textarea class="textarea" id="note" rows="3" placeholder="(Không bắt buộc)"></textarea>
-        </div>
+    <!-- 1 CARD DUY NHẤT -->
+    <section class="sheet">
+
+      <!-- Header 1 dòng -->
+      <div class="order-head">
+        <span class="oh-title" id="ohTitle">Đơn hàng #—</span>
+        <span class="oh-sep">·</span>
+        <span id="hdrStatus" class="status">—</span>
+        <span class="oh-sep">·</span>
+        <span class="oh-meta" id="hdrCode">Mã đơn: #—</span>
+        <span class="oh-sep">·</span>
+        <span class="oh-meta" id="hdrCreated">Ngày tạo: —</span>
       </div>
 
-      <div class="mt-16">
-        <div class="label">Phương thức thanh toán</div>
-        <label class="row mt-8">
-          <input type="radio" name="pay" value="COD" checked>
-          <span>COD (khi nhận hàng)</span>
-        </label>
-      </div>
+      <div class="divider"></div>
 
-      <div id="form-error" class="alert mt-16" style="display:none"></div>
-      <button id="btn-order" class="btn btn-primary mt-24" type="submit">Đặt hàng</button>
-    </form>
+      <!-- Summary strip -->
+      <div class="summary">
+        <div class="sum-box">
+          <h3 class="sum-title">Tổng kết</h3>
+          <div class="sum-row"><div class="sum-label">Tạm tính</div><div id="sumSub" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-label">Giảm giá</div><div id="sumDis" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-label">Phí vận chuyển</div><div id="sumShip" class="num">—</div></div>
+          <div class="sum-row"><div class="sum-grand">Tổng cộng</div><div class="sum-grand num" id="sumTotal">—</div></div>
+        </div>
 
-    <!-- Tóm tắt đơn hàng -->
-    <aside>
-      <div class="summary" id="summary">
-        <div class="h3">Tóm tắt đơn hàng</div>
-
-        <div id="summary-items" class="mt-8"></div>
-
-        <!-- Voucher -->
-        <div class="mt-12">
-          <label for="voucher" class="label">Mã giảm giá</label>
-          <div class="row">
-            <input id="voucher" class="input" placeholder="Nhập mã (ví dụ: FONE50K, FONE5, FREESHIP)">
-            <button id="btn-apply" class="btn" style="margin-left:8px">Áp dụng</button>
-          </div>
-          <div id="voucher-note" class="help" style="margin-top:6px; display:none;"></div>
-          <div id="voucher-pill" class="badge" style="display:none; margin-top:8px;">
-            <span id="voucher-code">CODE</span>
-            <a href="#" id="voucher-remove" class="btn-ghost" style="margin-left:8px">Bỏ</a>
+        <div class="sum-box">
+          <h3 class="sum-title">Địa chỉ giao hàng</h3>
+          <div class="addr-grid">
+            <div class="lbl">Tên</div>     <div id="addrName">—</div>
+            <div class="lbl">SĐT</div>     <div id="addrPhone">—</div>
+            <div class="lbl">Địa chỉ</div> <div id="addrLine">—</div>
           </div>
         </div>
-
-        <hr class="sep">
-        <div class="row"><span>Tạm tính</span><span id="sum-sub">0₫</span></div>
-        <div class="row" id="row-discount" style="display:none;"><span>Giảm giá</span><span id="sum-discount">−0₫</span></div>
-        <div class="row"><span>Phí vận chuyển</span><span id="sum-ship">0₫</span></div>
-        <div class="row total"><span>Tổng cộng</span><span id="sum-total">0₫</span></div>
-        <p class="help" id="ship-help">Miễn phí ship cho đơn từ 5.000.000₫</p>
       </div>
-    </aside>
+
+      <div class="divider"></div>
+
+      <!-- Sản phẩm -->
+      <h3 class="section-title">Sản phẩm</h3>
+      <div class="table-wrap">
+        <table class="tbl">
+          <colgroup>
+            <col style="width:56%">
+            <col style="width:10%">
+            <col style="width:17%">
+            <col style="width:17%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Sản phẩm</th>
+              <th class="ta-c">SL</th>
+              <th class="ta-r">Đơn giá</th>
+              <th class="ta-r">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody id="lines">
+            <tr><td colspan="4" class="muted">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Thanh toán -->
+      <h3 class="section-title">Thanh toán</h3>
+      <div class="table-wrap">
+        <table class="tbl">
+          <colgroup>
+            <col>                     <!-- Phương thức -->
+            <col style="width:160px"> <!-- Trạng thái -->
+            <col style="width:160px"> <!-- Số tiền -->
+            <col>                     <!-- Mã giao dịch -->
+            <col style="width:200px"> <!-- Thời gian -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Phương thức</th>
+              <th>Trạng thái</th>
+              <th class="ta-r">Số tiền</th>
+              <th>Mã giao dịch</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody id="payments">
+            <tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Vận chuyển -->
+      <h3 class="section-title">Vận chuyển</h3>
+      <div class="table-wrap">
+        <table class="tbl">
+          <colgroup>
+            <col style="width:160px"> <!-- ĐVVC -->
+            <col style="width:200px"> <!-- Mã vận đơn -->
+            <col>                     <!-- Trạng thái -->
+            <col style="width:150px"> <!-- Phí -->
+            <col style="width:200px"> <!-- Tạo lúc -->
+            <col style="width:200px"> <!-- Cập nhật -->
+          </colgroup>
+          <thead>
+            <tr>
+              <th>ĐVVC</th>
+              <th>Mã vận đơn</th>
+              <th>Trạng thái</th>
+              <th class="ta-r">Phí</th>
+              <th>Tạo lúc</th>
+              <th>Cập nhật</th>
+            </tr>
+          </thead>
+          <tbody id="ships">
+            <tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Ghi chú -->
+      <h3 class="section-title">Ghi chú</h3>
+      <div id="note" class="muted">—</div>
+
+    </section>
   </div>
 </main>
 
 <footer class="footer">
-  <div class="container section">
-    <div class="copyright">© 2025 fonestore</div>
-  </div>
+  <div class="container section"><div class="copyright">© 2025 fonestore</div></div>
 </footer>
 
 <script>
-(() => {
-  // ====== Config & helpers ======
-  const BASE_URL = window.location.origin;
-  const CART_KEY = 'fonestore_cart_v2';
-  const FREE_SHIP_THRESHOLD = 5_000_000;
-  const SHIP_FEE = 30_000;
+(function(){
+  const API = "http://localhost:9090";
+  const qs = new URLSearchParams(location.search);
+  const orderId = qs.get('id');
+  if(!orderId){ location.replace('orders.html'); return; }
 
-  // Fallback rules (khi không có API voucher)
-  // - FONE50K   : giảm 50.000đ
-  // - FONE5     : giảm 5% (tối đa 200.000đ)
-  // - FREESHIP  : miễn phí vận chuyển
-  const FALLBACK_VOUCHERS = {
-    'FONE50K': { type:'amount',  value: 50_000 },
-    'FONE5'  : { type:'percent', value: 5, max: 200_000 },
-    'FREESHIP':{ type:'freeship' }
+  const $ = id => document.getElementById(id);
+  const VND = n => (Number(n||0)).toLocaleString('vi-VN') + ' đ';
+  const DT  = v => {
+    if(!v) return '';
+    if(typeof v === 'number'){ if(v < 1e12) v *= 1000; return new Date(v).toLocaleString('vi-VN'); }
+    const d = new Date(v); return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN');
   };
 
-  const money = n => (Number(n||0)).toLocaleString('vi-VN', { style:'currency', currency:'VND' });
-  const clamp = (n, min, max) => Math.max(min, Math.min(max, Number(n||0)));
+  // Header
+  $('ohTitle').textContent = `Đơn hàng #${orderId}`;
+  $('hdrCode').textContent = `Mã đơn: #${orderId}`;
 
-  // ====== Load/Save Cart ======
-  function loadCart(){
-    const tryParse = k => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch { return []; } };
-    let arr = tryParse(CART_KEY);
-    if (!arr.length) arr = tryParse('fonestore_cart'); // fallback key cũ nếu có
+  fetch(`${API}/api/public/orders/${encodeURIComponent(orderId)}?t=${Date.now()}`)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(o => {
+      // Trạng thái
+      const s = String(o.status||'').toUpperCase();
+      const sEl = $('hdrStatus');
+      sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='PAID'?'Đã thanh toán':
+                         s==='DELIVERED'?'Đã giao': s==='SHIPPED'?'Đang giao':
+                         s==='CANCELLED'?'Đã hủy': s==='FAILED'?'Thất bại': (o.status||'—'));
+      sEl.className = 'status st--'+s.replace(/\s+/g,'_');
 
-    return arr.map(x => ({
-      id: x.id ?? x.productId ?? x.skuId ?? x.product_id,
-      name: x.name ?? '(Không tên)',
-      price: Number(x.price ?? x.priceNow ?? x.minPrice ?? 0),
-      qty: clamp(x.qty ?? x.quantity ?? 1, 1, 99),
-      imageUrl: x.imageUrl ?? x.thumbnailUrl ?? x.cover ?? x.image ?? null,
-      variant: (x.variant ?? x.variantText ?? [x.color, x.capacity].filter(Boolean).join(' • ')) || '',
-      slug: x.slug ?? '',
-    })).filter(i => i.id != null);
-  }
-  function saveCart(arr){ localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+      // Ngày tạo
+      const created = o.createdAt ?? o.created_at ?? o.createdDate ?? o.created_on;
+      $('hdrCreated').textContent = `Ngày tạo: ${DT(created)}`;
 
-  // ====== Voucher load/save ======
-  function loadVoucher(){
-    try { return JSON.parse(localStorage.getItem('fs_voucher_v1') || 'null'); } catch { return null; }
-  }
-  function saveVoucher(v){ if (v) localStorage.setItem('fs_voucher_v1', JSON.stringify(v)); else localStorage.removeItem('fs_voucher_v1'); }
+      // Dòng hàng
+      const lines = Array.isArray(o.lines) ? o.lines : (Array.isArray(o.orderLines)?o.orderLines:[]);
+      $('lines').innerHTML = lines.length ? lines.map(l=>{
+        const name = l.productName || l.name || 'Sản phẩm';
+        const sku  = l.skuId ?? l.sku ?? l.variantCode ?? '';
+        const unit = Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0);
+        const qty  = Number(l.qty ?? l.quantity ?? 0);
+        const total= unit * qty;
+        return `
+          <tr>
+            <td>
+              <div class="prod-name">${name}</div>
+              <div class="sku">SKU ${sku ? `<span class="pill">#${sku}</span>` : '—'}</div>
+            </td>
+            <td class="ta-c">${qty}</td>
+            <td class="num ta-r">${VND(unit)}</td>
+            <td class="num ta-r">${VND(total)}</td>
+          </tr>`;
+      }).join('') : '<tr><td colspan="4" class="muted">Không có sản phẩm.</td></tr>';
 
-  // ====== DOM refs ======
-  const elItems    = document.getElementById('summary-items');
-  const elSub      = document.getElementById('sum-sub');
-  const elShip     = document.getElementById('sum-ship');
-  const elTotal    = document.getElementById('sum-total');
-  const elHelp     = document.getElementById('ship-help');
-  const elForm     = document.getElementById('checkout-form');
-  const elBtn      = document.getElementById('btn-order');
-  const elErr      = document.getElementById('form-error');
-  const elDiscRow  = document.getElementById('row-discount');
-  const elDiscVal  = document.getElementById('sum-discount');
+      // Tổng kết
+      const clientSub = lines.reduce((s,l)=> s + Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0) * Number(l.qty ?? l.quantity ?? 0), 0);
+      const subtotal  = (o.subtotal!=null) ? o.subtotal : clientSub;
+      const discount  = o.discount ?? o.promotionDiscount ?? o.voucherDiscount ?? 0;
+      const shipFee   = o.shippingFee ?? o.shipping_fee ?? 0;
+      const total     = (o.total!=null) ? o.total : (subtotal - discount + shipFee);
 
-  const elVoucher      = document.getElementById('voucher');
-  const elApply        = document.getElementById('btn-apply');
-  const elVNote        = document.getElementById('voucher-note');
-  const elVPill        = document.getElementById('voucher-pill');
-  const elVCode        = document.getElementById('voucher-code');
-  const elVRemove      = document.getElementById('voucher-remove');
+      $('sumSub').textContent   = VND(subtotal);
+      $('sumDis').textContent   = VND(discount);
+      $('sumShip').textContent  = VND(shipFee);
+      $('sumTotal').textContent = VND(total);
 
-  let cart = loadCart();
-  let voucher = loadVoucher(); // {code, type, value, max?, freeship?}
+      // Ghi chú
+      $('note').textContent = (o.note && String(o.note).trim()) ? o.note : '—';
 
-  // ====== Voucher helpers ======
-  function computeDiscount(subtotal, v){
-    if (!v) return { discount:0, freeship:false };
-    if (v.type === 'amount')  return { discount: Math.min(Number(v.value||0), subtotal), freeship:false };
-    if (v.type === 'percent') {
-      const raw = subtotal * (Number(v.value||0)/100);
-      const capped = Math.min( raw, Number(v.max||Infinity) );
-      return { discount: Math.floor(capped), freeship:false };
-    }
-    if (v.type === 'freeship') return { discount:0, freeship:true };
-    return { discount:0, freeship:false };
-  }
-
-  async function validateVoucher(code, subtotal){
-    // 1) thử gọi API nếu backend có (an toàn: bắt lỗi & fallback)
-    try {
-      const res = await fetch(`${BASE_URL}/api/public/vouchers/validate?code=${encodeURIComponent(code)}&subtotal=${encodeURIComponent(subtotal)}`, { method:'GET' });
-      if (res.ok){
-        const data = await res.json();
-        // kỳ vọng server trả: {code,type,value,max,freeship,message}
-        if (data && data.code) return { ok:true, voucher:data, message:data.message || 'Áp dụng thành công.' };
+      // Địa chỉ
+      const setAddr = (name, phone, addr) => {
+        $('addrName').textContent  = name  || '—';
+        $('addrPhone').textContent = phone || '—';
+        $('addrLine').textContent  = addr  || '—';
+      };
+      let snap = o.addressSnapshot ?? o.shippingAddress ?? o.address;
+      if(typeof snap === 'string'){
+        try{
+          const a = JSON.parse(snap);
+          setAddr(a.name||a.fullname||a.fullName, a.phone||a.tel, a.address||[a.line1,a.line2,a.city,a.province,a.postalCode].filter(Boolean).join(', '));
+        }catch{ setAddr(null,null,snap); }
+      }else if(typeof snap === 'object' && snap){
+        setAddr(snap.name||snap.fullname||snap.fullName, snap.phone||snap.tel, snap.address||[snap.line1,snap.line2,snap.city,snap.province,snap.postalCode].filter(Boolean).join(', '));
+      }else{
+        setAddr(null,null,null);
       }
-    } catch(_) { /* bỏ qua, xuống fallback */ }
 
-    // 2) Fallback: rule local
-    const key = code.toUpperCase();
-    const rule = FALLBACK_VOUCHERS[key];
-    if (!rule) return { ok:false, message:'Mã không hợp lệ.' };
+      // Payments
+      const payments = Array.isArray(o.payments)? o.payments : [];
+      document.getElementById('payments').innerHTML = payments.length ? payments.map(p=>`
+        <tr>
+          <td>${p.method || p.provider || '—'}</td>
+          <td><span class="pill">${p.status || '—'}</span></td>
+          <td class="num ta-r">${VND(p.amount)}</td>
+          <td>${p.txnRef || p.txnId || p.transactionId || ''}</td>
+          <td>${DT(p.createdAt || p.paidAt)}</td>
+        </tr>`).join('') : '<tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>';
 
-    const v = { code:key, ...rule };
-    const { discount } = computeDiscount(subtotal, v);
-    if (discount===0 && rule.type!=='freeship') return { ok:false, message:'Đơn hàng chưa đáp ứng điều kiện mã này.' };
-
-    return { ok:true, voucher:v, message:'Áp dụng thành công.' };
-  }
-
-  function showVoucherUI(){
-    if (voucher){
-      elVPill.style.display = '';
-      elVCode.textContent = voucher.code;
-      elVoucher.value = voucher.code;
-      elVNote.style.display = 'none';
-    } else {
-      elVPill.style.display = 'none';
-      elVNote.style.display = 'none';
-      elVoucher.value = '';
-    }
-  }
-
-  // ====== Render summary ======
-  function renderSummary(){
-    elItems.innerHTML = '';
-    if (!cart.length){
-      elItems.innerHTML = '<div class="alert">Giỏ hàng trống. <a href="products.html">Tiếp tục mua sắm</a>.</div>';
-      elSub.textContent = money(0);
-      elDiscRow.style.display = 'none';
-      elShip.textContent = money(0);
-      elTotal.textContent = money(0);
-      elHelp.textContent = 'Hãy thêm sản phẩm trước khi đặt hàng.';
-      elBtn.disabled = true;
-      // voucher vẫn cho nhập, nhưng chưa áp dụng được do không có hàng
-      return;
-    }
-
-    let sub = 0;
-    const frag = document.createDocumentFragment();
-    cart.forEach(it => {
-      const line = it.price * it.qty;
-      sub += line;
-      const row = document.createElement('div');
-      row.className = 'row';
-      const name = it.variant ? `${it.name} — ${it.variant}` : it.name;
-      row.innerHTML = `<span>${name} × ${it.qty}</span><span>${money(line)}</span>`;
-      frag.appendChild(row);
+      // Shipments
+      const ships = Array.isArray(o.shipments)? o.shipments : [];
+      document.getElementById('ships').innerHTML = ships.length ? ships.map(s=>`
+        <tr>
+          <td>${s.carrier || s.provider || '—'}</td>
+          <td>${s.trackingNo || s.tracking || '—'}</td>
+          <td><span class="pill">${s.status || '—'}</span></td>
+          <td class="num ta-r">${VND(s.fee)}</td>
+          <td>${DT(s.createdAt)}</td>
+          <td>${DT(s.updatedAt)}</td>
+        </tr>`).join('') : '<tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>';
+    })
+    .catch(err=>{
+      console.error(err);
+      alert('Không tải được chi tiết đơn hàng. Vui lòng thử lại.');
+      location.replace('orders.html');
     });
-    elItems.appendChild(frag);
-    elSub.textContent = money(sub);
-
-    // áp voucher
-    const { discount, freeship } = computeDiscount(sub, voucher);
-    if (discount > 0) {
-      elDiscRow.style.display = '';
-      elDiscVal.textContent = '−' + money(discount);
-    } else {
-      elDiscRow.style.display = 'none';
-    }
-
-    // ship: free theo voucher hoặc theo ngưỡng
-    const subAfterDiscount = Math.max(0, sub - discount);
-    const shipping = (freeship || subAfterDiscount >= FREE_SHIP_THRESHOLD) ? 0 : SHIP_FEE;
-
-    elShip.textContent  = shipping === 0 ? '0₫' : money(shipping);
-    elTotal.textContent = money(subAfterDiscount + shipping);
-    elHelp.textContent  = 'Miễn phí ship cho đơn từ 5.000.000₫';
-    elBtn.disabled = false;
-  }
-
-  // ====== Submit order ======
-  async function createOrder(){
-    const items = cart.map(it => ({ skuId: it.id, qty: it.qty, unitPrice: it.price }));
-    // Nếu backend chấp nhận voucher, có thể thêm: voucherCode: voucher?.code
-    const payload = { items };
-
-    const res = await fetch(`${BASE_URL}/api/public/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if(!res.ok){
-      const txt = await res.text().catch(()=> '');
-      throw new Error(`Đặt hàng thất bại (${res.status}). ${txt}`);
-    }
-    return await res.json().catch(()=> ({}));
-  }
-
-  // Prefill form
-  (function prefill(){
-    const g = id => document.getElementById(id);
-    g('fullName').value = localStorage.getItem('fs_checkout_name') || '';
-    g('email').value    = localStorage.getItem('fs_checkout_email') || '';
-    g('phone').value    = localStorage.getItem('fs_checkout_phone') || '';
-    g('address').value  = localStorage.getItem('fs_checkout_address') || '';
-  })();
-
-  // Validate & submit
-  elForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    elErr.style.display = 'none';
-
-    if(!cart.length){
-      elErr.textContent = 'Giỏ hàng đang trống.';
-      elErr.style.display = '';
-      return;
-    }
-    if(!elForm.reportValidity()){
-      elErr.textContent = 'Vui lòng điền đầy đủ và đúng thông tin.';
-      elErr.style.display = '';
-      return;
-    }
-
-    // Lưu info cho lần sau
-    localStorage.setItem('fs_checkout_name',    document.getElementById('fullName').value.trim());
-    localStorage.setItem('fs_checkout_email',   document.getElementById('email').value.trim());
-    localStorage.setItem('fs_checkout_phone',   document.getElementById('phone').value.trim());
-    localStorage.setItem('fs_checkout_address', document.getElementById('address').value.trim());
-
-    elBtn.disabled = true; elBtn.textContent = 'Đang đặt hàng...';
-    try{
-      const order = await createOrder();
-      saveCart([]); // clear cart
-      saveVoucher(null);
-      const oid = encodeURIComponent(order?.id ?? '');
-      window.location.href = `order-success.html${oid ? ('?orderId='+oid) : ''}`;
-    }catch(err){
-      elErr.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-      elErr.style.display = '';
-      elBtn.disabled = false; elBtn.textContent = 'Đặt hàng';
-    }
-  });
-
-  // Apply / Remove voucher
-  elApply.addEventListener('click', async (e) => {
-    e.preventDefault();
-    elVNote.style.display = 'none';
-    const code = (elVoucher.value || '').trim().toUpperCase();
-    if (!code){
-      elVNote.textContent = 'Vui lòng nhập mã.';
-      elVNote.style.display = '';
-      return;
-    }
-    if (!cart.length){
-      elVNote.textContent = 'Giỏ hàng trống — chưa thể áp dụng mã.';
-      elVNote.style.display = '';
-      return;
-    }
-    const subtotal = cart.reduce((s,it)=> s + it.price*it.qty, 0);
-    const result = await validateVoucher(code, subtotal);
-    if (!result.ok){
-      elVNote.textContent = result.message || 'Mã không hợp lệ.';
-      elVNote.style.display = '';
-      return;
-    }
-    voucher = { code, ...result.voucher };
-    saveVoucher(voucher);
-    showVoucherUI();
-    renderSummary();
-    elVNote.textContent = result.message || 'Áp dụng thành công.';
-    elVNote.style.display = '';
-  });
-
-  elVRemove.addEventListener('click', (e) => {
-    e.preventDefault();
-    voucher = null;
-    saveVoucher(null);
-    showVoucherUI();
-    renderSummary();
-  });
-
-  // Khởi tạo
-  showVoucherUI();
-  renderSummary();
-
-  // Lắng nghe giỏ hàng thay đổi ở tab khác
-  window.addEventListener('storage', (e) => {
-    if (e.key === CART_KEY){
-      cart = loadCart();
-      renderSummary();
-    }
-  });
 })();
 </script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
 </body>
 </html>

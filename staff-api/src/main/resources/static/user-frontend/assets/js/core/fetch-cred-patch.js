@@ -1,0 +1,1 @@
+(function(){const o=window.fetch;window.fetch=function(i,n){n=n||{};n.credentials=n.credentials||'include';n.headers=n.headers||{};return o(i,n);};})();

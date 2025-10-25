@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Hồ sơ — fonestore</title>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+  <style>.profile-wrap{min-height:calc(100vh - var(--header-h) - 120px)}.profile-card{max-width:720px;margin:0 auto}</style>
+</head>
+<body>
+<header class="header">
+  <div class="container inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <nav class="nav">
+      <a href="products.html">Sản phẩm</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="login.html">Đăng nhập</a>
+      <a href="help.html">Hỗ trợ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container section profile-wrap">
+  <div class="card p-16 profile-card">
+    <h1 class="h2">Chỉnh sửa thông tin</h1>
+    <div id="msg" class="alert" style="display:none"></div>
+
+    <form id="form-profile" class="mt-16">
+      <div class="field"><label class="label">Email</label><input id="email" class="input" disabled></div>
+      <div class="field mt-12"><label class="label">Họ tên</label><input id="fullName" class="input"></div>
+      <div class="field mt-12"><label class="label">Số điện thoại</label><input id="phone" class="input"></div>
+      <div class="field mt-12"><label class="label">Ngày sinh</label><input id="dob" type="date" class="input"></div>
+      <div class="field mt-12">
+        <label class="label">Giới tính</label>
+        <select id="gender" class="input">
+          <option value="">—</option>
+          <option value="male">Nam</option>
+          <option value="female">Nữ</option>
+          <option value="other">Khác</option>
+        </select>
+      </div>
+      <button class="btn btn-primary mt-16" type="submit">Lưu thay đổi</button>
+    </form>
+  </div>
+</main>
+
+<footer class="footer"><div class="container section"><div class="copyright">© 2025 fonestore</div></div></footer>
+
+<script src="assets/js/auth.js"></script>
+<script>
+(function(){
+  const API_BASE = "http://localhost:9090";
+  const token = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token');
+  if (!token) { window.location.replace('login.html'); return; }
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
+
+  const $ = id => document.getElementById(id);
+  const elMsg = document.getElementById('msg');
+
+  function showMsg(text, ok=false){
+    elMsg.textContent = text; elMsg.style.display = '';
+    elMsg.className = 'alert ' + (ok ? 'success' : 'error');
+    setTimeout(()=>{ elMsg.style.display='none'; }, 2000);
+  }
+
+  fetch(API_BASE + '/api/users/me', { headers })
+    .then(r => r.ok ? r.json() : Promise.reject(r))
+    .then(data => {
+      $('#email').value = data.email || '';
+      $('#fullName').value = data.fullName || '';
+      $('#phone').value = data.phone || '';
+      $('#gender').value = data.gender || '';
+      if (data.dob) $('#dob').value = data.dob;
+    }).catch(()=>{});
+
+  document.getElementById('form-profile').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const body = JSON.stringify({
+      fullName: $('#fullName').value.trim(),
+      phone: $('#phone').value.trim(),
+      dob: $('#dob').value || null,
+      gender: $('#gender').value || null
+    });
+    fetch(API_BASE + '/api/users/me', { method:'PUT', headers, body })
+      .then(r => r.ok ? r.json() : r.text().then(t=>Promise.reject(new Error(t||'Cập nhật thất bại'))))
+      .then(()=> showMsg('Đã lưu thay đổi', true))
+      .catch(err => showMsg(err.message || 'Cập nhật thất bại'));
+  });
+})();
+</script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
+</body>
+</html>

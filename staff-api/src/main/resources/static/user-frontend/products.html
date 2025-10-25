@@ -6,15 +6,65 @@
   <title>Sản phẩm — fonestore</title>
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
-</head>
-<body>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
 
+  <script>
+  // ===== AUTH AVATAR MENU =====
+  document.addEventListener('DOMContentLoaded', () => {
+    const me = JSON.parse(localStorage.getItem('fs_user') || 'null');
+    if (!me) return;
+
+    const nav = document.querySelector('header .nav');
+    if (!nav) return;
+    const loginLink = [...nav.querySelectorAll('a')].find(a => (a.textContent || '').trim().toLowerCase() === 'đăng nhập');
+    if (!loginLink) return;
+
+    const name = me.name || me.fullName || me.username || 'Tài khoản';
+    const ini  = (name.match(/\b(\w)/g) || ['?']).join('').slice(0,2).toUpperCase();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'auth-menu';
+    wrap.innerHTML = `
+      <button class="auth-avatar" type="button" aria-haspopup="menu" aria-expanded="false">
+        <span class="avatar-dot">${ini}</span>
+        <span class="auth-name">${name}</span>
+        <span class="auth-caret">▾</span>
+      </button>
+      <div class="auth-dropdown" role="menu" aria-hidden="true">
+        <a role="menuitem" href="orders.html">Đơn hàng của tôi</a>
+        <a role="menuitem" href="profile.html">Trang cá nhân</a>
+        <div class="sep"></div>
+        <a role="menuitem" id="logoutLink" href="login.html">Đăng xuất</a>
+      </div>`;
+    loginLink.replaceWith(wrap);
+
+    const btn = wrap.querySelector('.auth-avatar');
+    const dd  = wrap.querySelector('.auth-dropdown');
+    btn.addEventListener('click', () => {
+      const open = wrap.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      dd.setAttribute('aria-hidden', open ? 'false' : 'true');
+    });
+    document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
+
+    wrap.querySelector('#logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await fetch('/api/auth/logout', { method:'POST', credentials:'include' }); } catch {}
+      localStorage.removeItem('fs_user');
+      location.href = 'login.html';
+    });
+  });
+  </script>
+</head>
+
+<body>
 <header class="header">
   <div class="container inner">
     <a class="brand" href="index.html">
       <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input class="input" id="q" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
       <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
@@ -69,10 +119,7 @@
         </div>
       </div>
 
-      <!-- Grid đổ dữ liệu động -->
       <div class="grid grid-cols-4" id="product-grid"></div>
-
-      <!-- Phân trang -->
       <nav class="pagination" id="pagination"></nav>
     </section>
   </div>
@@ -89,12 +136,10 @@
     <div class="copyright">© 2025 fonestore — All rights reserved.</div>
   </div>
 </footer>
+
 <script>
 (() => {
-  // === Backend base ===
-  const BASE_URL = window.location.origin; // ví dụ http://localhost:9090
-
-  // === State ===
+  const BASE_API = window.location.origin; // http://localhost:9090
   let page = 1, size = 12, total = 0;
   let productsCache = [];
   let q = '', sort = 'newest', priceMin = '', priceMax = '';
@@ -110,58 +155,31 @@
   const priceMaxEl = document.getElementById('priceMax');
   const quickChips = document.querySelectorAll('.chip');
 
-  function money(n){ return (n==null||isNaN(n)) ? '' :
-    Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'}); }
+  const money = n => (n==null || isNaN(n)) ? '' : Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'});
+  const pickPrice = p => p?.minPrice ?? p?.price ?? null;
+  const pickBrand = p => p?.brandName ?? p?.brand ?? '';
+  const pageSlice = (arr,p,sz) => arr.slice((p-1)*sz,(p-1)*sz+sz);
 
-  // ✅ Ưu tiên ảnh từ backend (ProductListDTO.imageUrl)
-  function pickImg(p) {
-    const u = p?.imageUrl;
-    if (!u) return '/staff-frontend/assets/logo.svg'; // fallback có thật
-    if (u.startsWith('http') || u.startsWith('/')) return u;
-    if (u.startsWith('products/')) return '/staff-frontend/assets/' + u;
-    return '/staff-frontend/assets/' + u;
+  function pickImg(p){
+    const u = p?.imagePath || '';
+    if (!u) return 'assets/img/product-placeholder.svg';
+    if (u.startsWith('http')) return u;
+    return u.startsWith('/') ? u : '/' + u;
   }
 
-
-
-  function pickPrice(p){ return p?.minPrice ?? p?.price ?? p?.priceNow ?? null; }
-  function pickBrand(p){ return p?.brand ?? p?.manufacturer ?? ''; }
-
-  function apiSortParam(){
-    if (sort==='price,asc') return 'price,asc';
-    if (sort==='price,desc') return 'price,desc';
-    return '';
-  }
-
-  function buildApiUrl() {
-    const params = new URLSearchParams();
-    params.set('page', String(page-1)); // Spring 0-based
-    params.set('size', String(size));
-    const s = apiSortParam(); if (s) params.set('sort', s);
-    if (q) params.set('q', q);
-    if (priceMin) params.set('minPrice', priceMin);
-    if (priceMax) params.set('maxPrice', priceMax);
-    if (brands.size) params.set('brand', Array.from(brands).join(','));
-    return `${BASE_URL}/api/public/products?`+params.toString();
-  }
+  function buildApiUrl(){ return `${BASE_API}/api/products`; }
 
   async function fetchProducts(){
     const res = await fetch(buildApiUrl());
-    if(!res.ok) throw new Error('Fetch products failed: '+res.status);
+    if (!res.ok) throw new Error(`Fetch products failed: ${res.status}`);
     const data = await res.json();
     if (Array.isArray(data)) {
-      productsCache = data.slice(); total = data.length;
+      productsCache = data.slice();
+      total = productsCache.length;
       return pageSlice(productsCache, page, size);
-    } else if (data?.content) {
-      total = Number(data.totalElements ?? data.content.length);
-      return data.content;
-    } else {
-      total = Array.isArray(data.items) ? data.items.length : 0;
-      return Array.isArray(data.items) ? pageSlice(data.items, page, size) : [];
     }
+    total = 0; return [];
   }
-
-  function pageSlice(arr,p,sz){ const s=(p-1)*sz; return arr.slice(s,s+sz); }
 
   function clientFilter(arr){
     return arr.filter(p=>{
@@ -178,19 +196,18 @@
   function renderProducts(list){
     gridEl.innerHTML='';
     if(!list.length){ gridEl.innerHTML='<div class="muted">Không có sản phẩm phù hợp.</div>'; return; }
-    const frag = document.createDocumentFragment();
+    const frag=document.createDocumentFragment();
     list.forEach(p=>{
-      const id = p.id ?? p.productId ?? p.skuId ?? '';
-      const el = document.createElement('article');
+      const id=p.productId??p.id??'';
+      const el=document.createElement('article');
       el.className='prod-card';
-      const imgUrl = pickImg(p);
-      el.innerHTML = `
+      const imgUrl=pickImg(p);
+      el.innerHTML=`
         <img class="prod-thumb" src="${imgUrl}" alt="${p.name||'Điện thoại'}"
-             onerror="this.src='/staff-frontend/assets/products/logo.svg'"/>
+             onerror="this.src='assets/img/product-placeholder.svg'"/>
         <div class="prod-title">${p.name||'(Không tên)'}</div>
         <div class="price"><div class="price-now">${money(pickPrice(p))}</div></div>
-        <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>
-      `;
+        <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>`;
       frag.appendChild(el);
     });
     gridEl.appendChild(frag);
@@ -205,14 +222,16 @@
       const a=document.createElement('a');
       a.className='page-btn'+(act?' active':'')+(dis?' disabled':'');
       a.href='#'; a.textContent=label;
-      if(!dis) a.onclick=e=>{e.preventDefault(); if(tgt!==page){page=tgt; load(); window.scrollTo({top:0,behavior:'smooth'});} };
+      if(!dis) a.onclick=e=>{e.preventDefault(); if(tgt!==page){page=tgt;load();window.scrollTo({top:0,behavior:'smooth'});} };
       return a;
     };
     paginationEl.appendChild(mk('«', Math.max(1,page-1), false, page===1));
     const maxBtn=Math.min(7, Math.ceil(total/size));
     for(let i=1;i<=maxBtn;i++) paginationEl.appendChild(mk(String(i), i, i===page));
-    if (Math.ceil(total/size)>7){ const s=document.createElement('span'); s.className='page-btn muted'; s.textContent='...'; paginationEl.appendChild(s);
-      paginationEl.appendChild(mk(String(Math.ceil(total/size)), Math.ceil(total/size), Math.ceil(total/size)===page)); }
+    if (Math.ceil(total/size)>7){
+      const s=document.createElement('span'); s.className='page-btn muted'; s.textContent='...'; paginationEl.appendChild(s);
+      paginationEl.appendChild(mk(String(Math.ceil(total/size)), Math.ceil(total/size), Math.ceil(total/size)===page));
+    }
     paginationEl.appendChild(mk('»', Math.max(1, Math.min(page+1, Math.ceil(total/size))), false, page===Math.ceil(total/size)));
   }
 
@@ -232,17 +251,15 @@
     }
   }
 
-  // events
-  document.getElementById('sort').onchange=()=>{sort=sortEl.value; page=1; load();};
-  qEl.onkeydown=(e)=>{ if(e.key==='Enter'){ q=qEl.value.trim(); page=1; load(); } };
-  brandFiltersEl.onchange=()=>{ brands=new Set([...brandFiltersEl.querySelectorAll('input[type=checkbox]:checked')].map(i=>i.value)); page=1; load(); };
-  quickChips.forEach(btn=>btn.onclick=()=>{ priceMin=btn.dataset.min||''; priceMax=btn.dataset.max||''; priceMinEl.value=priceMin; priceMaxEl.value=priceMax; page=1; load(); });
-  priceMinEl.onchange=()=>{ priceMin=priceMinEl.value; page=1; load(); };
-  priceMaxEl.onchange=()=>{ priceMax=priceMaxEl.value; page=1; load(); };
+  sortEl.onchange=()=>{sort=sortEl.value;page=1;load();};
+  qEl.onkeydown=e=>{if(e.key==='Enter'){q=qEl.value.trim();page=1;load();}};
+  brandFiltersEl.onchange=()=>{brands=new Set([...brandFiltersEl.querySelectorAll('input:checked')].map(i=>i.value));page=1;load();};
+  quickChips.forEach(btn=>btn.onclick=()=>{priceMin=btn.dataset.min||'';priceMax=btn.dataset.max||'';priceMinEl.value=priceMin;priceMaxEl.value=priceMax;page=1;load();});
+  priceMinEl.onchange=()=>{priceMin=priceMinEl.value;page=1;load();};
+  priceMaxEl.onchange=()=>{priceMax=priceMaxEl.value;page=1;load();};
 
   load();
 })();
 </script>
-
 </body>
 </html>

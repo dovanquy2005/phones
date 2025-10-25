@@ -6,6 +6,7 @@
   <title>Đăng ký — fonestore</title>
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/auth-menu.css"/>
   <style>
     .auth-wrap{min-height:calc(100vh - var(--header-h) - 120px);display:flex;align-items:center;justify-content:center}
     .auth-card{width:100%;max-width:520px}
@@ -18,11 +19,13 @@
 <body>
 <header class="header">
   <div class="container inner">
-    <a class="brand" href="index.html"><img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span></a>
-    <div class="search"><input class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
+    <a class="brand" href="index.html">
+      <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
+    </a>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -171,5 +174,10 @@
   });
 })();
 </script>
+<script src="assets/js/header-auth.js"></script>
+
+  <!-- auto-injected: auth core -->
+  <script src="assets/js/core/fetch-cred-patch.js"></script>
+  <script type="module" src="assets/js/core/header-auth.js"></script>
 </body>
 </html>

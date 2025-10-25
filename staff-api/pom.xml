@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -18,16 +17,31 @@
   <name>staff-api</name>
   <description>Backend for Phone Store Staff System</description>
 
+
   <properties>
     <java.version>17</java.version>
     <lombok.version>1.18.32</lombok.version>
   </properties>
 
+  <!-- ... giữ nguyên phần đầu ... -->
+  
   <dependencies>
+    <!-- Excel export (Apache POI) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.2.5</version>
+    </dependency>
+
     <!-- Web -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
     </dependency>
 
     <!-- JPA -->
@@ -36,7 +50,13 @@
       <artifactId>spring-boot-starter-data-jpa</artifactId>
     </dependency>
 
-    <!-- SQL Server -->
+    <!-- 🔐 Security -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- ✅ SQL Server (giữ jre11 cũng chạy tốt trên JDK17) -->
     <dependency>
       <groupId>com.microsoft.sqlserver</groupId>
       <artifactId>mssql-jdbc</artifactId>
@@ -118,13 +138,12 @@
         </configuration>
       </plugin>
 
-      <!-- Spring Boot Plugin -->
+      <!-- Spring Boot Plugin: CHỈ ĐỊNH main class -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <!-- ✅ Chỉ định main class duy nhất -->
-          <mainClass>com.fonestore.fonestoreApplication</mainClass>
+          <mainClass>com.fonestore.staff_api.StaffApiApplication</mainClass>
           <excludes>
             <exclude>
               <groupId>org.projectlombok</groupId>
@@ -135,5 +154,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>

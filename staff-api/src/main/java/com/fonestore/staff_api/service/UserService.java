@@ -2,12 +2,16 @@ package com.fonestore.staff_api.service;
 
 import com.fonestore.staff_api.config.JwtUtil;
 import com.fonestore.staff_api.dto.auth.LoginResponse;
-import com.fonestore.staff_api.dto.user.*;
+import com.fonestore.staff_api.dto.user.TwoFAResponse;
+import com.fonestore.staff_api.dto.user.UserCreateRequest;
+import com.fonestore.staff_api.dto.user.UserResponse;
+import com.fonestore.staff_api.dto.user.UserUpdateRequest;
 import com.fonestore.staff_api.entity.User;
 import com.fonestore.staff_api.exception.BadRequestException;
 import com.fonestore.staff_api.exception.NotFoundException;
 import com.fonestore.staff_api.repository.UserRepository;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,8 +24,8 @@ import java.util.HexFormat;
 
 @Service("staffUserService")
 public class UserService {
-        // field
-    private final JwtUtil jwtUtil; 
+
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepo;
     private static final SecureRandom RNG = new SecureRandom();
 
@@ -29,7 +33,6 @@ public class UserService {
         this.userRepo = userRepo;
         this.jwtUtil = jwtUtil;
     }
-
 
     @Transactional
     public UserResponse create(UserCreateRequest r) {
@@ -42,17 +45,15 @@ public class UserService {
         u.setPhone(r.phone());
         u.setDob(parseDob(r.dob()));
         u.setGender(r.gender());
-        u.setRole(r.role() == null ? "user" : r.role());
+        u.setAddress(r.address());
         u = userRepo.save(u);
 
         return toResp(u);
     }
 
     @Transactional(readOnly = true)
-    public Page<UserResponse> list(String role, Pageable pageable) {
-        Page<User> page = (role == null || role.isBlank())
-                ? userRepo.findAll(pageable)
-                : userRepo.findByRole(role, pageable);
+    public Page<UserResponse> list(String roleIgnored, Pageable pageable) {
+        Page<User> page = userRepo.findAll(pageable);
         return page.map(this::toResp);
     }
 
@@ -63,7 +64,7 @@ public class UserService {
         if (r.phone() != null) u.setPhone(r.phone());
         if (r.dob() != null) u.setDob(parseDob(r.dob()));
         if (r.gender() != null) u.setGender(r.gender());
-        if (r.role() != null) u.setRole(r.role());
+        if (r.address() != null) u.setAddress(r.address());
         u = userRepo.save(u);
         return toResp(u);
     }
@@ -74,11 +75,10 @@ public class UserService {
         userRepo.deleteById(id);
     }
 
-    /* ====== 2FA ====== */
     @Transactional
     public TwoFAResponse enable2FA(Long userId, String issuer) {
         User u = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        String secret = generateBase32Secret(32);
+        String secret = generateBase32Secret(16);
         u.setTwofaSecret(secret);
         userRepo.save(u);
 
@@ -95,7 +95,6 @@ public class UserService {
         userRepo.save(u);
     }
 
-    /* ====== helpers ====== */
     private String hashPassword(String plain) {
         if (plain == null) throw new BadRequestException("Password is required");
         try {
@@ -107,7 +106,7 @@ public class UserService {
 
     private LocalDate parseDob(String dobStr) {
         if (dobStr == null || dobStr.isBlank()) return null;
-        try { return LocalDate.parse(dobStr); } // yyyy-MM-dd
+        try { return LocalDate.parse(dobStr); }
         catch (DateTimeParseException e) { throw new BadRequestException("dob must be yyyy-MM-dd"); }
     }
 
@@ -124,24 +123,23 @@ public class UserService {
 
     private UserResponse toResp(User u) {
         return new UserResponse(
-                u.getId(), u.getEmail(), u.getFullName(), u.getPhone(),
-                u.getDob() == null ? null : u.getDob().toString(),
-                u.getGender(), u.getRole(),
+                u.getId(),
+                u.getEmail(),
+                u.getFullName(),
+                u.getPhone(),
+                u.getDob() != null ? u.getDob().toString() : null,
+                u.getGender(),
+                u.getAddress(),
                 u.getTwofaSecret() != null
         );
     }
 
-
-
-
-    // ========== NEW: lấy chi tiết ==========
     @Transactional(readOnly = true)
     public UserResponse getById(Long id) {
         User u = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
         return toResp(u);
     }
 
-    // ========== NEW: đổi mật khẩu ==========
     @Transactional
     public void changePassword(Long id, String oldPassword, String newPassword) {
         User u = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
@@ -153,9 +151,8 @@ public class UserService {
         userRepo.save(u);
     }
 
-    // ========== NEW: login (trả JWT) ==========
     @Transactional(readOnly = true)
-    public LoginResponse login(String email, String password) {
+    public com.fonestore.staff_api.dto.auth.LoginResponse login(String email, String password) {
         User u = userRepo.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException("Invalid email or password"));
 
@@ -166,9 +163,8 @@ public class UserService {
 
         String token = jwtUtil.generateToken(
                 u.getEmail(),
-                java.util.Map.of("uid", u.getId(), "role", u.getRole())
+                java.util.Map.of("uid", u.getId(), "role", "user", "aud", "buyer")
         );
-        return new LoginResponse(u.getId(), u.getEmail(), u.getRole(), u.getTwofaSecret() != null, token);
+        return new LoginResponse(u.getId(), u.getEmail(), "user", u.getTwofaSecret() != null, token);
     }
-
 }

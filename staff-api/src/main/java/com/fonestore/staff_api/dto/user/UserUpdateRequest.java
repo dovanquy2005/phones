@@ -5,5 +5,6 @@ public record UserUpdateRequest(
         String phone,
         String dob,     // yyyy-MM-dd
         String gender,
-        String role
+        String role,
+        String address  // <-- String!
 ) {}

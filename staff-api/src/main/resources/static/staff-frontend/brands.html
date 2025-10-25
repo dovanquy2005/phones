@@ -5,6 +5,52 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>fonestore · Thương hiệu</title>
   <link rel="stylesheet" href="css/base.css"/>
+  <link rel="icon" href="/user-frontend/assets/img/logo.svg" type="image/svg+xml">
+  <style>
+    .table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    .table thead th,.table tbody td{padding:12px 16px;border-bottom:1px solid var(--color-border)}
+    .table-wrap{overflow-x:auto;}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .page-title{margin:0}
+    .btn--danger{background:#ef4444;color:#fff}
+    .empty{padding:16px;color:#6b7280;text-align:center;}
+    .modal{
+      position: fixed; inset: 0; background: rgba(17,24,39,.45);
+      display: none; justify-content: center; align-items: flex-start;
+      padding: 32px 16px; z-index: 9999;
+    }
+    .modal[aria-hidden="false"]{ display:flex; }
+    .modal__card{
+      width: min(560px, 100%);
+      background:#fff; border-radius:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    }
+    .modal__header,.modal__body,.modal__footer{padding:16px}
+    .modal__header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--color-border)}
+    .modal__footer{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--color-border)}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .helper{font-size:12px;color:#6b7280}
+    .td-actions{display:flex;gap:8px;justify-content:flex-end}
+
+    /* ===== Toast ===== */
+    .toast-wrap{
+      position:fixed; top:20px; right:20px; z-index:99999;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .toast{
+      min-width:260px; max-width:360px;
+      padding:10px 12px; border-radius:12px;
+      box-shadow:0 10px 25px rgba(0,0,0,.15);
+      display:flex; align-items:flex-start; gap:10px;
+      color:#0f172a; background:#fff; border:1px solid #e5e7eb;
+      animation:toast-in .18s ease-out;
+    }
+    .toast--success{ border-color:#86efac; background:#f0fdf4; }
+    .toast--error{   border-color:#fecaca; background:#fef2f2; }
+    .toast__title{ font-weight:600; margin-bottom:2px }
+    .toast__msg{ font-size:13px; color:#334155 }
+    @keyframes toast-in { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+  </style>
 </head>
 <body>
   <header class="app-header">
@@ -13,29 +59,28 @@
       <span class="brand__text">fonestore</span>
     </a>
 
-    <form class="search" role="search" aria-label="Tìm kiếm">
+    <form class="search" role="search" aria-label="Tìm kiếm nhanh" onsubmit="return false;">
       <span class="input-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       </span>
-      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
+      <input id="q" class="input" placeholder="Tìm kiếm nhanh…"/>
     </form>
 
     <div class="header-actions">
-      <a class="btn btn--primary" href="products.html#modal-create">Tạo mới</a>
       <details class="avatar-menu">
         <summary class="avatar" aria-label="Tài khoản">
           <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
         </summary>
         <nav class="dropdown" aria-label="Tài khoản">
           <a href="settings.html">Cài đặt</a>
-          <a href="auth-login.html">Đăng xuất</a>
+          <a href="auth-login.html" id="btn-logout">Đăng xuất</a>
         </nav>
       </details>
     </div>
   </header>
 
   <div class="app-shell">
-        <aside class="sidebar" aria-label="Điều hướng">
+    <aside class="sidebar" aria-label="Điều hướng">
       <div class="sidebar__group">
         <p class="sidebar__heading">Bán hàng</p>
         <a class="sidebar__link" href="orders.html">Đơn hàng</a>
@@ -45,8 +90,8 @@
       </div>
       <div class="sidebar__group">
         <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+        <a class="sidebar__link" href="products.html">Sản phẩm</a>
+        <a class="sidebar__link sidebar__link--active" href="brands.html">Thương hiệu</a>
       </div>
       <div class="sidebar__group">
         <p class="sidebar__heading">Hệ thống</p>
@@ -54,26 +99,192 @@
         <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
       </div>
     </aside>
+
     <main class="content">
       <section class="toolbar">
         <h1 class="page-title">Thương hiệu</h1>
+        <button class="btn btn--primary" id="btn-open-create" type="button">+ Thêm thương hiệu</button>
       </section>
+
       <section class="card">
         <div class="card__body table-wrap">
           <table class="table">
-            <thead><tr><th>Tên</th><th>Mã</th></tr></thead>
-            <tbody>
-              
-<tr><td>Apple</td><td>APPLE</td></tr>
-<tr><td>Samsung</td><td>SAMSUNG</td></tr>
-<tr><td>Xiaomi</td><td>XIAOMI</td></tr>
-<tr><td>OPPO</td><td>OPPO</td></tr>
-
-            </tbody>
+            <thead><tr><th>Tên</th><th style="width:180px;text-align:right">Thao tác</th></tr></thead>
+            <tbody id="rows-brands"><tr><td colspan="2" class="empty">Đang tải…</td></tr></tbody>
           </table>
         </div>
       </section>
     </main>
   </div>
+
+  <!-- Toast root -->
+  <div id="toast-root" class="toast-wrap"></div>
+
+  <!-- Modal tạo thương hiệu -->
+  <div id="modal-create" class="modal" aria-hidden="true">
+    <article class="modal__card" role="dialog" aria-modal="true">
+      <header class="modal__header">
+        <strong>Thêm thương hiệu</strong>
+        <button class="btn btn--ghost" id="btn-close" type="button">Đóng</button>
+      </header>
+      <form id="form-create">
+        <div class="modal__body">
+          <div class="field">
+            <label>Tên thương hiệu</label>
+            <input id="b-name" class="input" required placeholder="Ví dụ: Apple"/>
+          </div>
+          <div class="field">
+            <small id="b-err" class="helper" style="color:#b91c1c;display:none"></small>
+          </div>
+        </div>
+        <footer class="modal__footer">
+          <button class="btn" type="button" id="btn-cancel">Hủy</button>
+          <button class="btn btn--primary" type="submit">Lưu</button>
+        </footer>
+      </form>
+    </article>
+  </div>
+
+<script>
+// ===== Toast helper =====
+function showToast(message, type='success', title){
+  const root = document.getElementById('toast-root');
+  if (!root) return;
+  const el = document.createElement('div');
+  el.className = `toast toast--${type}`;
+  el.innerHTML = `
+    <div>
+      <div class="toast__title">${title || (type==='success' ? 'Thành công' : 'Lỗi')}</div>
+      <div class="toast__msg">${message || ''}</div>
+    </div>`;
+  root.appendChild(el);
+  const timeout = setTimeout(()=> el.remove(), 2500);
+  el.addEventListener('click', ()=>{ clearTimeout(timeout); el.remove(); });
+}
+
+// ===== API logic =====
+const API_BASE   = location.origin;
+const API_BRANDS = API_BASE + '/api/brands';
+const qs = s => document.querySelector(s);
+const show = (el)=>{ el?.setAttribute('aria-hidden','false'); };
+const hide = (el)=>{ el?.setAttribute('aria-hidden','true'); };
+
+const getToken = () => localStorage.getItem('accessToken') || '';
+if (!getToken()) location.href = '/staff-frontend/auth-login.html';
+
+async function apiFetch(url, opts={}){
+  const headers = new Headers(opts.headers || {});
+  const token = getToken();
+  if (token) headers.set('Authorization', 'Bearer ' + token);
+  if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
+    headers.set('Content-Type','application/json');
+  }
+  const res = await fetch(url, {...opts, headers});
+  if (!res.ok){
+    let detail=''; try{ const j=await res.json(); detail=j.message||j.error||''; }catch{}
+    if (res.status===401){ alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; }
+    throw new Error(`HTTP ${res.status}${detail?': '+detail:''}`);
+  }
+  return res.status===204 ? null : res.json();
+}
+
+let allBrands = [];
+
+function renderRows(list){
+  const tb = qs('#rows-brands');
+  if (!list.length){
+    tb.innerHTML = `<tr><td colspan="2" class="empty">Chưa có thương hiệu</td></tr>`;
+    return;
+  }
+  tb.innerHTML = list.map(b => `
+    <tr>
+      <td>${b.name ?? ''}</td>
+      <td class="td-actions" style="text-align:right">
+        <button class="btn btn--danger btn--sm" data-del="${b.id ?? b.brandId}">Xóa</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function loadBrands(){
+  const tb = qs('#rows-brands');
+  tb.innerHTML = `<tr><td colspan="2" class="empty">Đang tải…</td></tr>`;
+  const raw = await apiFetch(API_BRANDS);
+  const arr = Array.isArray(raw) ? raw
+           : Array.isArray(raw?.content) ? raw.content
+           : Array.isArray(raw?.items) ? raw.items : [];
+  allBrands = arr.map(x => ({
+    id: x.id ?? x.brandId ?? null,
+    name: x.name ?? x.brandName ?? ''
+  }));
+  allBrands.sort((a,b)=> a.name.localeCompare(b.name,'vi',{sensitivity:'base'}));
+  renderRows(allBrands);
+}
+
+const createBrand = (b)=> apiFetch(API_BRANDS, {method:'POST', body: JSON.stringify(b)});
+const deleteBrand = (id)=> apiFetch(`${API_BRANDS}/${encodeURIComponent(id)}`, {method:'DELETE'});
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  const logout = qs('#btn-logout'); logout?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+  await loadBrands().catch(err=>{
+    console.error(err);
+    qs('#rows-brands').innerHTML = `<tr><td colspan="2" class="empty">Lỗi tải: ${err.message}</td></tr>`;
+  });
+
+  const modal = qs('#modal-create');
+  const errEl = qs('#b-err');
+  const nameEl = qs('#b-name');
+
+  qs('#btn-open-create').addEventListener('click', ()=>{
+    errEl.style.display='none'; errEl.textContent='';
+    nameEl.value=''; show(modal); setTimeout(()=> nameEl.focus(),50);
+  });
+  const closeModal = ()=> hide(modal);
+  qs('#btn-close').addEventListener('click', closeModal);
+  qs('#btn-cancel').addEventListener('click', closeModal);
+
+  qs('#form-create').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    errEl.style.display='none'; errEl.textContent='';
+    const name = nameEl.value.trim();
+    if (!name){ errEl.textContent='Vui lòng nhập tên thương hiệu'; errEl.style.display='block'; return; }
+
+    const dup = allBrands.find(b => b.name.toLowerCase()===name.toLowerCase());
+    if (dup){ errEl.textContent='Thương hiệu đã tồn tại'; errEl.style.display='block'; return; }
+
+    try{
+      const created = await createBrand({ name });
+      allBrands.push({ id: created?.id ?? created?.brandId ?? null, name: created?.name ?? name });
+      allBrands.sort((a,b)=> a.name.localeCompare(b.name,'vi',{sensitivity:'base'}));
+      renderRows(allBrands); closeModal();
+      showToast('Đã thêm thương hiệu mới.', 'success');
+    }catch(err){
+      errEl.textContent='Lỗi tạo mới: '+err.message; errEl.style.display='block';
+      showToast('Lỗi khi tạo thương hiệu: '+err.message, 'error');
+    }
+  });
+
+  document.addEventListener('click', async (e)=>{
+    const del = e.target.closest('[data-del]');
+    if (!del) return;
+    if (!confirm('Xóa thương hiệu này?')) return;
+    const id = del.dataset.del;
+    try{
+      await deleteBrand(id);
+      allBrands = allBrands.filter(b => String(b.id)!==String(id));
+      renderRows(allBrands);
+      showToast('Đã xóa thương hiệu.', 'success');
+    }catch(err){
+      showToast('Xóa thất bại: '+err.message, 'error');
+    }
+  });
+
+  qs('#q').addEventListener('input',(e)=>{
+    const q = e.target.value.trim().toLowerCase();
+    const list = !q ? allBrands : allBrands.filter(b=>b.name.toLowerCase().includes(q));
+    renderRows(list);
+  });
+});
+</script>
 </body>
 </html>

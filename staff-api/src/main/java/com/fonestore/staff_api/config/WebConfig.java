@@ -10,10 +10,14 @@ public class WebConfig {
         return new WebMvcConfigurer() {
             @Override public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:9090","http://127.0.0.1:9090",
-                                        "http://localhost:5500","http://127.0.0.1:5500")
-                        .allowedMethods("GET","POST","PUT","DELETE")
-                        .allowCredentials(false);
+                        .allowedOrigins(
+                                "http://localhost:9090","http://127.0.0.1:9090",
+                                "http://localhost:5500","http://127.0.0.1:5500",
+                                "http://localhost:5173","http://127.0.0.1:5173"
+                        )
+                        .allowedMethods("GET","POST","PUT","DELETE","PATCH","OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true); // Bật nếu sau này bạn dùng cookie refresh
             }
         };
     }

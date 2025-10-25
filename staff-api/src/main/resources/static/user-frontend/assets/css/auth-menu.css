@@ -1,0 +1,25 @@
+/* Auth menu styles */
+.nav { display:flex; gap:20px; align-items:center; }
+.nav .user-menu { position:relative; display:flex; align-items:center; }
+.user-btn {
+  display:flex; align-items:center; gap:8px; padding:6px 10px;
+  border-radius:999px; border:1px solid var(--border, #e5e7eb); background:#fff;
+  cursor:pointer; line-height:1; transition:box-shadow .15s ease;
+}
+.user-btn:hover { box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.user-avatar {
+  width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  background:#111827; color:#fff; font-size:12px; font-weight:700; text-transform:uppercase;
+}
+.user-name { max-width:140px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-dropdown {
+  position:absolute; top:42px; right:0; min-width:200px; padding:8px;
+  background:#fff; border:1px solid var(--border, #e5e7eb); border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08); display:none; z-index:50;
+}
+.user-dropdown a, .user-dropdown button {
+  display:block; width:100%; text-align:left; padding:10px 12px; border-radius:8px; border:none; background:none; cursor:pointer;
+}
+.user-dropdown a:hover, .user-dropdown button:hover { background:#f3f4f6; }
+.user-divider { height:1px; background:#e5e7eb; margin:6px 0; }
+.badge-cart { margin-left:6px; } /* keep cart spacing */

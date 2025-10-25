@@ -5,8 +5,7 @@ import lombok.Getter; import lombok.Setter;
 @Getter @Setter
 public class Product {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
-    private Long id;
+    @Column(name = "product_id") private Long id;
     @Column(nullable = false) private String name;
     @Column private String slug;
     @Column(name = "brand_id") private Long brandId;

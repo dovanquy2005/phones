@@ -4,14 +4,14 @@ import com.fonestore.staff_api.dto.user.*;
 import com.fonestore.staff_api.service.UserService;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Qualifier;
+
 
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserService service;
-    public UserController(@Qualifier("staffUserService") UserService service) { this.service = service; }
+    public UserController(UserService service) { this.service = service; }
 
     @PostMapping(
         consumes = "application/json",
@@ -24,11 +24,28 @@ public class UserController {
             @RequestParam(required = false) String role,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id,desc") String sort
+            @RequestParam(defaultValue = "userId,desc") String sort // đổi mặc định
     ) {
-        Sort s = Sort.by(sort.split(",")[0]);
-        if (sort.toLowerCase().endsWith(",desc")) s = s.descending();
-        Pageable p = PageRequest.of(page, size, s);
+        // tách "field,dir"
+        String[] parts = sort.split(",");
+        String reqField = parts.length > 0 ? parts[0].trim() : "userId";
+        String dir = parts.length > 1 ? parts[1].trim() : "asc";
+
+        // ánh xạ & whitelist để tránh lỗi "No property ..."
+        String field = switch (reqField) {
+            case "id", "userId" -> "userId";     // map "id" -> "userId"
+            case "email"        -> "email";
+            case "fullName"     -> "fullName";
+            case "phone"        -> "phone";
+            case "dob"          -> "dob";
+            case "gender"       -> "gender";
+            default             -> "userId";     // fallback an toàn
+        };
+
+        Sort s = Sort.by(field);
+        if ("desc".equalsIgnoreCase(dir)) s = s.descending();
+
+        Pageable p = PageRequest.of(Math.max(0, page), Math.max(1, size), s);
         return service.list(role, p);
     }
 
