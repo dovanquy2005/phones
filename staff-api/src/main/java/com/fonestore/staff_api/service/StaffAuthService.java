@@ -4,7 +4,8 @@ import com.fonestore.staff_api.config.JwtUtil;
 import com.fonestore.staff_api.dto.auth.LoginResponse;
 import com.fonestore.staff_api.entity.Staff;
 import com.fonestore.staff_api.exception.BadRequestException;
-import com.fonestore.staff_api.repository.StaffRepository;
+import com.fonestore.staff_api.repository.staff.StaffRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

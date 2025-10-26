@@ -5,77 +5,608 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>fonestore · Khách hàng</title>
   <link rel="stylesheet" href="css/base.css"/>
+  <link rel="icon" href="/staff-frontend/assets/logo.svg" type="image/svg+xml"/>
   <script src="/staff-frontend/assets/js/api.js"></script>
+  <style>
+    :root{ --border:#e5e7eb; --ink:#0f172a; --muted:#6b7280; }
+    .table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .table thead th,.table tbody td{padding:12px 16px;border-bottom:1px solid var(--border)}
+    .table-wrap{overflow-x:auto}
+    .page-title{margin:0}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+    .empty{padding:16px;color:#6b7280;text-align:center}
 
+    /* Pager (dưới bảng chính) */
+    .pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;padding:12px 8px;border-top:1px solid var(--border)}
+    .pager .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer}
+    .pager .btn[disabled]{opacity:.45;cursor:not-allowed}
+    .pager .page{min-width:34px;text-align:center}
+    .pager .is-active{background:#111827;color:#fff;border-color:#111827}
+
+    /* Header search */
+    .search{display:flex;align-items:center;gap:8px;margin-left:auto}
+    .search .input{min-width:280px}
+    @media (max-width:720px){ .search .input{min-width:0;width:100%} }
+
+    /* Toast */
+    .toast{
+      position:fixed;right:16px;bottom:16px;z-index:50;background:#111827;color:#fff;
+      padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;
+      transform:translateY(8px);transition:opacity .2s ease, transform .2s ease;font-size:14px
+    }
+    .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60}
+    .modal.is-open{display:flex}
+    .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+    .modal__dialog{position:relative;background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:clamp(320px, 92vw, 840px);max-height:92vh;display:flex;flex-direction:column}
+    .modal__header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .modal__title{margin:0;font-size:18px}
+    .modal__body{padding:0}
+    .modal__footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+    .btn-close{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
+    .btn--sm{padding:6px 10px;border:1px solid var(--border);background:#fff;border-radius:8px;cursor:pointer}
+    .muted{color:#6b7280}
+
+    /* START: unified header css */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    .avatar-menu{position:relative}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    .avatar-menu[open] .dropdown{display:block}
+    .dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+    .dropdown a:hover{background:#f3f4f6}
+    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+    .role-badge.manager{background:#dcfce7;color:#166534}
+    .role-badge.staff{background:#fee2e2;color:#991b1b}
+    /* END: unified header css */
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="index.html" aria-label="fonestore">
-      <img src="assets/logo.svg" alt="" class="brand__logo"/>
-      <span class="brand__text">fonestore</span>
-    </a>
-
-    <form class="search" role="search" aria-label="Tìm kiếm">
-      <span class="input-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
-      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
-    </form>
-
-    <div class="header-actions">
-      <a class="btn btn--primary" href="products.html#modal-create">Tạo mới</a>
-      <details class="avatar-menu">
-        <summary class="avatar" aria-label="Tài khoản">
-          <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
-        </summary>
-        <nav class="dropdown" aria-label="Tài khoản">
-          <a href="settings.html">Cài đặt</a>
-          <a href="auth-login.html">Đăng xuất</a>
-        </nav>
-      </details>
-    </div>
-  </header>
-
-  <div class="app-shell">
-        <aside class="sidebar" aria-label="Điều hướng">
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Bán hàng</p>
-        <a class="sidebar__link" href="orders.html">Đơn hàng</a>
-        <a class="sidebar__link" href="payments.html">Thanh toán</a>
-        <a class="sidebar__link" href="customers.html">Khách hàng</a>
-        <a class="sidebar__link" href="index.html">Dashboard</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="brands.html">Thương hiệu</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hệ thống</p>
-        <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
-      </div>
-    </aside>
-    <main class="content">
-      <section class="toolbar">
-        <h1 class="page-title">Khách hàng</h1>
-      </section>
-      <section class="card">
-        <div class="card__body table-wrap">
-          <table class="table">
-            <thead><tr><th>Khách</th><th>Điện thoại</th><th>Tổng chi tiêu</th><th>Gần nhất</th></tr></thead>
-            <tbody>
-              
-<tr><td>Nguyễn Văn A</td><td>0938xxx111</td><td>56.700.000₫</td><td>OD-000128 (06/10/2025)</td></tr>
-<tr><td>Trần B</td><td>0903xxx222</td><td>24.990.000₫</td><td>OD-000120 (03/10/2025)</td></tr>
-<tr><td>Phạm C</td><td>0987xxx333</td><td>12.490.000₫</td><td>OD-000115 (01/10/2025)</td></tr>
-<tr><td>Lê D</td><td>0912xxx444</td><td>8.490.000₫</td><td>OD-000105 (28/09/2025)</td></tr>
-
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+<!-- START: unified header -->
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="fonestore">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/>
+    <span class="brand__text">fonestore</span>
+  </a>
+  <div class="header-spacer"></div>
+  <div class="header-actions">
+    <details class="avatar-menu" id="avatarMenu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="#modal-profile" id="open-profile">Thông tin tài khoản</a>
+        <a href="auth-login.html" id="btn-logout">Đăng xuất</a>
+      </nav>
+    </details>
   </div>
+</header>
+<!-- END: unified header -->
+
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Điều hướng">
+    <div class="sidebar__group" data-sec="sales">
+      <p class="sidebar__heading">Bán hàng</p>
+      <a class="sidebar__link" href="orders.html">Đơn hàng</a>
+      <a class="sidebar__link" href="payments.html">Thanh toán</a>
+      <a class="sidebar__link sidebar__link--active" href="customers.html">Khách hàng</a>
+      <a class="sidebar__link" href="index.html">Dashboard</a>
+    </div>
+    <div class="sidebar__group" data-sec="catalog">
+      <p class="sidebar__heading">Hàng hóa</p>
+      <a class="sidebar__link" href="products.html">Sản phẩm</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+      <a class="sidebar__link" href="vouchers.html">Voucher</a>
+    </div>
+    <div class="sidebar__group" data-sec="system">
+      <p class="sidebar__heading">Hệ thống</p>
+      <a class="sidebar__link" href="staff.html">Nhân viên</a>
+      <a class="sidebar__link" href="reports.html">Báo cáo</a>
+      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <section class="toolbar">
+      <h1 class="page-title">Khách hàng</h1>
+      <!-- Ô tìm kiếm được thêm vào đây -->
+      <div class="search">
+        <input id="q" class="input" placeholder="Tìm theo tên/SĐT"/>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__body table-wrap">
+        <table class="table" aria-describedby="pager-summary">
+          <thead>
+            <tr><th>Khách</th><th>Điện thoại</th><th>Tổng chi tiêu</th><th>Gần nhất</th><th style="width:140px;text-align:right"></th></tr>
+          </thead>
+          <tbody id="rows">
+            <tr><td colspan="5" class="empty">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="pager" class="pager" aria-label="Phân trang"></div>
+      <p id="pager-summary" class="muted" style="margin:0;padding:0 12px 12px;"></p>
+    </section>
+  </main>
+</div>
+
+<!-- Toast + aria live -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="aria-live" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-live="polite"></div>
+
+<!-- Modal: Lịch sử đơn hàng -->
+<div id="modal-orders" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-orders-title">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__dialog">
+    <div class="modal__header">
+      <h3 id="modal-orders-title" class="modal__title">Lịch sử đơn hàng</h3>
+      <button class="btn-close" data-close>Đóng</button>
+    </div>
+    <div class="modal__body">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Mã</th><th>Tổng</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
+          <tbody id="rows-orders-history">
+            <tr><td colspan="4" class="empty">Đang tải…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="pager-orders" class="pager"></div>
+      <p id="pager-orders-summary" class="muted" style="margin:0 12px 12px;"></p>
+    </div>
+    <div class="modal__footer">
+      <button class="btn-close" data-close>Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ===== Helpers & API ===== */
+  const BASE = (typeof window.API_BASE !== 'undefined' && window.API_BASE) ? window.API_BASE : location.origin;
+  const API_CUSTOMERS = (typeof window.API_CUSTOMERS !== 'undefined' && window.API_CUSTOMERS)
+    ? window.API_CUSTOMERS : (BASE + '/api/customers');
+
+  const qs = s => document.querySelector(s);
+  const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.') + '₫';
+  const fmtDate = s => {
+    if (!s) return '';
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yy = d.getFullYear();
+    return `${dd}/${mm}/${yy}`;
+  };
+  const maskPhone = p => {
+    if (!p) return '-';
+    const s = String(p);
+    if (s.length < 7) return s;
+    return s.slice(0,4) + 'xxx' + s.slice(-3);
+  };
+  const getStaffToken = () =>
+    (typeof window.getToken === 'function'
+      ? window.getToken()
+      : (localStorage.getItem('accessToken') || ''));
+  if (!getStaffToken()) location.href = '/staff-frontend/auth-login.html';
+
+  async function _fallbackApiFetch(url, opts={}){
+    const headers = new Headers(opts.headers || {});
+    const token = getStaffToken();
+    if (token) headers.set('Authorization','Bearer '+token);
+    if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
+      headers.set('Content-Type','application/json');
+    }
+    const res = await fetch(url, { ...opts, headers });
+    if (!res.ok){
+      let detail=''; try{ const j=await res.json(); detail=j.message||j.error||''; }catch{}
+      if (res.status===401){ alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; }
+      if (res.status===403){ alert('Bạn không có quyền truy cập tài nguyên này'); }
+      throw new Error(`HTTP ${res.status}${detail?': '+detail:''}`);
+    }
+    return res.status===204 ? null : res.json();
+  }
+  const __baseFetch = (typeof window.apiFetch === 'function') ? window.apiFetch : _fallbackApiFetch;
+  async function _apiFetch(url, opts={}){
+    const token = getStaffToken();
+    const headers = new Headers(opts.headers || {});
+    if (token && !headers.has('Authorization')) headers.set('Authorization','Bearer '+token);
+    if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
+      headers.set('Content-Type','application/json');
+    }
+    return __baseFetch(url, { ...opts, headers });
+  }
+
+  /* ===== State (bảng chính) ===== */
+  let all = [];
+  let filters = { q:'' };
+  let pagination = { page:1, perPage:10, totalPages:1 };
+
+  /* ===== State (modal lịch sử) ===== */
+  let modalState = { customerId:null, customerName:'', page:1, perPage:10, totalPages:1 };
+
+  /* ===== Toast ===== */
+  let toastTimer=null;
+  function showToast(msg, timeout=1500){
+    const t = qs('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), timeout);
+    document.getElementById('aria-live').textContent = msg;
+  }
+
+  /* ===== Load customers ===== */
+  async function loadCustomers(){
+    const tb = document.getElementById('rows');
+    tb.innerHTML = `<tr><td colspan="5" class="empty">Đang tải…</td></tr>`;
+    try{
+      const q = (filters.q || '').trim();
+      const url = q ? `${API_CUSTOMERS}?q=${encodeURIComponent(q)}` : API_CUSTOMERS;
+
+      const raw = await _apiFetch(url);
+      const arr = Array.isArray(raw) ? raw
+                : Array.isArray(raw?.content) ? raw.content
+                : Array.isArray(raw?.items) ? raw.items : [];
+
+      all = arr.map(c => {
+        const id = c.id ?? c.customerId ?? c.userId ?? c.customer_id ?? c.user_id;
+        const name = c.name ?? c.fullName ?? c.customerName ?? c.full_name ?? c.customer_name;
+        const phone = c.phone ?? c.phoneNumber ?? c.phone_number ?? c.mobile;
+        const totalSpent = c.totalSpent ?? c.spentTotal ?? c.total_spent ?? c.lifetimeValue ?? 0;
+        const lastCode = c.lastOrderCode ?? c.last_order_code ?? c.lastOrderCodeFormatted;
+        const lastAt = c.lastOrderAt ?? c.last_order_at ?? c.lastOrderDate ?? c.last_order_date;
+        return { id, name, phone, totalSpent, lastCode, lastAt };
+      });
+
+      pagination.page = 1;
+      renderRows(applyClientFilter(all));
+      showToast('Đã tải danh sách khách hàng');
+    }catch(err){
+      console.error(err);
+      tb.innerHTML = `<tr><td colspan="5" class="empty">Lỗi tải: ${err.message}</td></tr>`;
+      document.getElementById('pager').innerHTML = '';
+      document.getElementById('pager-summary').textContent = '';
+    }
+  }
+
+  function applyClientFilter(src){
+    const q = (filters.q || '').trim().toLowerCase();
+    if (!q) return src;
+    return src.filter(c => (c.name||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q));
+  }
+
+  function renderRows(list){
+    const tb = document.getElementById('rows');
+
+    const total = list.length;
+    pagination.totalPages = Math.max(1, Math.ceil(total / pagination.perPage));
+    if (pagination.page > pagination.totalPages) pagination.page = pagination.totalPages;
+    const start = (pagination.page - 1) * pagination.perPage;
+    const end = start + pagination.perPage;
+    const pageItems = list.slice(start, end);
+
+    const startIdx = total ? start + 1 : 0;
+    const endIdx = total ? Math.min(end, total) : 0;
+    document.getElementById('pager-summary').textContent =
+      total ? `Hiển thị ${startIdx}–${endIdx} trong tổng ${total} khách hàng` : '';
+
+    if (!pageItems.length){
+      tb.innerHTML = `<tr><td colspan="5" class="empty">Không có khách hàng</td></tr>`;
+      renderPagination();
+      return;
+    }
+
+    tb.innerHTML = pageItems.map(c => {
+      const last = (c.lastCode ? c.lastCode : '-') + (c.lastAt ? ` (${fmtDate(c.lastAt)})` : '');
+      return `
+        <tr data-id="${c.id ?? ''}" data-name="${c.name ?? ''}">
+          <td>${c.name ?? '-'}</td>
+          <td>${maskPhone(c.phone)}</td>
+          <td>${fmtVND(c.totalSpent)}</td>
+          <td>${last}</td>
+          <td style="text-align:right">
+            <button class="btn--sm" data-view="${c.id ?? ''}">Xem chi tiết</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    renderPagination();
+  }
+
+  function renderPagination(){
+    const wrap = document.getElementById('pager');
+    const { page, totalPages } = pagination;
+
+    const pages = [];
+    const maxBtns = 5;
+    let start = Math.max(1, page - Math.floor(maxBtns/2));
+    let end = start + maxBtns - 1;
+    if (end > totalPages){ end = totalPages; start = Math.max(1, end - maxBtns + 1); }
+    for (let i=start;i<=end;i++) pages.push(i);
+
+    wrap.innerHTML = `
+      <button class="btn" data-page="prev" ${page<=1?'disabled':''}>Prev</button>
+      ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-page="${p}">${p}</button>`).join('')}
+      <button class="btn" data-page="next" ${page>=totalPages?'disabled':''}>Next</button>
+    `;
+  }
+
+  /* ===== Dịch trạng thái sang tiếng Việt ===== */
+  function viStatus(status){
+    if (!status) return '-';
+    switch ((status+'').toUpperCase()){
+      case 'PENDING':   return 'Chờ giao';
+      case 'SHIPPING':
+      case 'SHIPPED':   return 'Đang giao';
+      case 'DELIVERED': return 'Đã giao';
+      case 'PAID':      return 'Đã thanh toán';
+      case 'COD':       return 'COD';
+      case 'CANCELED':
+      case 'CANCELLED': return 'Đã hủy';
+      case 'REFUNDED':  return 'Đã hoàn tiền';
+      default:          return status;
+    }
+  }
+
+  /* ===== Modal: Lịch sử đơn hàng ===== */
+  function openOrdersModal(customerId, customerName){
+    modalState.customerId = customerId;
+    modalState.customerName = customerName || '';
+    modalState.page = 1;
+    qs('#modal-orders-title').textContent = `Lịch sử đơn hàng · ${customerName || ('ID ' + customerId)}`;
+    qs('#modal-orders').classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    loadCustomerOrders();
+  }
+  function closeOrdersModal(){
+    qs('#modal-orders').classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  async function loadCustomerOrders(){
+    const tb = qs('#rows-orders-history');
+    tb.innerHTML = `<tr><td colspan="4" class="empty">Đang tải…</td></tr>`;
+    try{
+      let url = `${API_CUSTOMERS}/${encodeURIComponent(modalState.customerId)}/orders?page=${modalState.page-1}&size=${modalState.perPage}`;
+      let raw;
+      try {
+        raw = await _apiFetch(url);
+      } catch (e) {
+        // fallback nếu BE chưa có endpoint trên
+        url = `${BASE}/api/orders?userId=${encodeURIComponent(modalState.customerId)}&page=${modalState.page-1}&size=${modalState.perPage}`;
+        raw = await _apiFetch(url);
+      }
+
+      const arr = Array.isArray(raw) ? raw
+                : Array.isArray(raw?.content) ? raw.content
+                : Array.isArray(raw?.items) ? raw.items : [];
+
+      const total = (typeof raw?.totalElements === 'number') ? raw.totalElements : arr.length;
+      modalState.totalPages = Math.max(1, (typeof raw?.totalPages === 'number') ? raw.totalPages : Math.ceil(total / modalState.perPage));
+
+      if (!arr.length){
+        tb.innerHTML = `<tr><td colspan="4" class="empty">Chưa có đơn hàng</td></tr>`;
+      } else {
+        tb.innerHTML = arr.map(o=>{
+          const id = o.id ?? o.orderId ?? o.order_id;
+          const code = o.code || `OD-${String(id).padStart(6,'0')}`;
+          const total = o.total ?? (o.subtotal - (o.discount||0) + (o.shippingFee||o.shipping_fee||0));
+          const status = viStatus(o.status);
+          const date = o.createdAt ?? o.created_at;
+          return `
+            <tr>
+              <td>${code}</td>
+              <td>${fmtVND(total)}</td>
+              <td>${status}</td>
+              <td>${fmtDate(date)}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      renderOrdersPagination();
+      qs('#pager-orders-summary').textContent = `Trang ${modalState.page}/${modalState.totalPages}`;
+    }catch(err){
+      console.error(err);
+      tb.innerHTML = `<tr><td colspan="4" class="empty">Lỗi tải: ${err.message}</td></tr>`;
+      qs('#pager-orders').innerHTML = '';
+      qs('#pager-orders-summary').textContent = '';
+    }
+  }
+
+  function renderOrdersPagination(){
+    const wrap = qs('#pager-orders');
+    const { page, totalPages } = modalState;
+
+    const pages = [];
+    const maxBtns = 5;
+    let start = Math.max(1, page - Math.floor(maxBtns/2));
+    let end = start + maxBtns - 1;
+    if (end > totalPages){ end = totalPages; start = Math.max(1, end - maxBtns + 1); }
+    for (let i=start;i<=end;i++) pages.push(i);
+
+    wrap.innerHTML = `
+      <button class="btn" data-mpage="prev" ${page<=1?'disabled':''}>Prev</button>
+      ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-mpage="${p}">${p}</button>`).join('')}
+      <button class="btn" data-mpage="next" ${page>=totalPages?'disabled':''}>Next</button>
+    `;
+  }
+
+  /* ===== Events ===== */
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+
+    // Tìm nhanh (thêm null-guard)
+    const qInput = document.getElementById('q');
+    let t=null;
+    if (qInput){
+      qInput.addEventListener('input', e=>{
+        clearTimeout(t);
+        t = setTimeout(()=>{
+          filters.q = e.target.value || '';
+          pagination.page = 1;
+          renderRows(applyClientFilter(all));
+        }, 200);
+      });
+    }
+
+    // Phân trang bảng chính
+    document.getElementById('pager').addEventListener('click', e=>{
+      const btn = e.target.closest('[data-page]'); if (!btn) return;
+      const val = btn.dataset.page;
+      if (val === 'prev' && pagination.page > 1) pagination.page--;
+      else if (val === 'next' && pagination.page < pagination.totalPages) pagination.page++;
+      else if (!isNaN(+val)) pagination.page = +val;
+      renderRows(applyClientFilter(all));
+    });
+
+    // Mở modal lịch sử đơn hàng
+    document.getElementById('rows').addEventListener('click', e=>{
+      const btn = e.target.closest('[data-view]'); if (!btn) return;
+      const id = btn.dataset.view;
+      const tr = btn.closest('tr');
+      const name = tr?.dataset?.name || '';
+      openOrdersModal(id, name);
+    });
+
+    // Đóng modal
+    document.getElementById('modal-orders').addEventListener('click', e=>{
+      if (e.target.matches('[data-close]')) closeOrdersModal();
+    });
+    window.addEventListener('keydown', e=>{
+      if (e.key === 'Escape' && qs('#modal-orders').classList.contains('is-open')) closeOrdersModal();
+    });
+
+    // Phân trang trong modal
+    document.getElementById('pager-orders').addEventListener('click', e=>{
+      const btn = e.target.closest('[data-mpage]'); if (!btn) return;
+      const val = btn.dataset.mpage;
+      if (val === 'prev' && modalState.page > 1) modalState.page--;
+      else if (val === 'next' && modalState.totalPages && modalState.page < modalState.totalPages) modalState.page++;
+      else if (!isNaN(+val)) modalState.page = +val;
+      loadCustomerOrders();
+    });
+
+    await loadCustomers();
+  });
+})();
+</script>
+
+<!-- START: profile modal -->
+<div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <header class="modal__header">
+      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+    <div class="modal__body grid grid--2" id="profile-view">
+      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
+        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
+        <div>
+          <div id="profileName" style="font-weight:600">—</div>
+          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Họ tên</label>
+        <input class="input" id="profile_name" disabled/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input class="input" id="profile_email" disabled/>
+      </div>
+      <div class="field">
+        <label>Vai trò</label>
+        <input class="input" id="profile_role" disabled/>
+      </div>
+    </div>
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Đóng</a>
+    </footer>
+  </div>
+</div>
+<!-- END: profile modal -->
+
+<script>
+// START: role-based sidebar control (robust) + header render hook ensure
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+  function __extractRoles(payload){
+    try{
+      let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
+      let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
+      list = list
+        .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x)
+        .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
+      return list.filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function __deriveRole(list){
+    if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
+    if (list.includes('staff') || list.includes('employee')) return 'staff';
+    if (list.includes('user')) return 'user';
+    return list[0] || 'user';
+  }
+  function __applyRoleUI(role){
+    try{
+      const sys = document.querySelector('.sidebar__group[data-sec="system"]');
+      if (sys && role !== 'manager') sys.remove();
+    }catch(e){}
+  }
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  const token = getToken(); if (!token) return;
+  const payload = decodeJwt(token) || {};
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+  const email = payload.email || payload.username || '—';
+
+  fillProfile({name,email,role});
+  __applyRoleUI(role);
+
+  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+})();
+</script>
 </body>
 </html>

@@ -3,55 +3,20 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>fonestore · Thương hiệu</title>
+  <title>fonestore · Nhân viên</title>
   <link rel="stylesheet" href="css/base.css"/>
-  <link rel="icon" href="/user-frontend/assets/img/logo.svg" type="image/svg+xml">
+  <script src="/staff-frontend/assets/js/api.js"></script>
   <style>
-    .table{width:100%;border-collapse:collapse;table-layout:fixed;}
-    .table thead th,.table tbody td{padding:12px 16px;border-bottom:1px solid var(--color-border)}
-    .table-wrap{overflow-x:auto;}
-    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .page-title{margin:0}
-    .btn--danger{background:#ef4444;color:#fff}
-    .empty{padding:16px;color:#6b7280;text-align:center;}
-    .modal{
-      position: fixed; inset: 0; background: rgba(17,24,39,.45);
-      display: none; justify-content: center; align-items: flex-start;
-      padding: 32px 16px; z-index: 9999;
-    }
-    .modal[aria-hidden="false"]{ display:flex; }
-    .modal__card{
-      width: min(560px, 100%);
-      background:#fff; border-radius:16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.15);
-    }
-    .modal__header,.modal__body,.modal__footer{padding:16px}
-    .modal__header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--color-border)}
-    .modal__footer{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--color-border)}
-    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-    .helper{font-size:12px;color:#6b7280}
-    .td-actions{display:flex;gap:8px;justify-content:flex-end}
+    .toast{position:fixed;right:16px;bottom:16px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s ease, transform .2s ease;font-size:14px}
+    .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid #e5e7eb;border-top-color:#111827;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .table-wrap{overflow-x:auto}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6}
+    .badge--ok{background:#dcfce7}
+    .badge--off{background:#fee2e2}
 
-    /* ===== Toast ===== */
-    .toast-wrap{
-      position:fixed; top:20px; right:20px; z-index:99999;
-      display:flex; flex-direction:column; gap:10px;
-    }
-    .toast{
-      min-width:260px; max-width:360px;
-      padding:10px 12px; border-radius:12px;
-      box-shadow:0 10px 25px rgba(0,0,0,.15);
-      display:flex; align-items:flex-start; gap:10px;
-      color:#0f172a; background:#fff; border:1px solid #e5e7eb;
-      animation:toast-in .18s ease-out;
-    }
-    .toast--success{ border-color:#86efac; background:#f0fdf4; }
-    .toast--error{   border-color:#fecaca; background:#fef2f2; }
-    .toast__title{ font-weight:600; margin-bottom:2px }
-    .toast__msg{ font-size:13px; color:#334155 }
-    @keyframes toast-in { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
-  
-            /* header */
+        /* header */
     .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
     .header-spacer{flex:1}
@@ -71,7 +36,6 @@
     .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
     .role-badge.manager{background:#dcfce7;color:#166534}
     .role-badge.staff{background:#fee2e2;color:#991b1b}
-  
   
 /* START: unified header css */
 .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
@@ -93,16 +57,14 @@
 </style>
 </head>
 <body>
- <header class="app-header">
+<!-- START: unified header -->
+<header class="app-header">
   <a class="brand" href="index.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
     <span class="brand__text">fonestore</span>
   </a>
-
   <div class="header-spacer"></div>
-
   <div class="header-actions">
-    <!-- Avatar top-right -->
     <details class="avatar-menu" id="avatarMenu">
       <summary class="avatar" aria-label="Tài khoản">
         <img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/>
@@ -114,9 +76,12 @@
     </details>
   </div>
 </header>
+<!-- END: unified header -->
 
-  <div class="app-shell">
-      <aside class="sidebar" aria-label="Điều hướng">
+
+
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Điều hướng">
     <div class="sidebar__group" data-sec="sales">
       <p class="sidebar__heading">Bán hàng</p>
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
@@ -127,202 +92,274 @@
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
       <a class="sidebar__link" href="products.html">Sản phẩm</a>
-      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+      <a class="sidebar__link" href="brands.html">Danh mục</a>
       <a class="sidebar__link" href="vouchers.html">Voucher</a>
     </div>
     <div class="sidebar__group" data-sec="system">
       <p class="sidebar__heading">Hệ thống</p>
-<a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
+      
+      <a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
       <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
     </div>
   </aside>
-    <main class="content">
-      <section class="toolbar">
-        <h1 class="page-title">Thương hiệu</h1>
-        <button class="btn btn--primary" id="btn-open-create" type="button">+ Thêm thương hiệu</button>
-      </section>
 
-      <section class="card">
-        <div class="card__body table-wrap">
-          <table class="table">
-            <thead><tr><th>Tên</th><th style="width:180px;text-align:right">Thao tác</th></tr></thead>
-            <tbody id="rows-brands"><tr><td colspan="2" class="empty">Đang tải…</td></tr></tbody>
+  <main class="content">
+    <section class="toolbar" style="display:flex;justify-content:space-between;align-items:center">
+      <h1 class="page-title">Nhân viên</h1>
+    </section>
+
+    <section class="card">
+      <div class="card__body">
+        <div class="table-wrap">
+          <table class="table" aria-label="Danh sách nhân viên">
+            <thead>
+              <tr>
+                <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th style="width:1%"></th>
+              </tr>
+            </thead>
+            <tbody id="tb">
+              <tr><td colspan="6" class="muted">Đang tải… <span class="spinner"></span></td></tr>
+            </tbody>
           </table>
         </div>
-      </section>
-    </main>
-  </div>
+        <p id="summary" class="muted" style="margin-top:8px"></p>
+      </div>
+    </section>
+  </main>
+</div>
 
-  <!-- Toast root -->
-  <div id="toast-root" class="toast-wrap"></div>
+<!-- MODAL: Tạo -->
+<div class="modal" id="modal-create" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <header class="modal__header">
+      <h3 id="createTitle" style="margin:0">Tạo nhân viên</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
 
-  <!-- Modal tạo thương hiệu -->
-  <div id="modal-create" class="modal" aria-hidden="true">
-    <article class="modal__card" role="dialog" aria-modal="true">
-      <header class="modal__header">
-        <strong>Thêm thương hiệu</strong>
-        <button class="btn btn--ghost" id="btn-close" type="button">Đóng</button>
-      </header>
-      <form id="form-create">
-        <div class="modal__body">
-          <div class="field">
-            <label>Tên thương hiệu</label>
-            <input id="b-name" class="input" required placeholder="Ví dụ: Apple"/>
-          </div>
-          <div class="field">
-            <small id="b-err" class="helper" style="color:#b91c1c;display:none"></small>
-          </div>
-        </div>
-        <footer class="modal__footer">
-          <button class="btn" type="button" id="btn-cancel">Hủy</button>
-          <button class="btn btn--primary" type="submit">Lưu</button>
-        </footer>
-      </form>
-    </article>
+    <form class="modal__body grid grid--2" id="form-create">
+      <div class="field"><label>Họ tên <span style="color:#e11d48">*</span></label>
+        <input class="input" name="full_name" required/>
+      </div>
+      <div class="field"><label>Email <span style="color:#e11d48">*</span></label>
+        <input class="input" type="email" name="email" required/>
+      </div>
+      <div class="field"><label>Số điện thoại</label>
+        <input class="input" name="phone"/>
+      </div>
+      <div class="field"><label>Vai trò</label>
+        <select class="input" name="role">
+          <option value="STAFF">Staff</option>
+          <option value="MANAGER">Manager</option>
+        </select>
+      </div>
+      <div class="field"><label>Mật khẩu <span style="color:#e11d48">*</span></label>
+        <input class="input" type="password" name="password" minlength="6" required/>
+      </div>
+      <div class="field"><label>Trạng thái</label>
+        <select class="input" name="is_active">
+          <option value="1">Hoạt động</option>
+          <option value="0">Tạm khóa</option>
+        </select>
+      </div>
+    </form>
+
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Hủy</a>
+      <button class="btn btn--primary" id="btn-create" type="submit" form="form-create">Tạo</button>
+    </footer>
   </div>
+</div>
+
+<!-- MODAL: Sửa -->
+<div class="modal" id="modal-edit" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <header class="modal__header">
+      <h3 id="editTitle" style="margin:0">Sửa nhân viên</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+
+    <form class="modal__body grid grid--2" id="form-edit">
+      <input type="hidden" name="staff_id"/>
+      <div class="field"><label>Họ tên</label>
+        <input class="input" name="full_name"/>
+      </div>
+      <div class="field"><label>Số điện thoại</label>
+        <input class="input" name="phone"/>
+      </div>
+      <div class="field"><label>Vai trò</label>
+        <select class="input" name="role">
+          <option value="STAFF">Staff</option>
+          <option value="MANAGER">Manager</option>
+        </select>
+      </div>
+      <div class="field"><label>Mật khẩu (đổi nếu nhập)</label>
+        <input class="input" type="password" name="password" minlength="6"/>
+      </div>
+      <div class="field"><label>Trạng thái</label>
+        <select class="input" name="is_active">
+          <option value="1">Hoạt động</option>
+          <option value="0">Tạm khóa</option>
+        </select>
+      </div>
+    </form>
+
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Hủy</a>
+      <button class="btn btn--primary" id="btn-update" type="submit" form="form-edit">Lưu</button>
+    </footer>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
-// ===== Toast helper =====
-function showToast(message, type='success', title){
-  const root = document.getElementById('toast-root');
-  if (!root) return;
-  const el = document.createElement('div');
-  el.className = `toast toast--${type}`;
-  el.innerHTML = `
-    <div>
-      <div class="toast__title">${title || (type==='success' ? 'Thành công' : 'Lỗi')}</div>
-      <div class="toast__msg">${message || ''}</div>
-    </div>`;
-  root.appendChild(el);
-  const timeout = setTimeout(()=> el.remove(), 2500);
-  el.addEventListener('click', ()=>{ clearTimeout(timeout); el.remove(); });
-}
+(function(){
+  const BASE = (typeof window.API_BASE !== 'undefined' && window.API_BASE) ? window.API_BASE : location.origin;
+  const API = BASE + '/api/staff/users';
 
-// ===== API logic =====
-const API_BASE   = location.origin;
-const API_BRANDS = API_BASE + '/api/brands';
-const qs = s => document.querySelector(s);
-const show = (el)=>{ el?.setAttribute('aria-hidden','false'); };
-const hide = (el)=>{ el?.setAttribute('aria-hidden','true'); };
+  const qs = s => document.querySelector(s);
+  const getToken = () => (typeof window.getToken==='function'?window.getToken():localStorage.getItem('accessToken')||'');
+  if (!getToken()) location.href = '/staff-frontend/auth-login.html';
 
-const getToken = () => localStorage.getItem('accessToken') || '';
-if (!getToken()) location.href = '/staff-frontend/auth-login.html';
+  function toast(m, t=1600){ const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t); }
+  const viRole = r => (String(r||'').toUpperCase()==='MANAGER' ? 'Manager' : 'Staff');
+  const viActive = v => (String(v)==='0' || v===false ? '<span class="badge badge--off">Tạm khóa</span>' : '<span class="badge badge--ok">Hoạt động</span>');
+  const mask = s => s?String(s).trim():'';
 
-async function apiFetch(url, opts={}){
-  const headers = new Headers(opts.headers || {});
-  const token = getToken();
-  if (token) headers.set('Authorization', 'Bearer ' + token);
-  if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
-    headers.set('Content-Type','application/json');
+  async function apiFetch(url, opts={}){
+    const headers = new Headers(opts.headers||{});
+    const token = getToken();
+    if (token) headers.set('Authorization','Bearer '+token);
+    if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type','application/json');
+    const res = await fetch(url,{...opts, headers});
+    if(!res.ok){
+      let detail=''; try{const j=await res.json(); detail=j.message||j.error||''}catch{}
+      if (res.status===401){ alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; return;}
+      if (res.status===403){ alert('Bạn không có quyền thao tác này'); }
+      throw new Error(`HTTP ${res.status}${detail?': '+detail:''}`);
+    }
+    return res.status===204?null:res.json();
   }
-  const res = await fetch(url, {...opts, headers});
-  if (!res.ok){
-    let detail=''; try{ const j=await res.json(); detail=j.message||j.error||''; }catch{}
-    if (res.status===401){ alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; }
-    throw new Error(`HTTP ${res.status}${detail?': '+detail:''}`);
+
+  async function loadList(){
+    const tb = qs('#tb');
+    tb.innerHTML = `<tr><td colspan="6" class="muted">Đang tải… <span class="spinner"></span></td></tr>`;
+    try{
+      const page = await apiFetch(API);
+      const arr = Array.isArray(page?.content) ? page.content : (Array.isArray(page)?page:[]);
+      if(!arr.length){ tb.innerHTML=`<tr><td colspan="6" class="muted">Chưa có nhân viên</td></tr>`; qs('#summary').textContent=''; return;}
+      tb.innerHTML = arr.map(u=>{
+        return `
+          <tr data-id="${u.staffId}">
+            <td>${mask(u.fullName)||'-'}</td>
+            <td>${mask(u.email)||'-'}</td>
+            <td>${mask(u.phone)||'-'}</td>
+            <td>${viRole(u.role)}</td>
+            <td>${viActive(u.isActive)}</td>
+            <td style="white-space:nowrap">
+              <a class="btn" href="#modal-edit" data-edit="${u.staffId}">Sửa</a>
+              <a class="btn" href="#" data-toggle="${u.staffId}" data-active="${u.isActive?'1':'0'}">${u.isActive?'Khóa':'Mở khóa'}</a>
+              <a class="btn" href="#" data-del="${u.staffId}">Xoá</a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      qs('#summary').textContent = `Tổng ${arr.length} nhân viên (trang đầu)`;
+    }catch(e){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Lỗi: ${e.message}</td></tr>`;
+      qs('#summary').textContent='';
+    }
   }
-  return res.status===204 ? null : res.json();
-}
 
-let allBrands = [];
-
-function renderRows(list){
-  const tb = qs('#rows-brands');
-  if (!list.length){
-    tb.innerHTML = `<tr><td colspan="2" class="empty">Chưa có thương hiệu</td></tr>`;
-    return;
-  }
-  tb.innerHTML = list.map(b => `
-    <tr>
-      <td>${b.name ?? ''}</td>
-      <td class="td-actions" style="text-align:right">
-        <button class="btn btn--danger btn--sm" data-del="${b.id ?? b.brandId}">Xóa</button>
-      </td>
-    </tr>
-  `).join('');
-}
-
-async function loadBrands(){
-  const tb = qs('#rows-brands');
-  tb.innerHTML = `<tr><td colspan="2" class="empty">Đang tải…</td></tr>`;
-  const raw = await apiFetch(API_BRANDS);
-  const arr = Array.isArray(raw) ? raw
-           : Array.isArray(raw?.content) ? raw.content
-           : Array.isArray(raw?.items) ? raw.items : [];
-  allBrands = arr.map(x => ({
-    id: x.id ?? x.brandId ?? null,
-    name: x.name ?? x.brandName ?? ''
-  }));
-  allBrands.sort((a,b)=> a.name.localeCompare(b.name,'vi',{sensitivity:'base'}));
-  renderRows(allBrands);
-}
-
-const createBrand = (b)=> apiFetch(API_BRANDS, {method:'POST', body: JSON.stringify(b)});
-const deleteBrand = (id)=> apiFetch(`${API_BRANDS}/${encodeURIComponent(id)}`, {method:'DELETE'});
-
-document.addEventListener('DOMContentLoaded', async ()=>{
-  const logout = qs('#btn-logout'); logout?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
-  await loadBrands().catch(err=>{
-    console.error(err);
-    qs('#rows-brands').innerHTML = `<tr><td colspan="2" class="empty">Lỗi tải: ${err.message}</td></tr>`;
-  });
-
-  const modal = qs('#modal-create');
-  const errEl = qs('#b-err');
-  const nameEl = qs('#b-name');
-
-  qs('#btn-open-create').addEventListener('click', ()=>{
-    errEl.style.display='none'; errEl.textContent='';
-    nameEl.value=''; show(modal); setTimeout(()=> nameEl.focus(),50);
-  });
-  const closeModal = ()=> hide(modal);
-  qs('#btn-close').addEventListener('click', closeModal);
-  qs('#btn-cancel').addEventListener('click', closeModal);
-
+  // Tạo
   qs('#form-create').addEventListener('submit', async (e)=>{
     e.preventDefault();
-    errEl.style.display='none'; errEl.textContent='';
-    const name = nameEl.value.trim();
-    if (!name){ errEl.textContent='Vui lòng nhập tên thương hiệu'; errEl.style.display='block'; return; }
-
-    const dup = allBrands.find(b => b.name.toLowerCase()===name.toLowerCase());
-    if (dup){ errEl.textContent='Thương hiệu đã tồn tại'; errEl.style.display='block'; return; }
-
+    const btn=qs('#btn-create'); btn.disabled=true; btn.innerHTML='Đang tạo… <span class="spinner"></span>';
+    const fd=new FormData(e.target);
+    const payload={
+      fullName: fd.get('full_name')?.trim(),
+      email: fd.get('email')?.trim(),
+      phone: fd.get('phone')?.trim()||null,
+      role: (fd.get('role')||'STAFF').toUpperCase(),
+      password: fd.get('password'),
+      isActive: fd.get('is_active')==='1'
+    };
     try{
-      const created = await createBrand({ name });
-      allBrands.push({ id: created?.id ?? created?.brandId ?? null, name: created?.name ?? name });
-      allBrands.sort((a,b)=> a.name.localeCompare(b.name,'vi',{sensitivity:'base'}));
-      renderRows(allBrands); closeModal();
-      showToast('Đã thêm thương hiệu mới.', 'success');
-    }catch(err){
-      errEl.textContent='Lỗi tạo mới: '+err.message; errEl.style.display='block';
-      showToast('Lỗi khi tạo thương hiệu: '+err.message, 'error');
-    }
+      await apiFetch(API,{method:'POST', body:JSON.stringify(payload)});
+      toast('Đã tạo nhân viên');
+      e.target.reset(); location.hash='#'; await loadList();
+    }catch(err){ alert('Tạo nhân viên thất bại: '+err.message); }
+    finally{ btn.disabled=false; btn.textContent='Tạo'; }
   });
 
+  // Prefill Edit
+  document.addEventListener('click', (e)=>{
+    const edit = e.target.closest('[data-edit]'); if(!edit) return;
+    const tr = edit.closest('tr');
+    const id = edit.getAttribute('data-edit');
+    const name = tr.children[0].textContent.trim();
+    const email = tr.children[1].textContent.trim();
+    const phone = tr.children[2].textContent.trim();
+    const roleText = tr.children[3].textContent.trim(); // Manager/Staff
+    const isActive = edit.parentElement.querySelector('[data-toggle]').getAttribute('data-active')==='1';
+
+    const f = qs('#form-edit');
+    f.staff_id.value = id;
+    f.full_name.value = name;
+    f.phone.value = phone==='-'?'':phone;
+    f.role.value = roleText==='Manager'?'MANAGER':'STAFF';
+    f.password.value = '';
+    f.is_active.value = isActive?'1':'0';
+  });
+
+  // Lưu sửa
+  qs('#form-edit').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn=qs('#btn-update'); btn.disabled=true; btn.innerHTML='Đang lưu… <span class="spinner"></span>';
+    const fd=new FormData(e.target);
+    const id=fd.get('staff_id');
+    const payload={
+      fullName: fd.get('full_name')?.trim() || null,
+      phone: fd.get('phone')?.trim() || null,
+      role: (fd.get('role')||'STAFF').toUpperCase(),
+      password: fd.get('password') || null,
+      isActive: fd.get('is_active')==='1'
+    };
+    try{
+      await apiFetch(`${API}/${id}`, {method:'PATCH', body:JSON.stringify(payload)});
+      toast('Đã cập nhật');
+      e.target.reset(); location.hash='#'; await loadList();
+    }catch(err){ alert('Cập nhật thất bại: '+err.message); }
+    finally{ btn.disabled=false; btn.textContent='Lưu'; }
+  });
+
+  // Khóa/Mở
   document.addEventListener('click', async (e)=>{
-    const del = e.target.closest('[data-del]');
-    if (!del) return;
-    if (!confirm('Xóa thương hiệu này?')) return;
-    const id = del.dataset.del;
+    const tgl = e.target.closest('[data-toggle]'); if(!tgl) return;
+    const id = tgl.getAttribute('data-toggle');
+    const current = tgl.getAttribute('data-active')==='1';
     try{
-      await deleteBrand(id);
-      allBrands = allBrands.filter(b => String(b.id)!==String(id));
-      renderRows(allBrands);
-      showToast('Đã xóa thương hiệu.', 'success');
-    }catch(err){
-      showToast('Xóa thất bại: '+err.message, 'error');
-    }
+      await apiFetch(`${API}/${id}`, { method:'PATCH', body: JSON.stringify({ isActive: !current })});
+      toast(current?'Đã khóa':'Đã mở khóa');
+      await loadList();
+    }catch(err){ alert('Thao tác thất bại: '+err.message); }
   });
 
-  qs('#q').addEventListener('input',(e)=>{
-    const q = e.target.value.trim().toLowerCase();
-    const list = !q ? allBrands : allBrands.filter(b=>b.name.toLowerCase().includes(q));
-    renderRows(list);
+  // Xoá
+  document.addEventListener('click', async (e)=>{
+    const del = e.target.closest('[data-del]'); if(!del) return;
+    const id=del.getAttribute('data-del');
+    if(!confirm('Xoá nhân viên này?')) return;
+    try{
+      await apiFetch(`${API}/${id}`, {method:'DELETE'});
+      toast('Đã xoá'); await loadList();
+    }catch(err){ alert('Xoá thất bại: '+err.message); }
   });
-});
 
+  qs('#btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+  loadList();
+})();
 
 /* ====================== Avatar + Profile Modal ====================== */
 (function(){

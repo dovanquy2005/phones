@@ -7,55 +7,71 @@
   <link rel="stylesheet" href="css/base.css"/>
   <script src="/staff-frontend/assets/js/api.js"></script>
 
+<style>
+/* START: unified header css */
+.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.header-spacer{flex:1}
+.header-actions{display:flex;align-items:center;gap:10px}
+.avatar-menu{position:relative}
+.avatar-menu > summary{list-style:none;cursor:pointer}
+.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+.avatar img{width:100%;height:100%;display:block}
+.avatar-menu[open] .dropdown{display:block}
+.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+.dropdown a:hover{background:#f3f4f6}
+.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+.role-badge.manager{background:#dcfce7;color:#166534}
+.role-badge.staff{background:#fee2e2;color:#991b1b}
+/* END: unified header css */
+</style>
 </head>
 <body>
-  <header class="app-header">
-    <a class="brand" href="index.html" aria-label="fonestore">
-      <img src="assets/logo.svg" alt="" class="brand__logo"/>
-      <span class="brand__text">fonestore</span>
-    </a>
+<!-- START: unified header -->
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="fonestore">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/>
+    <span class="brand__text">fonestore</span>
+  </a>
+  <div class="header-spacer"></div>
+  <div class="header-actions">
+    <details class="avatar-menu" id="avatarMenu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="#modal-profile" id="open-profile">Thông tin tài khoản</a>
+        <a href="auth-login.html" id="btn-logout">Đăng xuất</a>
+      </nav>
+    </details>
+  </div>
+</header>
+<!-- END: unified header -->
 
-    <form class="search" role="search" aria-label="Tìm kiếm">
-      <span class="input-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
-      <input class="input" name="q" placeholder="Tìm kiếm nhanh…"/>
-    </form>
-
-    <div class="header-actions">
-      <a class="btn btn--primary" href="products.html#modal-create">Tạo mới</a>
-      <details class="avatar-menu">
-        <summary class="avatar" aria-label="Tài khoản">
-          <img src="https://api.dicebear.com/9.x/initials/svg?seed=NV" alt="NV"/>
-        </summary>
-        <nav class="dropdown" aria-label="Tài khoản">
-          <a href="settings.html">Cài đặt</a>
-          <a href="auth-login.html">Đăng xuất</a>
-        </nav>
-      </details>
-    </div>
-  </header>
-
+  
   <div class="app-shell">
-        <aside class="sidebar" aria-label="Điều hướng">
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Bán hàng</p>
-        <a class="sidebar__link" href="orders.html">Đơn hàng</a>
-        <a class="sidebar__link" href="payments.html">Thanh toán</a>
-        <a class="sidebar__link" href="customers.html">Khách hàng</a>
-        <a class="sidebar__link" href="index.html">Dashboard</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hàng hóa</p>
-        <a class="sidebar__link sidebar__link--active" href="products.html">Sản phẩm</a>
-        <a class="sidebar__link" href="brands.html">Thương hiệu</a>
-      </div>
-      <div class="sidebar__group">
-        <p class="sidebar__heading">Hệ thống</p>
-        <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
-      </div>
-    </aside>
+      <aside class="sidebar" aria-label="Điều hướng">
+    <div class="sidebar__group" data-sec="sales">
+      <p class="sidebar__heading">Bán hàng</p>
+      <a class="sidebar__link" href="orders.html">Đơn hàng</a>
+      <a class="sidebar__link" href="payments.html">Thanh toán</a>
+      <a class="sidebar__link" href="customers.html">Khách hàng</a>
+      <a class="sidebar__link" href="index.html">Dashboard</a>
+    </div>
+    <div class="sidebar__group" data-sec="catalog">
+      <p class="sidebar__heading">Hàng hóa</p>
+      <a class="sidebar__link" href="products.html">Sản phẩm</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+      <a class="sidebar__link" href="vouchers.html">Voucher</a>
+    </div>
+    <div class="sidebar__group" data-sec="system">
+      <p class="sidebar__heading">Hệ thống</p>
+<a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
+      <a class="sidebar__link" href="reports.html">Báo cáo</a>
+      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+    </div>
+  </aside>
     <main class="content">
       <section class="toolbar">
         <h1 class="page-title">Thanh toán</h1>
@@ -76,5 +92,182 @@
       </section>
     </main>
   </div>
+<!-- START: profile modal -->
+<div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <header class="modal__header">
+      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+    <div class="modal__body grid grid--2" id="profile-view">
+      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
+        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
+        <div>
+          <div id="profileName" style="font-weight:600">—</div>
+          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Họ tên</label>
+        <input class="input" id="profile_name" disabled/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input class="input" id="profile_email" disabled/>
+      </div>
+      <div class="field">
+        <label>Vai trò</label>
+        <input class="input" id="profile_role" disabled/>
+      </div>
+    </div>
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Đóng</a>
+    </footer>
+  </div>
+</div>
+<!-- END: profile modal -->
+<script>
+// START: unified header js
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+
+  function pickRole(payload){
+    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
+    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
+    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
+    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
+    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
+    return '—';
+  }
+
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  function renderUser(){
+    const token = getToken(); if (!token) return;
+    const payload = decodeJwt(token) || {};
+    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+    const email = payload.email || payload.username || '—';
+    const role  = pickRole(payload);
+    fillProfile({name,email,role});
+  }
+
+  // Ensure logout link clears token
+  document.getElementById('btn-logout')?.addEventListener('click', ()=>{
+    localStorage.removeItem('accessToken');
+  });
+
+  renderUser();
+})();
+// END: unified header js
+</script>
+<script>
+// START: role-based sidebar control (robust)
+function __extractRoles(payload){
+  try{
+    let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
+    let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
+    list = list
+      .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x) // support [{authority:"ROLE_MANAGER"}]
+      .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
+    return list.filter(Boolean);
+  }catch(e){ return []; }
+}
+function __deriveRole(list){
+  if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
+  if (list.includes('staff') || list.includes('employee')) return 'staff';
+  if (list.includes('user')) return 'user';
+  return list[0] || 'user';
+}
+function __applyRoleUI(role){
+  try{
+    const sys = document.querySelector('.sidebar__group[data-sec="system"]');
+    if (sys && role !== 'manager') {
+      sys.remove();
+    }
+  }catch(e){}
+}
+// END: role-based sidebar control (robust)
+</script>
+<script>
+// START: header render hook ensure
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  const token = getToken(); if (!token) return;
+  const payload = decodeJwt(token) || {};
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+  const email = payload.email || payload.username || '—';
+
+  fillProfile({name,email,role});
+  if (typeof __applyRoleUI === 'function') __applyRoleUI(role);
+
+  // ensure logout clears token
+  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+})();
+// END: header render hook ensure
+</script>
 </body>
 </html>

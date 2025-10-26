@@ -1,8 +1,16 @@
+// dto/staff/StaffCreateRequest.java
+// dto/staff/StaffCreateRequest.java
 package com.fonestore.staff_api.dto.staff;
 
+import jakarta.validation.constraints.*;
+
 public record StaffCreateRequest(
-        Long userId,
-        String position,
-        String phone,
-        String note
+    @Email @NotBlank String email,
+    @NotBlank String fullName,
+    @NotBlank String role,             // "manager" | "staff"
+    @Size(min = 6) String password,    // plaintext -> BE hash
+    String position,
+    String phone,
+    Boolean isActive,                  // null -> mặc định true
+    Boolean sendInvite                 // tuỳ bạn dùng
 ) {}

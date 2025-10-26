@@ -2,6 +2,7 @@
 package com.fonestore.staff_api.repository.order;
 
 import com.fonestore.user_api.entity.Order;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,3 +30,4 @@ public interface StaffOrderRepository extends JpaRepository<Order, Long> {
                         @Param("q") String q);
 
 }
+

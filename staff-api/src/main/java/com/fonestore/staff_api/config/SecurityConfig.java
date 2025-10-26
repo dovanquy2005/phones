@@ -35,6 +35,29 @@ public class SecurityConfig {
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(reg -> reg
 
+                // 1) Staff Users: phân quyền chi tiết theo method
+                .requestMatchers(HttpMethod.GET,    "/api/staff/users", "/api/staff/users/**")
+                    .hasAnyAuthority("staff","manager")
+                .requestMatchers(HttpMethod.POST,   "/api/staff/users", "/api/staff/users/**")
+                    .hasAuthority("manager")
+                .requestMatchers(HttpMethod.PUT,    "/api/staff/users/**")
+                    .hasAuthority("manager")
+                .requestMatchers(HttpMethod.PATCH,  "/api/staff/users/**")
+                    .hasAuthority("manager")
+                .requestMatchers(HttpMethod.DELETE, "/api/staff/users/**")
+                    .hasAuthority("manager")
+                
+                    // VOUCHERS
+                .requestMatchers(HttpMethod.GET,    "/api/staff/vouchers", "/api/staff/vouchers/**")
+                    .hasAnyAuthority("staff","manager")
+                .requestMatchers(HttpMethod.POST,   "/api/staff/vouchers/**")
+                    .hasAuthority("manager")
+                .requestMatchers(HttpMethod.PATCH,  "/api/staff/vouchers/**")
+                    .hasAuthority("manager")
+                .requestMatchers(HttpMethod.DELETE, "/api/staff/vouchers/**")
+                    .hasAuthority("manager")
+
+
                 // ===== PUBLIC =====
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers(HttpMethod.GET,
@@ -73,6 +96,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,   "/api/orders/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.PUT,    "/api/orders/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasAnyAuthority("staff", "manager")
+                // ✅ NEW: Cho phép đổi trạng thái bằng PATCH
+                .requestMatchers(HttpMethod.PATCH,  "/api/orders/*/status").hasAnyAuthority("staff", "manager")
+
+
+                .requestMatchers("/api/customers").hasAnyAuthority("staff","manager")
+                .requestMatchers("/api/customers/**").hasAnyAuthority("staff","manager")
+                .requestMatchers("/api/customers/*/orders").hasAnyAuthority("staff","manager")
+
 
                 // ===== MANAGER =====
                 .requestMatchers("/api/admin/**").hasAuthority("manager")

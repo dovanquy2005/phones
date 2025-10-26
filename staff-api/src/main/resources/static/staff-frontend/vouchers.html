@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>fonestore · Voucher</title>
+  <link rel="stylesheet" href="css/base.css"/>
+  <script src="/staff-frontend/assets/js/api.js"></script>
+  <style>
+    /* toast & misc */
+    .toast{position:fixed;right:16px;bottom:16px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s ease, transform .2s ease;font-size:14px}
+    .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid #e5e7eb;border-top-color:#111827;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:6px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .table-wrap{overflow-x:auto}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6}
+    .badge--ok{background:#dcfce7}
+    .badge--off{background:#fee2e2}
+
+    /* header */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+
+    /* avatar menu */
+    .avatar-menu{position:relative}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    .avatar-menu[open] .dropdown{display:block}
+    .dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+    .dropdown a:hover{background:#f3f4f6}
+
+    /* role badge color (dùng cho popup) */
+    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+    .role-badge.manager{background:#dcfce7;color:#166534}
+    .role-badge.staff{background:#fee2e2;color:#991b1b}
+  
+/* START: unified header css */
+.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.header-spacer{flex:1}
+.header-actions{display:flex;align-items:center;gap:10px}
+.avatar-menu{position:relative}
+.avatar-menu > summary{list-style:none;cursor:pointer}
+.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+.avatar img{width:100%;height:100%;display:block}
+.avatar-menu[open] .dropdown{display:block}
+.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+.dropdown a:hover{background:#f3f4f6}
+.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+.role-badge.manager{background:#dcfce7;color:#166534}
+.role-badge.staff{background:#fee2e2;color:#991b1b}
+/* END: unified header css */
+</style>
+</head>
+<body>
+<!-- START: unified header -->
+<header class="app-header">
+  <a class="brand" href="index.html" aria-label="fonestore">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/>
+    <span class="brand__text">fonestore</span>
+  </a>
+  <div class="header-spacer"></div>
+  <div class="header-actions">
+    <details class="avatar-menu" id="avatarMenu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="#modal-profile" id="open-profile">Thông tin tài khoản</a>
+        <a href="auth-login.html" id="btn-logout">Đăng xuất</a>
+      </nav>
+    </details>
+  </div>
+</header>
+<!-- END: unified header -->
+
+
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Điều hướng">
+    <div class="sidebar__group" data-sec="sales">
+      <p class="sidebar__heading">Bán hàng</p>
+      <a class="sidebar__link" href="orders.html">Đơn hàng</a>
+      <a class="sidebar__link" href="payments.html">Thanh toán</a>
+      <a class="sidebar__link" href="customers.html">Khách hàng</a>
+      <a class="sidebar__link" href="index.html">Dashboard</a>
+    </div>
+    <div class="sidebar__group" data-sec="catalog">
+      <p class="sidebar__heading">Hàng hóa</p>
+      <a class="sidebar__link" href="products.html">Sản phẩm</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
+      <a class="sidebar__link sidebar__link--active" href="vouchers.html">Voucher</a>
+    </div>
+    <div class="sidebar__group" data-sec="system">
+      <p class="sidebar__heading">Hệ thống</p>
+      
+      <a class="sidebar__link" href="staff.html">Nhân viên</a>
+      <a class="sidebar__link" href="reports.html">Báo cáo</a>
+      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+    </div>
+  </aside>
+
+  <main class="content">
+    <section class="toolbar" style="display:flex;justify-content:space-between;align-items:center">
+      <h1 class="page-title">Voucher</h1>
+      <a class="btn btn--primary" href="#modal-create">Tạo voucher</a>
+    </section>
+
+    <section class="card">
+      <div class="card__body">
+        <div class="table-wrap">
+          <table class="table" aria-label="Danh sách voucher">
+            <thead>
+              <tr>
+                <th>Mã</th><th>Loại</th><th>Giá trị</th><th>ĐH tối thiểu</th>
+                <th>Giới hạn</th><th>Per-user</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th style="width:1%"></th>
+              </tr>
+            </thead>
+            <tbody id="tb">
+              <tr><td colspan="10" class="muted">Đang tải… <span class="spinner"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="summary" class="muted" style="margin-top:8px"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- MODAL: Tạo -->
+<div class="modal" id="modal-create" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+    <header class="modal__header">
+      <h3 id="createTitle" style="margin:0">Tạo voucher</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+
+    <form class="modal__body grid grid--2" id="form-create">
+      <div class="field"><label>Mã <span style="color:#e11d48">*</span></label>
+        <input class="input" name="code" placeholder="GIAM10" required/>
+      </div>
+      <div class="field"><label>Loại</label>
+        <select class="input" name="type">
+          <option value="percent">Theo %</option>
+          <option value="flat">Theo số tiền</option>
+        </select>
+      </div>
+      <div class="field"><label>Giá trị <span style="color:#e11d48">*</span></label>
+        <input class="input" name="value" type="number" step="0.01" min="0.01" required/>
+        <small class="muted">Nếu %: 1–100. Nếu số tiền: >0</small>
+      </div>
+      <div class="field"><label>Đơn hàng tối thiểu</label>
+        <input class="input" name="min_order" type="number" step="1000" min="0"/>
+      </div>
+      <div class="field"><label>Tổng lượt dùng</label>
+        <input class="input" name="usage_limit" type="number" min="0" placeholder="bỏ trống = không giới hạn"/>
+      </div>
+      <div class="field"><label>Lượt mỗi khách</label>
+        <input class="input" name="per_user_limit" type="number" min="0" placeholder="bỏ trống = không giới hạn"/>
+      </div>
+      <div class="field"><label>Bắt đầu</label>
+        <input class="input" name="starts_at" type="datetime-local"/>
+      </div>
+      <div class="field"><label>Kết thúc</label>
+        <input class="input" name="ends_at" type="datetime-local"/>
+      </div>
+      <div class="field"><label>Trạng thái</label>
+        <select class="input" name="active">
+          <option value="1">Kích hoạt</option>
+          <option value="0">Tắt</option>
+        </select>
+      </div>
+    </form>
+
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Hủy</a>
+      <button class="btn btn--primary" id="btn-create" type="submit" form="form-create">Tạo</button>
+    </footer>
+  </div>
+</div>
+
+<!-- MODAL: Sửa -->
+<div class="modal" id="modal-edit" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <header class="modal__header">
+      <h3 id="editTitle" style="margin:0">Sửa voucher</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+
+    <form class="modal__body grid grid--2" id="form-edit">
+      <input type="hidden" name="voucher_id"/>
+      <div class="field"><label>Mã</label><input class="input" name="code"/></div>
+      <div class="field"><label>Loại</label>
+        <select class="input" name="type">
+          <option value="percent">Theo %</option>
+          <option value="flat">Theo số tiền</option>
+        </select>
+      </div>
+      <div class="field"><label>Giá trị</label><input class="input" name="value" type="number" step="0.01" min="0.01"/></div>
+      <div class="field"><label>ĐH tối thiểu</label><input class="input" name="min_order" type="number" step="1000" min="0"/></div>
+      <div class="field"><label>Tổng lượt dùng</label><input class="input" name="usage_limit" type="number" min="0"/></div>
+      <div class="field"><label>Lượt mỗi khách</label><input class="input" name="per_user_limit" type="number" min="0"/></div>
+      <div class="field"><label>Bắt đầu</label><input class="input" name="starts_at" type="datetime-local"/></div>
+      <div class="field"><label>Kết thúc</label><input class="input" name="ends_at" type="datetime-local"/></div>
+      <div class="field"><label>Trạng thái</label>
+        <select class="input" name="active">
+          <option value="1">Kích hoạt</option>
+          <option value="0">Tắt</option>
+        </select>
+      </div>
+    </form>
+
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Hủy</a>
+      <button class="btn btn--primary" id="btn-update" type="submit" form="form-edit">Lưu</button>
+    </footer>
+  </div>
+</div>
+
+<!-- MODAL: Thông tin tài khoản -->
+<div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <header class="modal__header">
+      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+
+    <div class="modal__body grid grid--2" id="profile-view">
+      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
+        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
+        <div>
+          <div id="profileName" style="font-weight:600">—</div>
+          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Họ tên</label>
+        <input class="input" id="profile_name" disabled/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input class="input" id="profile_email" disabled/>
+      </div>
+      <div class="field">
+        <label>Vai trò</label>
+        <input class="input" id="profile_role" disabled/>
+      </div>
+    </div>
+
+    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+      <a class="btn" href="#">Đóng</a>
+    </footer>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ====================== Voucher CRUD ====================== */
+(function(){
+  const BASE = (typeof window.API_BASE !== 'undefined' && window.API_BASE) ? window.API_BASE : location.origin;
+  const API = BASE + '/api/staff/vouchers';
+
+  const qs = s=>document.querySelector(s);
+  const getToken=()=> (typeof window.getToken==='function'?window.getToken():localStorage.getItem('accessToken')||'');
+  if(!getToken()) location.href='/staff-frontend/auth-login.html';
+
+  function toast(m,t=1600){const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t);}
+  const fmtMoney=v=> (v==null?'': Number(v).toLocaleString('vi-VN'));
+
+  // ---- NEW: chuẩn hoá code ở FE
+  function normalizeCode(s){
+    return String(s||'').trim().replace(/\s+/g,'').toUpperCase();
+  }
+
+  async function apiFetch(url, opts = {}) {
+    const headers = new Headers(opts.headers || {});
+    const token = getToken();
+    if (token) headers.set('Authorization', 'Bearer ' + token);
+    if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+    const res = await fetch(url, { ...opts, headers });   // <- chuẩn
+    if (!res.ok) {
+      let d = '';
+      try { const j = await res.json(); d = j.message || j.error || '' } catch {}
+      if (res.status === 401) { alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; return; }
+      if (res.status === 403) { alert('Bạn không có quyền thao tác này'); }
+      throw new Error(`HTTP ${res.status}${d ? ': ' + d : ''}`);
+    }
+    return res.status === 204 ? null : res.json();
+  }
+
+
+  function typeIcon(t){ return t==='percent'?'%':'₫'; }
+  function typeValue(t,v){ return t==='percent'? (Number(v).toLocaleString('vi-VN')+'%') : fmtMoney(v); }
+
+  async function loadList(){
+    const tb=qs('#tb');
+    tb.innerHTML=`<tr><td colspan="10" class="muted">Đang tải… <span class="spinner"></span></td></tr>`;
+    try{
+      const page=await apiFetch(API);
+      const arr=Array.isArray(page?.content)?page.content:(Array.isArray(page)?page:[]);
+      if(!arr.length){ tb.innerHTML=`<tr><td colspan="10" class="muted">Chưa có voucher</td></tr>`; qs('#summary').textContent=''; return; }
+      tb.innerHTML=arr.map(v=>`
+        <tr data-id="${v.voucherId}">
+          <td><b>${v.code}</b></td>
+          <td>${typeIcon(v.type)}</td>
+          <td>${typeValue(v.type,v.value)}</td>
+          <td>${v.minOrder!=null?fmtMoney(v.minOrder):'—'}</td>
+          <td>${v.usageLimit ?? '—'}</td>
+          <td>${v.perUserLimit ?? '—'}</td>
+          <td>${v.startsAt? v.startsAt.replace('T',' ') : '—'}</td>
+          <td>${v.endsAt? v.endsAt.replace('T',' ') : '—'}</td>
+          <td>${v.active?'<span class="badge badge--ok">Đang bật</span>':'<span class="badge badge--off">Tắt</span>'}</td>
+          <td style="white-space:nowrap">
+            <a class="btn" href="#modal-edit" data-edit='${JSON.stringify(v)}'>Sửa</a>
+            <a class="btn" href="#" data-toggle="${v.voucherId}" data-active="${v.active?'1':'0'}">${v.active?'Tắt':'Bật'}</a>
+            <a class="btn" href="#" data-del="${v.voucherId}">Xoá</a>
+          </td>
+        </tr>`).join('');
+      qs('#summary').textContent=`Tổng ${arr.length} voucher (trang đầu)`;
+    }catch(e){
+      tb.innerHTML=`<tr><td colspan="10" class="muted">Lỗi: ${e.message}</td></tr>`;
+      qs('#summary').textContent='';
+    }
+  }
+
+  // CREATE
+  qs('#form-create').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn=qs('#btn-create'); btn.disabled=true; btn.innerHTML='Đang tạo… <span class="spinner"></span>';
+    const fd=new FormData(e.target);
+    const type=fd.get('type'); const value=parseFloat(fd.get('value'));
+    if (type==='percent' && (value<1 || value>100)) { alert('Giá trị % phải 1–100'); btn.disabled=false; btn.textContent='Tạo'; return; }
+    if (type==='flat' && value<=0) { alert('Giá trị tiền phải > 0'); btn.disabled=false; btn.textContent='Tạo'; return; }
+
+    const payload = {
+      code: fd.get('code') ? normalizeCode(fd.get('code')) : null,
+      type: fd.get('type') || null,
+      value: fd.get('value') ? Number(fd.get('value')) : null,
+      minOrder: fd.get('min_order') ? Number(fd.get('min_order')) : 0,
+      usageLimit: fd.get('usage_limit') ? Number(fd.get('usage_limit')) : 0,
+      perUserLimit: fd.get('per_user_limit') ? Number(fd.get('per_user_limit')) : 0,
+      startsAt: fd.get('starts_at') || null,
+      endsAt: fd.get('ends_at') || null,
+      active: fd.get('active') === '1'
+    };
+    try{
+      await apiFetch(API,{method:'POST', body:JSON.stringify(payload)});
+      toast('Đã tạo voucher'); e.target.reset(); location.hash='#'; await loadList();
+    }catch(err){ alert('Tạo voucher thất bại: '+err.message); }
+    finally{ btn.disabled=false; btn.textContent='Tạo'; }
+  });
+
+  // Prefill EDIT
+  document.addEventListener('click',(e)=>{
+    const edit=e.target.closest('[data-edit]'); if(!edit) return;
+    const v=JSON.parse(edit.getAttribute('data-edit'));
+    const f=qs('#form-edit');
+    f.voucher_id.value=v.voucherId;
+    f.code.value=v.code||'';
+    f.type.value=v.type||'percent';
+    f.value.value=v.value??'';
+    f.min_order.value=v.minOrder??'';
+    f.usage_limit.value=v.usageLimit??'';
+    f.per_user_limit.value=v.perUserLimit??'';
+    f.starts_at.value=v.startsAt? v.startsAt.slice(0,16):'';
+    f.ends_at.value=v.endsAt? v.endsAt.slice(0,16):'';
+    f.active.value=v.active?'1':'0';
+  });
+
+  // UPDATE
+  qs('#form-edit').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const btn=qs('#btn-update'); btn.disabled=true; btn.innerHTML='Đang lưu… <span class="spinner"></span>';
+    const fd=new FormData(e.target); const id=fd.get('voucher_id');
+    const payload={
+      code: fd.get('code') ? normalizeCode(fd.get('code')) : null,
+      type: fd.get('type') || null,
+      value: fd.get('value')? Number(fd.get('value')): null,
+      // default 0 nếu để trống
+      minOrder: fd.get('min_order') ? Number(fd.get('min_order')) : 0,
+      usageLimit: fd.get('usage_limit')? Number(fd.get('usage_limit')): null,
+      perUserLimit: fd.get('per_user_limit')? Number(fd.get('per_user_limit')): null,
+      startsAt: fd.get('starts_at')||null,
+      endsAt: fd.get('ends_at')||null,
+      active: fd.get('active')==='1'
+    };
+    try{
+      await apiFetch(`${API}/${id}`,{method:'PATCH', body:JSON.stringify(payload)});
+      toast('Đã cập nhật'); e.target.reset(); location.hash='#'; await loadList();
+    }catch(err){ alert('Cập nhật thất bại: '+err.message); }
+    finally{ btn.disabled=false; btn.textContent='Lưu'; }
+  });
+
+  // Toggle active
+  document.addEventListener('click', async (e)=>{
+    const tgl = e.target.closest('[data-toggle]'); if(!tgl) return;
+    const id = tgl.getAttribute('data-toggle');
+    const current = tgl.getAttribute('data-active')==='1';
+    try{
+      await apiFetch(`${API}/${id}`, { method:'PATCH', body: JSON.stringify({ active: !current }) });
+      toast(!current?'Đã bật':'Đã tắt'); await loadList();
+    }catch(err){ alert('Thao tác thất bại: '+err.message); }
+  });
+
+  // Delete
+  document.addEventListener('click', async (e)=>{
+    const del=e.target.closest('[data-del]'); if(!del) return;
+    if(!confirm('Xoá voucher này?')) return;
+    const id=del.getAttribute('data-del');
+    try{ await apiFetch(`${API}/${id}`,{method:'DELETE'}); toast('Đã xoá'); await loadList(); }
+    catch(err){ alert('Xoá thất bại: '+err.message); }
+  });
+
+  // Logout
+  qs('#btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+
+  loadList();
+})();
+
+/* ====================== Avatar + Profile Modal ====================== */
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+
+  function pickRole(payload){
+    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
+    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
+    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
+    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
+    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
+    return '—';
+  }
+
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':'')); // reset + set
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  function renderUser(){
+    const token = getToken(); if (!token) return;
+    const payload = decodeJwt(token) || {};
+    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+    const email = payload.email || payload.username || '—';
+    const role  = pickRole(payload);
+    fillProfile({name,email,role});
+  }
+
+  // Khi click "Thông tin tài khoản" chỉ cần mở modal; dữ liệu đã fill ở renderUser
+  document.getElementById('open-profile')?.addEventListener('click', ()=> {});
+
+  renderUser();
+})();
+</script>
+<script>
+// START: unified header js
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+
+  function pickRole(payload){
+    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
+    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
+    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
+    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
+    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
+    return '—';
+  }
+
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  function renderUser(){
+    const token = getToken(); if (!token) return;
+    const payload = decodeJwt(token) || {};
+    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+    const email = payload.email || payload.username || '—';
+    const role  = pickRole(payload);
+    fillProfile({name,email,role});
+  }
+
+  // Ensure logout link clears token
+  document.getElementById('btn-logout')?.addEventListener('click', ()=>{
+    localStorage.removeItem('accessToken');
+  });
+
+  renderUser();
+})();
+// END: unified header js
+</script>
+<script>
+// START: role-based sidebar control (robust)
+function __extractRoles(payload){
+  try{
+    let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
+    let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
+    list = list
+      .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x)
+      .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
+    return list.filter(Boolean);
+  }catch(e){ return []; }
+}
+function __deriveRole(list){
+  if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
+  if (list.includes('staff') || list.includes('employee')) return 'staff';
+  if (list.includes('user')) return 'user';
+  return list[0] || 'user';
+}
+function __applyRoleUI(role){
+  try{
+    const sys = document.querySelector('.sidebar__group[data-sec="system"]');
+    if (sys && role !== 'manager') {
+      sys.remove();
+    }
+  }catch(e){}
+}
+// END: role-based sidebar control (robust)
+</script>
+<script>
+// START: header render hook ensure
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  const token = getToken(); if (!token) return;
+  const payload = decodeJwt(token) || {};
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+  const email = payload.email || payload.username || '—';
+
+  fillProfile({name,email,role});
+  if (typeof __applyRoleUI === 'function') __applyRoleUI(role);
+
+  // ensure logout clears token
+  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+})();
+// END: header render hook ensure
+</script>
+</body>
+</html>

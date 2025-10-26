@@ -6,7 +6,8 @@ import com.fonestore.staff_api.dto.auth.LoginResponse;
 import com.fonestore.staff_api.entity.User;
 import com.fonestore.staff_api.exception.BadRequestException;
 import com.fonestore.staff_api.repository.UserRepository;
-import com.fonestore.staff_api.service.StaffAuthService;  // <— dùng service riêng cho staff
+import com.fonestore.staff_api.service.StaffAuthService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
