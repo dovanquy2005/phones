@@ -99,7 +99,14 @@ public class SecurityConfig {
                 // ✅ NEW: Cho phép đổi trạng thái bằng PATCH
                 .requestMatchers(HttpMethod.PATCH,  "/api/orders/*/status").hasAnyAuthority("staff", "manager")
 
+                // ===== PAYMENTS (Staff/Manager) =====
+                .requestMatchers(HttpMethod.GET,   "/api/orders/*/payment").hasAnyAuthority("staff", "manager")
+                .requestMatchers(HttpMethod.POST,  "/api/orders/*/payment").hasAnyAuthority("staff", "manager")
+                .requestMatchers(HttpMethod.PATCH, "/api/orders/*/payment-status").hasAnyAuthority("staff", "manager")
 
+                
+            
+                // ===== CUSTOMERS =====
                 .requestMatchers("/api/customers").hasAnyAuthority("staff","manager")
                 .requestMatchers("/api/customers/**").hasAnyAuthority("staff","manager")
                 .requestMatchers("/api/customers/*/orders").hasAnyAuthority("staff","manager")

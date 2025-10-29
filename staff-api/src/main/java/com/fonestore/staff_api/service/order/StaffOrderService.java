@@ -6,6 +6,7 @@ import com.fonestore.staff_api.dto.order.OrderItemDetailDTO;
 import com.fonestore.staff_api.dto.order.OrderListDTO;
 import com.fonestore.staff_api.repository.order.StaffOrderItemRepository;
 import com.fonestore.staff_api.repository.order.StaffOrderRepository;
+import com.fonestore.staff_api.repository.payment.StaffPaymentRepository;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.OrderItem;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +20,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +29,7 @@ public class StaffOrderService {
 
     private final StaffOrderRepository orderRepo;
     private final StaffOrderItemRepository itemRepo;
+    private final StaffPaymentRepository paymentRepo;
 
     /* ===== Helpers ===== */
 
@@ -59,7 +60,8 @@ public class StaffOrderService {
 
     /* ===== mapping ===== */
 
-    private OrderListDTO toListDTO(Order o) {
+    // NOTE: OrderListDTO cần có thêm trường cuối: paymentStatus (String)
+    private OrderListDTO toListDTO(Order o, String paymentStatus) {
         String name = extractName(o.getAddressSnapshot());
         return new OrderListDTO(
                 o.getId(),
@@ -69,7 +71,8 @@ public class StaffOrderService {
                 bd(o.getSubtotal()),
                 bd(o.getShippingFee()),
                 bd(o.getTotal()),
-                o.getCreatedAt()
+                o.getCreatedAt(),
+                paymentStatus
         );
     }
 
@@ -97,14 +100,30 @@ public class StaffOrderService {
     }
 
     /* ===== Queries ===== */
-
     @Transactional(readOnly = true)
     public List<OrderListDTO> list(String status, String from, String to, String q) {
         String s = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
         String query = (q == null || q.isBlank()) ? null : q.trim();
-        return orderRepo.search(s, startOfDay(from), endExclusive(to), query)
-                .stream().map(this::toListDTO).toList();
+
+        List<Order> orders = orderRepo.search(s, startOfDay(from), endExclusive(to), query);
+
+        // Lấy id đơn
+        List<Long> ids = orders.stream()
+                .map(Order::getId)
+                .filter(Objects::nonNull)
+                .toList();
+
+        // Lấy các orderId đã PAID
+        Set<Long> paidIds = new HashSet<>();
+        if (!ids.isEmpty()) {
+            paidIds.addAll(paymentRepo.findPaidOrderIds(ids));
+        }
+
+        return orders.stream()
+                .map(o -> toListDTO(o, paidIds.contains(o.getId()) ? "PAID" : "UNPAID"))
+                .toList();
     }
+
 
     @Transactional(readOnly = true)
     public OrderDetailDTO detail(Long id) {
@@ -141,7 +160,6 @@ public class StaffOrderService {
     @Transactional(readOnly = true)
     public byte[] exportInvoiceXlsx(Long id) {
         Order o = orderRepo.findById(id).orElseThrow(NoSuchElementException::new);
-        // Lấy items có tên sản phẩm + sku code
         var items = getOrderDetails(id);
 
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -151,23 +169,18 @@ public class StaffOrderService {
             CellStyle bold = wb.createCellStyle();
             Font f = wb.createFont(); f.setBold(true); bold.setFont(f);
 
-            Row title = sh.createRow(r++);
-            title.createCell(0).setCellValue("HÓA ĐƠN BÁN HÀNG");
-            title.getCell(0).setCellStyle(bold);
+            Row title = sh.createRow(r++); title.createCell(0).setCellValue("HÓA ĐƠN BÁN HÀNG"); title.getCell(0).setCellStyle(bold);
 
-            sh.createRow(r++).createCell(0).setCellValue(
-                    "Mã đơn: " + Optional.ofNullable(o.getCode()).orElse("OD-" + String.format("%06d", o.getId())));
-            sh.createRow(r++).createCell(0).setCellValue(
-                    "Khách: " + Optional.ofNullable(extractName(o.getAddressSnapshot())).orElse("-"));
-            sh.createRow(r++).createCell(0).setCellValue(
-                    "Ngày: " + Optional.ofNullable(o.getCreatedAt()).orElse(Instant.now()));
+            sh.createRow(r++).createCell(0).setCellValue("Mã đơn: " + Optional.ofNullable(o.getCode()).orElse("OD-" + String.format("%06d", o.getId())));
+            sh.createRow(r++).createCell(0).setCellValue("Khách: " + Optional.ofNullable(extractName(o.getAddressSnapshot())).orElse("-"));
+            sh.createRow(r++).createCell(0).setCellValue("Ngày: " + Optional.ofNullable(o.getCreatedAt()).orElse(Instant.now()));
 
             r++;
             Row head = sh.createRow(r++);
-            head.createCell(0).setCellValue("Sản phẩm");    head.getCell(0).setCellStyle(bold);
-            head.createCell(1).setCellValue("SL");          head.getCell(1).setCellStyle(bold);
-            head.createCell(2).setCellValue("Đơn giá");     head.getCell(2).setCellStyle(bold);
-            head.createCell(3).setCellValue("Thành tiền");  head.getCell(3).setCellStyle(bold);
+            head.createCell(0).setCellValue("Sản phẩm"); head.getCell(0).setCellStyle(bold);
+            head.createCell(1).setCellValue("SL");       head.getCell(1).setCellStyle(bold);
+            head.createCell(2).setCellValue("Đơn giá");  head.getCell(2).setCellStyle(bold);
+            head.createCell(3).setCellValue("Thành tiền"); head.getCell(3).setCellStyle(bold);
 
             BigDecimal sum = BigDecimal.ZERO;
             for (var it : items) {
@@ -194,8 +207,7 @@ public class StaffOrderService {
             sh.getRow(r-1).createCell(3).setCellValue(bd(o.getShippingFee()).doubleValue());
 
             Row total = sh.createRow(r++);
-            total.createCell(2).setCellValue("TỔNG CỘNG:");
-            total.getCell(2).setCellStyle(bold);
+            total.createCell(2).setCellValue("TỔNG CỘNG:"); total.getCell(2).setCellStyle(bold);
             BigDecimal calc = bd(o.getSubtotal()).max(sum)
                     .subtract(bd(o.getDiscount()))
                     .add(bd(o.getShippingFee()));

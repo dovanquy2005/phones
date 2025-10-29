@@ -7,22 +7,25 @@
   <link rel="stylesheet" href="css/base.css"/>
   <script src="/staff-frontend/assets/js/api.js"></script>
   <style>
+    /* Toast + spinner */
     .toast{position:fixed;right:16px;bottom:16px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s ease, transform .2s ease;font-size:14px}
     .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
     .spinner{display:inline-block;width:16px;height:16px;border:2px solid #e5e7eb;border-top-color:#111827;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:6px}
     @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Table + badge */
     .table-wrap{overflow-x:auto}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6}
-    .badge--ok{background:#dcfce7}
-    .badge--off{background:#fee2e2}
+    .badge--ok{background:#dcfce7;color:#166534}
+    .badge--off{background:#fee2e2;color:#991b1b}
 
-        /* header */
+    /* Header */
     .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
     .header-spacer{flex:1}
     .header-actions{display:flex;align-items:center;gap:10px}
 
-    /* avatar menu */
+    /* Avatar menu */
     .avatar-menu{position:relative}
     .avatar-menu > summary{list-style:none;cursor:pointer}
     .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
@@ -32,32 +35,36 @@
     .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
     .dropdown a:hover{background:#f3f4f6}
 
-    /* role badge color (dùng cho popup) */
+    /* Role badge (profile modal) */
     .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
     .role-badge.manager{background:#dcfce7;color:#166534}
-    .role-badge.staff{background:#fee2e2;color:#991b1b}
-  
-/* START: unified header css */
-.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.header-spacer{flex:1}
-.header-actions{display:flex;align-items:center;gap:10px}
-.avatar-menu{position:relative}
-.avatar-menu > summary{list-style:none;cursor:pointer}
-.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
-.avatar img{width:100%;height:100%;display:block}
-.avatar-menu[open] .dropdown{display:block}
-.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
-.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
-.dropdown a:hover{background:#f3f4f6}
-.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
-.role-badge.manager{background:#dcfce7;color:#166534}
-.role-badge.staff{background:#fee2e2;color:#991b1b}
-/* END: unified header css */
-</style>
+    .role-badge.staff{background:#e5e7eb;color:#111827}
+
+    /* Split "Create" button */
+    .btnbar{display:flex;align-items:center;gap:8px}
+    .btn-split{position:relative;display:inline-flex;align-items:stretch;border-radius:8px;overflow:hidden}
+    .btn-split .btn-main{border-top-right-radius:0;border-bottom-right-radius:0}
+    .btn-split .btn-caret{border-left:1px solid #0001;border-top-left-radius:0;border-bottom-left-radius:0;padding:0 10px}
+    .btn-split .menu{position:absolute;top:100%;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);min-width:200px;padding:6px;display:none;z-index:40}
+    .btn-split.open .menu{display:block}
+    .btn-split .menu a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:#111827;font-size:14px}
+    .btn-split .menu a:hover{background:#f3f4f6}
+
+    /* Toolbar search */
+    .searchbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .input{min-width:0}
+    .input--search{width:280px}
+    .input--role{width:160px}
+
+    /* Pager (1 2 3 » | Trang x/y · Tổng n) */
+    .pager{margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .pagebtn{min-width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer}
+    .pagebtn[disabled]{opacity:.5;cursor:default}
+    .pagebtn--active{background:#0f172a;color:#fff;border-color:#0f172a}
+    .pager-info{color:#6b7280}
+  </style>
 </head>
 <body>
-<!-- START: unified header -->
 <header class="app-header">
   <a class="brand" href="index.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -76,9 +83,6 @@
     </details>
   </div>
 </header>
-<!-- END: unified header -->
-
-
 
 <div class="app-shell">
   <aside class="sidebar" aria-label="Điều hướng">
@@ -97,7 +101,6 @@
     </div>
     <div class="sidebar__group" data-sec="system">
       <p class="sidebar__heading">Hệ thống</p>
-      
       <a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
       <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
@@ -105,8 +108,30 @@
   </aside>
 
   <main class="content">
-    <section class="toolbar" style="display:flex;justify-content:space-between;align-items:center">
-      <h1 class="page-title">Nhân viên</h1>
+    <section class="toolbar" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <h1 class="page-title" style="margin-right:auto">Nhân viên</h1>
+
+      <!-- Search + role filter (auto apply, no buttons) -->
+      <form id="searchForm" class="searchbar" role="search">
+        <input class="input input--search" id="q" name="q" placeholder="Tìm theo tên, SĐT, email" autocomplete="off"/>
+        <select class="input input--role" id="roleFilter" name="role">
+          <option value="">Tất cả vai trò</option>
+          <option value="STAFF">Staff</option>
+          <option value="MANAGER">Manager</option>
+        </select>
+      </form>
+
+      <!-- Split create button -->
+      <div class="btnbar" id="createBar">
+        <div class="btn-split" id="createSplit">
+          <a class="btn btn--primary btn-main" id="btn-create-open" href="#modal-create" aria-haspopup="dialog">+ Tạo</a>
+          <button class="btn btn--primary btn-caret" id="btn-create-caret" aria-haspopup="menu" aria-expanded="false" aria-controls="createMenu">▾</button>
+          <div class="menu" id="createMenu" role="menu" aria-label="Tạo nhanh">
+            <a href="#modal-create" role="menuitem" data-role="STAFF">Tạo nhân viên</a>
+            <a href="#modal-create" role="menuitem" data-role="MANAGER">Tạo Manager</a>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="card">
@@ -115,7 +140,7 @@
           <table class="table" aria-label="Danh sách nhân viên">
             <thead>
               <tr>
-                <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th style="width:1%"></th>
+                <th>Họ tên</th><th>Email</th><th>SĐT</th><th>Vai trò</th><th>Trạng thái</th><th style="width:1%">Hành động</th>
               </tr>
             </thead>
             <tbody id="tb">
@@ -123,7 +148,12 @@
             </tbody>
           </table>
         </div>
-        <p id="summary" class="muted" style="margin-top:8px"></p>
+
+        <!-- Pager -->
+        <div id="pager" class="pager">
+          <div id="pg-pages" style="display:flex;gap:8px;align-items:center"></div>
+          <span id="pg-label" class="pager-info"></span>
+        </div>
       </div>
     </section>
   </main>
@@ -214,6 +244,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
+/* =================== Core helpers + State =================== */
 (function(){
   const BASE = (typeof window.API_BASE !== 'undefined' && window.API_BASE) ? window.API_BASE : location.origin;
   const API = BASE + '/api/staff/users';
@@ -223,9 +254,9 @@
   if (!getToken()) location.href = '/staff-frontend/auth-login.html';
 
   function toast(m, t=1600){ const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t); }
-  const viRole = r => (String(r||'').toUpperCase()==='MANAGER' ? 'Manager' : 'Staff');
+  const viRole   = r => (String(r||'').toUpperCase()==='MANAGER' ? 'Manager' : 'Staff');
   const viActive = v => (String(v)==='0' || v===false ? '<span class="badge badge--off">Tạm khóa</span>' : '<span class="badge badge--ok">Hoạt động</span>');
-  const mask = s => s?String(s).trim():'';
+  const mask = s => s?String(s).trim() : '';
 
   async function apiFetch(url, opts={}){
     const headers = new Headers(opts.headers||{});
@@ -242,38 +273,126 @@
     return res.status===204?null:res.json();
   }
 
-  async function loadList(){
-    const tb = qs('#tb');
-    tb.innerHTML = `<tr><td colspan="6" class="muted">Đang tải… <span class="spinner"></span></td></tr>`;
-    try{
-      const page = await apiFetch(API);
-      const arr = Array.isArray(page?.content) ? page.content : (Array.isArray(page)?page:[]);
-      if(!arr.length){ tb.innerHTML=`<tr><td colspan="6" class="muted">Chưa có nhân viên</td></tr>`; qs('#summary').textContent=''; return;}
-      tb.innerHTML = arr.map(u=>{
-        return `
-          <tr data-id="${u.staffId}">
-            <td>${mask(u.fullName)||'-'}</td>
-            <td>${mask(u.email)||'-'}</td>
-            <td>${mask(u.phone)||'-'}</td>
-            <td>${viRole(u.role)}</td>
-            <td>${viActive(u.isActive)}</td>
-            <td style="white-space:nowrap">
-              <a class="btn" href="#modal-edit" data-edit="${u.staffId}">Sửa</a>
-              <a class="btn" href="#" data-toggle="${u.staffId}" data-active="${u.isActive?'1':'0'}">${u.isActive?'Khóa':'Mở khóa'}</a>
-              <a class="btn" href="#" data-del="${u.staffId}">Xoá</a>
-            </td>
-          </tr>
-        `;
-      }).join('');
-      qs('#summary').textContent = `Tổng ${arr.length} nhân viên (trang đầu)`;
-    }catch(e){
-      tb.innerHTML = `<tr><td colspan="6" class="muted">Lỗi: ${e.message}</td></tr>`;
-      qs('#summary').textContent='';
+  /* =============== State (client-side filter) =============== */
+  const PAGE_SIZE = 10;
+  let pageIndex = 0;                 // 0-based
+  let totalPages = 1;
+  let totalElements = 0;
+
+  let all = [];    // dữ liệu đầy đủ từ server
+  let q = '';      // text search
+  let role = '';   // role filter: ''|STAFF|MANAGER
+
+  /* =============== Pagination render =============== */
+  function buildPager(){
+    const wrap = document.getElementById('pg-pages');
+    wrap.innerHTML = '';
+    const windowSize = 3;
+    const start = Math.max(0, Math.min(pageIndex - Math.floor(windowSize/2), Math.max(0, totalPages - windowSize)));
+    const end = Math.min(totalPages, start + windowSize);
+
+    for (let p = start; p < end; p++){
+      const btn = document.createElement('button');
+      btn.className = 'pagebtn' + (p===pageIndex ? ' pagebtn--active' : '');
+      btn.textContent = (p+1);
+      btn.addEventListener('click', ()=>{ if (p!==pageIndex){ pageIndex = p; render(); }});
+      wrap.appendChild(btn);
     }
+    const next = document.createElement('button');
+    next.className = 'pagebtn';
+    next.textContent = '»';
+    next.disabled = pageIndex >= totalPages-1;
+    next.addEventListener('click', ()=>{ if(pageIndex < totalPages-1){ pageIndex++; render(); }});
+    wrap.appendChild(next);
+
+    const lbl = document.getElementById('pg-label');
+    lbl.textContent = `Trang ${Math.min(pageIndex+1,totalPages)}/${Math.max(totalPages,1)} · Tổng ${totalElements}`;
   }
 
-  // Tạo
-  qs('#form-create').addEventListener('submit', async (e)=>{
+  /* =============== Filter + render (no network) =============== */
+  function currentFiltered(){
+    const t = (q||'').toLowerCase();
+    return all.filter(u=>{
+      const hay = `${mask(u.fullName)} ${mask(u.email)} ${mask(u.phone)}`.toLowerCase();
+      const okQ = t ? hay.includes(t) : true;
+      const okR = role ? String(u.role||'').toUpperCase()===role : true;
+      return okQ && okR;
+    });
+  }
+
+  function renderRows(arr){
+    const tb = qs('#tb');
+    if(!arr.length){
+      tb.innerHTML=`<tr><td colspan="6" class="muted">Không có dữ liệu</td></tr>`;
+      return;
+    }
+    tb.innerHTML = arr.map(u=>`
+      <tr data-id="${u.staffId}">
+        <td>${mask(u.fullName)||'-'}</td>
+        <td>${mask(u.email)||'-'}</td>
+        <td>${mask(u.phone)||'-'}</td>
+        <td>${viRole(u.role)}</td>
+        <td>${viActive(u.isActive)}</td>
+        <td style="white-space:nowrap">
+          <a class="btn" href="#modal-edit" data-edit="${u.staffId}">Sửa</a>
+          <a class="btn" href="#" data-toggle="${u.staffId}" data-active="${u.isActive?'1':'0'}">${u.isActive?'Khóa':'Mở'}</a>
+          <a class="btn" href="#" data-del="${u.staffId}">Xoá</a>
+        </td>
+      </tr>`).join('');
+  }
+
+  function render(){
+    const filtered = currentFiltered();
+    totalElements = filtered.length;
+    totalPages = Math.max(1, Math.ceil(totalElements/PAGE_SIZE));
+    if (pageIndex >= totalPages) pageIndex = totalPages-1;
+
+    const start = pageIndex * PAGE_SIZE;
+    renderRows(filtered.slice(start, start + PAGE_SIZE));
+    buildPager();
+  }
+
+  /* =============== Load ALL once (only show loading on first/CRUD) =============== */
+  async function reloadAll(showLoading=true){
+    const tb = qs('#tb');
+    if (showLoading){
+      tb.innerHTML = `<tr><td colspan="6" class="muted">Đang tải… <span class="spinner"></span></td></tr>`;
+    }
+    const raw = await apiFetch(API);
+    all = Array.isArray(raw?.content) ? raw.content : (Array.isArray(raw)?raw:[]);
+    pageIndex = 0;
+    render();
+  }
+
+  /* =============== Search & role filter (smooth like orders) =============== */
+  (function(){
+    const form = document.getElementById('searchForm');
+    form.addEventListener('submit', (e)=> e.preventDefault());
+
+    const inputQ = document.getElementById('q');
+    let timer=null;
+    inputQ.addEventListener('input', ()=>{
+      const val = (inputQ.value||'').trim();
+      if (val===q) return;
+      q = val; pageIndex = 0;
+      clearTimeout(timer);
+      timer = setTimeout(render, 200); // debounce 200ms
+    });
+    inputQ.addEventListener('keydown', (e)=>{
+      if (e.key==='Escape'){
+        inputQ.value=''; if (q){ q=''; pageIndex=0; render(); }
+      }
+    });
+
+    const sel = document.getElementById('roleFilter');
+    sel.addEventListener('change', ()=>{
+      role = (sel.value||'').toUpperCase(); // '' = tất cả
+      pageIndex = 0; render();
+    });
+  })();
+
+  /* =============== CRUD handlers (reload once done) =============== */
+  document.getElementById('form-create').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const btn=qs('#btn-create'); btn.disabled=true; btn.innerHTML='Đang tạo… <span class="spinner"></span>';
     const fd=new FormData(e.target);
@@ -288,7 +407,8 @@
     try{
       await apiFetch(API,{method:'POST', body:JSON.stringify(payload)});
       toast('Đã tạo nhân viên');
-      e.target.reset(); location.hash='#'; await loadList();
+      e.target.reset(); location.hash='#';
+      await reloadAll(true);
     }catch(err){ alert('Tạo nhân viên thất bại: '+err.message); }
     finally{ btn.disabled=false; btn.textContent='Tạo'; }
   });
@@ -299,9 +419,8 @@
     const tr = edit.closest('tr');
     const id = edit.getAttribute('data-edit');
     const name = tr.children[0].textContent.trim();
-    const email = tr.children[1].textContent.trim();
     const phone = tr.children[2].textContent.trim();
-    const roleText = tr.children[3].textContent.trim(); // Manager/Staff
+    const roleText = tr.children[3].textContent.trim();
     const isActive = edit.parentElement.querySelector('[data-toggle]').getAttribute('data-active')==='1';
 
     const f = qs('#form-edit');
@@ -314,7 +433,7 @@
   });
 
   // Lưu sửa
-  qs('#form-edit').addEventListener('submit', async (e)=>{
+  document.getElementById('form-edit').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const btn=qs('#btn-update'); btn.disabled=true; btn.innerHTML='Đang lưu… <span class="spinner"></span>';
     const fd=new FormData(e.target);
@@ -328,8 +447,8 @@
     };
     try{
       await apiFetch(`${API}/${id}`, {method:'PATCH', body:JSON.stringify(payload)});
-      toast('Đã cập nhật');
-      e.target.reset(); location.hash='#'; await loadList();
+      toast('Đã cập nhật'); location.hash='#';
+      await reloadAll(false);
     }catch(err){ alert('Cập nhật thất bại: '+err.message); }
     finally{ btn.disabled=false; btn.textContent='Lưu'; }
   });
@@ -341,8 +460,8 @@
     const current = tgl.getAttribute('data-active')==='1';
     try{
       await apiFetch(`${API}/${id}`, { method:'PATCH', body: JSON.stringify({ isActive: !current })});
-      toast(current?'Đã khóa':'Đã mở khóa');
-      await loadList();
+      toast(current?'Đã khóa':'Đã mở');
+      await reloadAll(false);
     }catch(err){ alert('Thao tác thất bại: '+err.message); }
   });
 
@@ -353,81 +472,42 @@
     if(!confirm('Xoá nhân viên này?')) return;
     try{
       await apiFetch(`${API}/${id}`, {method:'DELETE'});
-      toast('Đã xoá'); await loadList();
+      toast('Đã xoá'); await reloadAll(false);
     }catch(err){ alert('Xoá thất bại: '+err.message); }
   });
 
-  qs('#btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
-  loadList();
+  // Split create behaviors
+  (function(){
+    const split = document.getElementById('createSplit');
+    const caret = document.getElementById('btn-create-caret');
+    const menu  = document.getElementById('createMenu');
+    const main  = document.getElementById('btn-create-open');
+    const form  = document.getElementById('form-create');
+    const title = document.getElementById('createTitle');
+
+    main?.addEventListener('click', ()=>{ if(form?.role) form.role.value='STAFF'; if(title) title.textContent='Tạo nhân viên'; });
+    caret?.addEventListener('click', (e)=>{ e.preventDefault(); split.classList.toggle('open'); caret.setAttribute('aria-expanded', split.classList.contains('open')?'true':'false'); });
+    menu?.addEventListener('click', (e)=>{
+      const a = e.target.closest('a[data-role]'); if(!a) return;
+      const r = a.getAttribute('data-role') || 'STAFF';
+      if(form?.role) form.role.value = r;
+      if(title) title.textContent = r==='MANAGER' ? 'Tạo Manager' : 'Tạo nhân viên';
+      split.classList.remove('open'); caret.setAttribute('aria-expanded','false');
+      location.hash = '#modal-create';
+    });
+    document.addEventListener('click', (e)=>{ if(!split.contains(e.target)) { split.classList.remove('open'); caret?.setAttribute('aria-expanded','false'); }});
+  })();
+
+  // Initial load
+  (async()=>{
+    await reloadAll(true);
+    // Ensure logout clears token
+    qs('#btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+  })();
 })();
-
-/* ====================== Avatar + Profile Modal ====================== */
-(function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-
-  function pickRole(payload){
-    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
-    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
-    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
-    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
-    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
-    return '—';
-  }
-
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-
-  function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':'')); // reset + set
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
-  }
-
-  function renderUser(){
-    const token = getToken(); if (!token) return;
-    const payload = decodeJwt(token) || {};
-    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-    const email = payload.email || payload.username || '—';
-    const role  = pickRole(payload);
-    fillProfile({name,email,role});
-  }
-
-  // Khi click "Thông tin tài khoản" chỉ cần mở modal (data-hash đã lo); dữ liệu đã fill ở renderUser
-  document.getElementById('open-profile')?.addEventListener('click', ()=> {
-    // Nếu muốn làm gì khi mở, thêm ở đây
-  });
-
-  // Logout link trong dropdown đã có handler ở block CRUD
-
-  renderUser();
-})();
-
 </script>
-<!-- START: profile modal -->
+
+<!-- Profile modal -->
 <div class="modal" id="modal-profile" aria-hidden="true">
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">
@@ -442,27 +522,18 @@
           <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
         </div>
       </div>
-      <div class="field">
-        <label>Họ tên</label>
-        <input class="input" id="profile_name" disabled/>
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input class="input" id="profile_email" disabled/>
-      </div>
-      <div class="field">
-        <label>Vai trò</label>
-        <input class="input" id="profile_role" disabled/>
-      </div>
+      <div class="field"><label>Họ tên</label><input class="input" id="profile_name" disabled/></div>
+      <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
+      <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
     <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
       <a class="btn" href="#">Đóng</a>
     </footer>
   </div>
 </div>
-<!-- END: profile modal -->
+
 <script>
-// START: unified header js
+/* ========== Unified header fill (avatar/name/role) ========== */
 (function(){
   const getToken = () =>
     (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
@@ -474,7 +545,12 @@
       return JSON.parse(decodeURIComponent(escape(json)));
     }catch{ return null; }
   }
-
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
   function pickRole(payload){
     const arr = payload?.authorities || payload?.roles || payload?.scope || [];
     const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
@@ -482,96 +558,6 @@
     if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
     if (list.find(v => v.toLowerCase()==='user'))    return 'user';
     return '—';
-  }
-
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-
-  function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
-  }
-
-  function renderUser(){
-    const token = getToken(); if (!token) return;
-    const payload = decodeJwt(token) || {};
-    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-    const email = payload.email || payload.username || '—';
-    const role  = pickRole(payload);
-    fillProfile({name,email,role});
-  }
-
-  // Ensure logout link clears token
-  document.getElementById('btn-logout')?.addEventListener('click', ()=>{
-    localStorage.removeItem('accessToken');
-  });
-
-  renderUser();
-})();
-// END: unified header js
-</script>
-<script>
-// START: role-based sidebar control (robust)
-function __extractRoles(payload){
-  try{
-    let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
-    let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
-    list = list
-      .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x) // support [{authority:"ROLE_MANAGER"}]
-      .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
-    return list.filter(Boolean);
-  }catch(e){ return []; }
-}
-function __deriveRole(list){
-  if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
-  if (list.includes('staff') || list.includes('employee')) return 'staff';
-  if (list.includes('user')) return 'user';
-  return list[0] || 'user';
-}
-function __applyRoleUI(role){
-  try{
-    const sys = document.querySelector('.sidebar__group[data-sec="system"]');
-    if (sys && role !== 'manager') {
-      sys.remove();
-    }
-  }catch(e){}
-}
-// END: role-based sidebar control (robust)
-</script>
-<script>
-// START: header render hook ensure
-(function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
   }
   function fillProfile({name,email,role}){
     const avHeader = document.getElementById('avatarImg');
@@ -591,18 +577,13 @@ function __applyRoleUI(role){
 
   const token = getToken(); if (!token) return;
   const payload = decodeJwt(token) || {};
-  const roles = __extractRoles(payload);
-  const role  = __deriveRole(roles);
   const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
   const email = payload.email || payload.username || '—';
-
+  const role  = pickRole(payload);
   fillProfile({name,email,role});
-  if (typeof __applyRoleUI === 'function') __applyRoleUI(role);
 
-  // ensure logout clears token
   document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 })();
-// END: header render hook ensure
 </script>
 </body>
 </html>

@@ -1,11 +1,19 @@
 package com.fonestore.user_api.entity;
 
+import com.fonestore.staff_api.entity.converter.PaymentStatusConverter;
+import com.fonestore.staff_api.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-@Table(name = "payments")
+@Table(name = "payments", indexes = {
+    @Index(name = "ix_payments_order", columnList = "order_id", unique = true)
+})
 public class Payment {
 
     @Id
@@ -13,42 +21,32 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
+    // NOTE: nên là BIGINT trong DB
     @Column(name = "order_id", nullable = false)
     private Long orderId;
 
-    @Column(name = "method", length = 32, nullable = false)
-    private String method;
+    @Column(name = "method", length = 30, nullable = false)
+    private String method; // "cod" | "bank" | ...
 
     @Column(name = "amount", precision = 18, scale = 2, nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "status", length = 32, nullable = false)
-    private String status;
+    // DB lưu 'pending' / 'paid' → map sang UNPAID / PAID
+    @Convert(converter = PaymentStatusConverter.class)
+    @Column(name = "status", length = 20, nullable = false)
+    private PaymentStatus status;
 
-    @Column(name = "txn_ref", length = 128)
+    @Column(name = "txn_ref", length = 64)
     private String txnRef;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
-    public void prePersist() {
-        createdAt = LocalDateTime.now();
+    void onCreate(){
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (status == null)    status = PaymentStatus.UNPAID;
+        if (method == null)    method = "cod";
+        if (amount == null)    amount = BigDecimal.ZERO;
     }
-
-    // getters & setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getOrderId() { return orderId; }
-    public void setOrderId(Long orderId) { this.orderId = orderId; }
-    public String getMethod() { return method; }
-    public void setMethod(String method) { this.method = method; }
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public String getTxnRef() { return txnRef; }
-    public void setTxnRef(String txnRef) { this.txnRef = txnRef; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
