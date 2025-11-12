@@ -1,7 +1,8 @@
 package com.fonestore.staff_api.controller.customer;
 
 import com.fonestore.user_api.entity.Order;
-import com.fonestore.user_api.repository.OrderRepository;
+import com.fonestore.user_api.repository.order.OrderRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

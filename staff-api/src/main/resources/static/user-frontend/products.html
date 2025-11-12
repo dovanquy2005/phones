@@ -8,53 +8,6 @@
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
 
-  <script>
-  // ===== AUTH AVATAR MENU =====
-  document.addEventListener('DOMContentLoaded', () => {
-    const me = JSON.parse(localStorage.getItem('fs_user') || 'null');
-    if (!me) return;
-
-    const nav = document.querySelector('header .nav');
-    if (!nav) return;
-    const loginLink = [...nav.querySelectorAll('a')].find(a => (a.textContent || '').trim().toLowerCase() === 'đăng nhập');
-    if (!loginLink) return;
-
-    const name = me.name || me.fullName || me.username || 'Tài khoản';
-    const ini  = (name.match(/\b(\w)/g) || ['?']).join('').slice(0,2).toUpperCase();
-
-    const wrap = document.createElement('div');
-    wrap.className = 'auth-menu';
-    wrap.innerHTML = `
-      <button class="auth-avatar" type="button" aria-haspopup="menu" aria-expanded="false">
-        <span class="avatar-dot">${ini}</span>
-        <span class="auth-name">${name}</span>
-        <span class="auth-caret">▾</span>
-      </button>
-      <div class="auth-dropdown" role="menu" aria-hidden="true">
-        <a role="menuitem" href="orders.html">Đơn hàng của tôi</a>
-        <a role="menuitem" href="profile.html">Trang cá nhân</a>
-        <div class="sep"></div>
-        <a role="menuitem" id="logoutLink" href="login.html">Đăng xuất</a>
-      </div>`;
-    loginLink.replaceWith(wrap);
-
-    const btn = wrap.querySelector('.auth-avatar');
-    const dd  = wrap.querySelector('.auth-dropdown');
-    btn.addEventListener('click', () => {
-      const open = wrap.classList.toggle('open');
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      dd.setAttribute('aria-hidden', open ? 'false' : 'true');
-    });
-    document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) wrap.classList.remove('open'); });
-
-    wrap.querySelector('#logoutLink').addEventListener('click', async (e) => {
-      e.preventDefault();
-      try { await fetch('/api/auth/logout', { method:'POST', credentials:'include' }); } catch {}
-      localStorage.removeItem('fs_user');
-      location.href = 'login.html';
-    });
-  });
-  </script>
 </head>
 
 <body>
@@ -136,7 +89,6 @@
     <div class="copyright">© 2025 fonestore — All rights reserved.</div>
   </div>
 </footer>
-
 <script>
 (() => {
   const BASE_API = window.location.origin; // http://localhost:9090
@@ -161,10 +113,22 @@
   const pageSlice = (arr,p,sz) => arr.slice((p-1)*sz,(p-1)*sz+sz);
 
   function pickImg(p){
-    const u = p?.imagePath || '';
-    if (!u) return 'assets/img/product-placeholder.svg';
-    if (u.startsWith('http')) return u;
-    return u.startsWith('/') ? u : '/' + u;
+    const raw = p?.imagePath ?? p?.thumbnail ?? p?.imageUrl ?? p?.image ?? null;
+    if (!raw){
+      if (Array.isArray(p?.images)){
+        const f = p.images[0];
+        const s = (typeof f === 'string') ? f : (f?.url || f?.src || f?.path);
+        if (s) return absolutize(s);
+      }
+      return 'assets/img/placeholder.png';
+    }
+    return absolutize(raw);
+  }
+  function absolutize(u){
+    const s = String(u||'').trim();
+    if (!s) return 'assets/img/placeholder.png';
+    if (/^https?:\/\//i.test(s) || s.startsWith('data:') || s.startsWith('/')) return s;
+    return '/' + s;
   }
 
   function buildApiUrl(){ return `${BASE_API}/api/products`; }
@@ -204,7 +168,7 @@
       const imgUrl=pickImg(p);
       el.innerHTML=`
         <img class="prod-thumb" src="${imgUrl}" alt="${p.name||'Điện thoại'}"
-             onerror="this.src='assets/img/product-placeholder.svg'"/>
+             onerror="this.src='assets/img/placeholder.png'"/>
         <div class="prod-title">${p.name||'(Không tên)'}</div>
         <div class="price"><div class="price-now">${money(pickPrice(p))}</div></div>
         <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>`;
@@ -261,5 +225,20 @@
   load();
 })();
 </script>
+
+
+
+
+
+
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import lombok.*; import java.util.List;
 @Data @AllArgsConstructor @NoArgsConstructor
 public class ProductDetailDTO {
     private Long id;
+    private long skuId;
     private String name;
     private String slug;
     private Long brandId;

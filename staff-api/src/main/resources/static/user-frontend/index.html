@@ -1,21 +1,31 @@
 <!doctype html>
-<html lang="vi"><head>
-  <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>fonestore — Mua điện thoại chính hãng</title>
-  <link rel="stylesheet" href="assets/css/base.css"/><link rel="stylesheet" href="assets/css/components.css"/>
+  <link rel="stylesheet" href="assets/css/base.css"/>
+  <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
-</head><body>
+  <style>
+    /* đảm bảo ảnh hiển thị đẹp ngay cả khi tỷ lệ khác nhau */
+    .prod-thumb{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:12px}
+  </style>
+</head>
+<body>
 
 <header class="header">
   <div class="container inner">
     <a class="brand" href="index.html">
       <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <div class="search">
+      <input id="q" class="input" placeholder="Tìm điện thoại..." aria-label="Search">
+    </div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
-      <a href="login.html">Đăng nhập</a>
+      <a href="cart.html" class="badge badge-cart" id="navCart">Giỏ hàng</a>
+      <a href="login.html" id="navLogin">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
   </div>
@@ -33,42 +43,22 @@
   </section>
 
   <section class="section">
-    <div class="space-between mb-8"><h2 class="h2">Thương hiệu nổi bật</h2><a class="muted" href="products.html">Tất cả →</a></div>
-    <div class="chips">
-      <a class="chip" href="products.html">Apple</a><a class="chip" href="products.html">Samsung</a>
-      <a class="chip" href="products.html">Xiaomi</a><a class="chip" href="products.html">OPPO</a>
-      <a class="chip" href="products.html">vivo</a><a class="chip" href="products.html">realme</a>
+    <div class="space-between mb-8">
+      <h2 class="h2">Thương hiệu nổi bật</h2>
+      <a class="muted" href="products.html">Tất cả →</a>
+    </div>
+    <div class="chips" id="brandChips">
+      <span class="muted">Đang tải thương hiệu…</span>
     </div>
   </section>
 
   <section class="section">
-    <div class="space-between mb-8"><h2 class="h2">Sản phẩm nổi bật</h2><a class="muted" href="products.html">Xem tất cả →</a></div>
-    <div class="grid grid-cols-4">
-
-      <article class="prod-card">
-        <img class="prod-thumb" src="assets/img/phone-1.svg" alt="Điện thoại 1"/>
-        <div class="prod-title">Điện thoại mẫu 1 cực chất</div>
-        <div class="price"><div class="price-now">10.990.000₫</div></div>
-        <a class="btn btn-ghost" href="product-detail.html">Xem chi tiết</a>
-      </article>
-      <article class="prod-card">
-        <img class="prod-thumb" src="assets/img/phone-2.svg" alt="Điện thoại 2"/>
-        <div class="prod-title">Điện thoại mẫu 2 cực chất</div>
-        <div class="price"><div class="price-now">10.990.000₫</div></div>
-        <a class="btn btn-ghost" href="product-detail.html">Xem chi tiết</a>
-      </article>
-      <article class="prod-card">
-        <img class="prod-thumb" src="assets/img/phone-3.svg" alt="Điện thoại 3"/>
-        <div class="prod-title">Điện thoại mẫu 3 cực chất</div>
-        <div class="price"><div class="price-now">10.990.000₫</div></div>
-        <a class="btn btn-ghost" href="product-detail.html">Xem chi tiết</a>
-      </article>
-      <article class="prod-card">
-        <img class="prod-thumb" src="assets/img/phone-4.svg" alt="Điện thoại 4"/>
-        <div class="prod-title">Điện thoại mẫu 4 cực chất</div>
-        <div class="price"><div class="price-now">10.990.000₫</div></div>
-        <a class="btn btn-ghost" href="product-detail.html">Xem chi tiết</a>
-      </article>
+    <div class="space-between mb-8">
+      <h2 class="h2">Sản phẩm nổi bật</h2>
+      <a class="muted" href="products.html">Xem tất cả →</a>
+    </div>
+    <div class="grid grid-cols-4" id="featuredGrid">
+      <div class="muted">Đang tải sản phẩm…</div>
     </div>
   </section>
 
@@ -92,11 +82,205 @@
     <div class="copyright">© 2025 fonestore — All rights reserved.</div>
   </div>
 </footer>
+<!-- auto-injected: auth core -->
 
-  <script src="assets/js/auth.js"></script>
-<script src="assets/js/header-auth.js"></script>
+<!-- ====== BE integration for brands & featured products ====== -->
+<script type="module">
+/** Robust BE integration + graceful fallback */
+const ORIGIN = location.origin;
+const FALLBACK_IMG = 'assets/img/placeholder.png';
+const IMAGE_BASES = ['/uploads/', '/images/', '/static/img/', '/assets/products/', '/']; // chỉnh theo BE bạn
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
-</body></html>
+// API bases (thử lần lượt)
+const BASES  = [ '/api/user', '/api/public', '/api' ].map(p => ORIGIN + p);
+
+// Auth header nếu có đăng nhập
+const token  = localStorage.getItem('accessToken') || '';
+const AUTH_H = token ? { 'Authorization': 'Bearer ' + token } : {};
+
+// DOM
+const brandChips   = document.getElementById('brandChips');
+const featuredGrid = document.getElementById('featuredGrid');
+const navCart      = document.getElementById('navCart');
+const navLogin     = document.getElementById('navLogin');
+const qInput       = document.getElementById('q');
+
+/* ---------- helpers: fetch thử nhiều path ---------- */
+async function tryPaths(paths, {mapList=true} = {}){
+  for (const base of BASES){
+    for (const path of paths){
+      try{
+        const r = await fetch(base + path, { headers: { ...AUTH_H }});
+        if (!r.ok) continue;
+        const data = await r.json();
+        if (!mapList) return data;
+        const list = Array.isArray(data) ? data
+                  : Array.isArray(data?.content) ? data.content
+                  : Array.isArray(data?.items) ? data.items
+                  : Array.isArray(data?.data) ? data.data
+                  : null;
+        if (list!==null) return list;
+      }catch(e){}
+    }
+  }
+  return mapList ? [] : null;
+}
+
+/* ---------- Ảnh: dựng danh sách ứng viên + set với fallback ---------- */
+function resolveImageCandidates(p){
+  let raw = p?.imagePath ?? p?.thumbnail ?? p?.thumb ?? p?.imageUrl ?? p?.image_url ?? p?.cover ?? p?.image ?? p?.picture ?? null;  if (!raw && Array.isArray(p?.images)) {
+    const f = p.images[0];
+    raw = typeof f === 'string' ? f : (f?.url || f?.src || f?.path || null);
+  }
+  if (!raw) return [FALLBACK_IMG];
+
+  if (typeof raw === 'number' || (/^\d+$/.test(String(raw)))) {
+    return [`${ORIGIN}/api/public/files/${raw}`];
+  }
+
+  const s = String(raw).trim();
+  if (s.startsWith('data:')) return [s];
+  if (/^https?:\/\//i.test(s)) return [s];
+  if (s.startsWith('/')) return [ORIGIN + s];
+
+  const fn = s.replace(/^\/+/, '');
+  return IMAGE_BASES.map(b => ORIGIN + (b.endsWith('/') ? b : b + '/') + fn);
+}
+
+function setImgSrc(imgEl, candidates){
+  const list = [...candidates];
+  function next(){
+    const u = list.shift();
+    if (!u){ imgEl.src = FALLBACK_IMG; return; }
+    imgEl.src = u;
+  }
+  imgEl.onerror = next;
+  next();
+}
+
+/* ---------- Search ---------- */
+qInput?.addEventListener('keydown', (e)=>{
+  if (e.key === 'Enter'){
+    const q = (qInput.value||'').trim();
+    location.href = q ? `products.html?q=${encodeURIComponent(q)}` : 'products.html';
+  }
+});
+
+/* ---------- Brands ---------- */
+async function loadBrands(){
+  const list = await tryPaths([
+    '/brands?limit=6',
+    '/brands',
+    '/catalog/brands?limit=6',
+  ]);
+  if (!list.length){
+    brandChips.innerHTML = '<span class="muted">Chưa có thương hiệu.</span>';
+    return;
+  }
+  brandChips.innerHTML = '';
+  list.slice(0,6).forEach(b=>{
+    const id   = b?.id ?? b?.brandId ?? b?.code ?? b?.slug ?? String(b?.name||'').toLowerCase();
+    const name = b?.name ?? b?.brandName ?? b?.title ?? 'Brand';
+    const a = document.createElement('a');
+    a.className = 'chip';
+    a.href = `products.html?brand=${encodeURIComponent(id)}`;
+    a.textContent = name;
+    brandChips.appendChild(a);
+  });
+}
+
+/* ---------- Featured products ---------- */
+function renderCard(p){
+  const id    = p?.id ?? p?.productId ?? p?.skuId;
+  const name  = p?.name ?? p?.title ?? p?.productName ?? 'Điện thoại';
+  const price = p?.price ?? p?.salePrice ?? p?.currentPrice ?? p?.minPrice ?? p?.finalPrice ?? 0;
+  const url   = `product-detail.html?id=${encodeURIComponent(id ?? name)}`;
+
+  const card  = document.createElement('article');
+  card.className = 'prod-card';
+
+  const imgEl = document.createElement('img');
+  imgEl.className = 'prod-thumb';
+  imgEl.alt = name;
+  setImgSrc(imgEl, resolveImageCandidates(p));
+
+  const title = document.createElement('div');
+  title.className = 'prod-title';
+  title.title = name;
+  title.textContent = name;
+
+  const priceWrap = document.createElement('div');
+  priceWrap.className = 'price';
+  const priceNow = document.createElement('div');
+  priceNow.className = 'price-now';
+  priceNow.textContent = (Number(price)||0).toLocaleString('vi-VN').replace(/,/g,'.')+'₫';
+  priceWrap.appendChild(priceNow);
+
+  const btn = document.createElement('a');
+  btn.className = 'btn btn-ghost';
+  btn.href = url;
+  btn.textContent = 'Xem chi tiết';
+
+  card.append(imgEl, title, priceWrap, btn);
+  return card;
+}
+
+async function loadFeatured(){
+  const list = await tryPaths([
+    '/products/featured?limit=8',
+    '/products?sort=popular&limit=8',
+    '/products?limit=8',
+    '/catalog/featured?limit=8',
+  ]);
+  featuredGrid.innerHTML = '';
+  if (!list.length){
+    featuredGrid.innerHTML = '<div class="muted">Chưa có sản phẩm.</div>';
+    return;
+  }
+  list.slice(0,8).forEach(p => featuredGrid.appendChild(renderCard(p)));
+}
+
+/* ---------- Cart badge: chỉ khi đã đăng nhập ---------- */
+async function fillCart(){
+  if (navCart) navCart.textContent = 'Giỏ hàng';
+  if (!token) return;
+  for (const base of BASES){
+    try{
+      const r = await fetch(base + '/cart/summary', { headers: { ...AUTH_H }});
+      if (!r.ok) continue;
+      const d = await r.json();
+      const n = Number(d?.count ?? d?.quantity ?? d?.totalItems ?? d?.itemsCount ?? d?.size ?? 0);
+      if (n > 0) navCart.textContent = `Giỏ hàng (${n})`;
+      return;
+    }catch(e){}
+  }
+}
+
+/* ---------- Login visibility ---------- */
+(function setLoginVisible(){
+  if (token && navLogin) navLogin.style.display = 'none';
+})();
+
+
+
+
+
+/* ---------- init ---------- */
+await Promise.all([loadBrands(), loadFeatured(), fillCart()]);
+</script>
+
+
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
+
+
+<!-- đặt CUỐI CÙNG -->
+</body>
+</html>

@@ -6,29 +6,44 @@
   <title>fonestore · Báo cáo</title>
   <link rel="stylesheet" href="css/base.css"/>
   <script src="/staff-frontend/assets/js/api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Header */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .brand__logo{width:28px;height:28px}
+    .brand__text{font-weight:700;color:#111827}
+    .header-spacer{flex:1}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    .dropdown{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e5e7eb;border-radius:10px;min-width:180px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:8px}
+    details[open] > .dropdown{display:block}
+    .dropdown a{display:block;padding:8px 10px;color:#111827;text-decoration:none;border-radius:8px}
+    .dropdown a:hover{background:#f3f4f6}
 
-<style>
-/* START: unified header css */
-.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.header-spacer{flex:1}
-.header-actions{display:flex;align-items:center;gap:10px}
-.avatar-menu{position:relative}
-.avatar-menu > summary{list-style:none;cursor:pointer}
-.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
-.avatar img{width:100%;height:100%;display:block}
-.avatar-menu[open] .dropdown{display:block}
-.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
-.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
-.dropdown a:hover{background:#f3f4f6}
-.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
-.role-badge.manager{background:#dcfce7;color: #166534}
-.role-badge.staff{background:#dcfce7;color: #166534}
-/* END: unified header css */
-</style>
+    /* Toolbar + controls */
+    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .input{height:36px;border:1px solid #e5e7eb;border-radius:10px;padding:0 10px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#111827;color:#fff;text-decoration:none;cursor:pointer}
+    .btn:hover{opacity:.92}
+
+    /* Cards + chart placeholder */
+    .grid{display:grid;gap:12px}
+    .grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    @media (max-width:1024px){.grid--3{grid-template-columns:1fr}}
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}
+    .card__header{padding:12px 14px;border-bottom:1px solid #e5e7eb}
+    .card__body{padding:12px 14px}
+    .chart{min-height:160px;display:flex;align-items:center;justify-content:center;color:#6b7280;border:1px dashed #e5e7eb;border-radius:10px;padding:12px}
+
+    /* Table */
+    .table{width:100%;border-collapse:collapse;table-layout:fixed}
+    .table th,.table td{padding:10px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .table-wrap{overflow-x:auto}
+  </style>
 </head>
 <body>
-<!-- START: unified header -->
+<!-- Header -->
 <header class="app-header">
   <a class="brand" href="index.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -47,16 +62,16 @@
     </details>
   </div>
 </header>
-<!-- END: unified header -->
 
-  <div class="app-shell">
-      <aside class="sidebar" aria-label="Điều hướng">
+<div class="app-shell" style="display:flex">
+  <!-- Sidebar -->
+  <aside class="sidebar" aria-label="Điều hướng">
     <div class="sidebar__group" data-sec="sales">
       <p class="sidebar__heading">Bán hàng</p>
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-      <a class="sidebar__link" href="index.html">Dashboard</a>
+       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -66,41 +81,58 @@
     </div>
     <div class="sidebar__group" data-sec="system">
       <p class="sidebar__heading">Hệ thống</p>
-<a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
-      <a class="sidebar__link" href="reports.html">Báo cáo</a>
-      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+      <a class="sidebar__link" href="staff.html">Nhân viên</a>
+      <a class="sidebar__link sidebar__link--active" href="reports.html">Báo cáo</a>
+        
     </div>
   </aside>
-    <main class="content">
-      <section class="toolbar">
-        <h1 class="page-title">Báo cáo</h1>
+
+  <!-- Main -->
+  <main class="content" style="flex:1">
+    <section class="toolbar">
+      <h1 class="page-title">Báo cáo</h1>
+      <div style="flex:1"></div>
+
+      <label style="font-size:14px;color:#6b7280">Từ</label>
+      <input id="inpFrom" type="date" class="input" style="min-width:150px"/>
+
+      <label style="font-size:14px;color:#6b7280;margin-left:6px">Đến</label>
+      <input id="inpTo" type="date" class="input" style="min-width:150px"/>
+
+      <label style="font-size:14px;color:#6b7280;margin-left:6px">Năm</label>
+      <select id="selYear" class="input" style="min-width:100px"></select>
+
+      <button id="btnApply" class="btn" title="Tải dữ liệu theo bộ lọc">Tải dữ liệu</button>
+      <button id="btnExport" class="btn" title="Xuất Excel theo bộ lọc">↑ Xuất Excel</button>
+    </section>
+
+    <div class="grid grid--3">
+      <section class="card">
+        <div class="card__header"><strong>Doanh thu theo ngày</strong></div>
+        <div class="card__body"><div class="chart" id="phDaily">Đang tải…</div></div>
       </section>
-      <div class="grid grid--3">
-        <section class="card">
-          <div class="card__header"><strong>Doanh thu theo ngày</strong></div>
-          <div class="card__body"><div class="chart">Biểu đồ ngày (placeholder)</div></div>
-        </section>
-        <section class="card">
-          <div class="card__header"><strong>Doanh thu theo tháng</strong></div>
-          <div class="card__body"><div class="chart">Biểu đồ tháng (placeholder)</div></div>
-        </section>
-        <section class="card">
-          <div class="card__header"><strong>Top bán chạy</strong></div>
-          <div class="card__body table-wrap">
-            <table class="table">
-              <thead><tr><th>Sản phẩm</th><th>SL</th><th>Doanh thu</th></tr></thead>
-              <tbody>
-                <tr><td>iPhone 15 128GB</td><td>32</td><td>672.000.000₫</td></tr>
-                <tr><td>Galaxy S24 Ultra</td><td>18</td><td>468.000.000₫</td></tr>
-                <tr><td>Xiaomi 14T Pro</td><td>25</td><td>374.750.000₫</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    </main>
-  </div>
-<!-- START: profile modal -->
+
+      <section class="card">
+        <div class="card__header"><strong>Doanh thu theo tháng</strong></div>
+        <div class="card__body"><div class="chart" id="phMonthly">Đang tải…</div></div>
+      </section>
+
+      <section class="card">
+        <div class="card__header"><strong>Top bán chạy</strong></div>
+        <div class="card__body table-wrap">
+          <table class="table" id="tblTop">
+            <thead>
+              <tr><th>Sản phẩm</th><th style="width:80px">SL</th><th style="width:140px">Doanh thu</th></tr>
+            </thead>
+            <tbody><tr><td colspan="3">Đang tải…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<!-- Profile modal -->
 <div class="modal" id="modal-profile" aria-hidden="true">
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">
@@ -115,27 +147,18 @@
           <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
         </div>
       </div>
-      <div class="field">
-        <label>Họ tên</label>
-        <input class="input" id="profile_name" disabled/>
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input class="input" id="profile_email" disabled/>
-      </div>
-      <div class="field">
-        <label>Vai trò</label>
-        <input class="input" id="profile_role" disabled/>
-      </div>
+      <div class="field"><label>Họ tên</label><input class="input" id="profile_name" disabled/></div>
+      <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
+      <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
     <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
       <a class="btn" href="#">Đóng</a>
     </footer>
   </div>
 </div>
-<!-- END: profile modal -->
+
 <script>
-// START: unified header js
+/* ========== Unified header fill (avatar/name/role) ========== */
 (function(){
   const getToken = () =>
     (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
@@ -147,7 +170,12 @@
       return JSON.parse(decodeURIComponent(escape(json)));
     }catch{ return null; }
   }
-
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
   function pickRole(payload){
     const arr = payload?.authorities || payload?.roles || payload?.scope || [];
     const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
@@ -155,96 +183,6 @@
     if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
     if (list.find(v => v.toLowerCase()==='user'))    return 'user';
     return '—';
-  }
-
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-
-  function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
-  }
-
-  function renderUser(){
-    const token = getToken(); if (!token) return;
-    const payload = decodeJwt(token) || {};
-    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-    const email = payload.email || payload.username || '—';
-    const role  = pickRole(payload);
-    fillProfile({name,email,role});
-  }
-
-  // Ensure logout link clears token
-  document.getElementById('btn-logout')?.addEventListener('click', ()=>{
-    localStorage.removeItem('accessToken');
-  });
-
-  renderUser();
-})();
-// END: unified header js
-</script>
-<script>
-// START: role-based sidebar control (robust)
-function __extractRoles(payload){
-  try{
-    let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
-    let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
-    list = list
-      .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x) // support [{authority:"ROLE_MANAGER"}]
-      .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
-    return list.filter(Boolean);
-  }catch(e){ return []; }
-}
-function __deriveRole(list){
-  if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
-  if (list.includes('staff') || list.includes('employee')) return 'staff';
-  if (list.includes('user')) return 'user';
-  return list[0] || 'user';
-}
-function __applyRoleUI(role){
-  try{
-    const sys = document.querySelector('.sidebar__group[data-sec="system"]');
-    if (sys && role !== 'manager') {
-      sys.remove();
-    }
-  }catch(e){}
-}
-// END: role-based sidebar control (robust)
-</script>
-<script>
-// START: header render hook ensure
-(function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
   }
   function fillProfile({name,email,role}){
     const avHeader = document.getElementById('avatarImg');
@@ -264,18 +202,151 @@ function __applyRoleUI(role){
 
   const token = getToken(); if (!token) return;
   const payload = decodeJwt(token) || {};
-  const roles = __extractRoles(payload);
-  const role  = __deriveRole(roles);
   const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
   const email = payload.email || payload.username || '—';
-
+  const role  = pickRole(payload);
   fillProfile({name,email,role});
-  if (typeof __applyRoleUI === 'function') __applyRoleUI(role);
 
-  // ensure logout clears token
   document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 })();
-// END: header render hook ensure
 </script>
+
+<script>
+/* ===== Reports: filters + fetch + render + export ===== */
+(function(){
+  const API  = location.origin;
+  const BASE = API + '/api/reports'; // cố định 1 base
+
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+  const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.')+'₫';
+
+  // DOM
+  const inpFrom = document.getElementById('inpFrom');
+  const inpTo   = document.getElementById('inpTo');
+  const selYear = document.getElementById('selYear');
+  const btnApply= document.getElementById('btnApply');
+  const btnExport=document.getElementById('btnExport');
+
+  // defaults: 30 ngày gần nhất
+  const today = new Date();
+  const fromDef = new Date(); fromDef.setDate(today.getDate()-29);
+  const yNow = today.getFullYear();
+  inpFrom.value = toISO(fromDef);
+  inpTo.value   = toISO(today);
+  if (selYear.children.length === 0) {
+    selYear.innerHTML = `<option value="${yNow}">${yNow}</option><option value="${yNow-1}">${yNow-1}</option>`;
+    selYear.value = String(yNow);
+  }
+
+  let chartDaily, chartMonthly;
+
+  function toISO(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+  function showStatus(where, text){
+    const el = document.getElementById(where);
+    if (el) el.textContent = text;
+  }
+  function setLoading(){
+    showStatus('phDaily','Đang tải…');
+    showStatus('phMonthly','Đang tải…');
+    const tb=document.querySelector('#tblTop tbody'); if(tb) tb.innerHTML='<tr><td colspan="3">Đang tải…</td></tr>';
+  }
+  function ensureCanvas(placeholderId, canvasId){
+    const box = document.getElementById(placeholderId);
+    box.innerHTML = `<canvas id="${canvasId}" height="160"></canvas>`;
+    return document.getElementById(canvasId);
+  }
+
+  // Fetch helpers (simple + log)
+  async function tryFetchJson(path){
+    const url = BASE + path;
+    const r = await fetch(url, { headers: { 'Authorization':'Bearer '+getToken() }});
+    let data = null;
+    try { data = r.ok ? await r.json() : null; } catch{}
+    console.debug('[GET]', r.status, url, '→', Array.isArray(data)?`len=${data.length}`:data);
+    return { ok: r.ok, status: r.status, data, url };
+  }
+  async function tryFetchBlob(path){
+    const url = BASE + path;
+    const r = await fetch(url, { headers: { 'Authorization':'Bearer '+getToken() }});
+    console.debug('[GET BLOB]', r.status, url);
+    if (!r.ok) return { ok:false, status:r.status, blob:null, url };
+    return { ok:true, status:r.status, blob: await r.blob(), url };
+  }
+
+  async function loadReports(){
+    setLoading();
+    const from = inpFrom.value;
+    const to   = inpTo.value;
+    const year = selYear.value;
+
+    // Daily
+    let res = await tryFetchJson(`/revenue/daily?from=${from}&to=${to}`);
+    if (!res.ok){
+      showStatus('phDaily', `Không thể tải dữ liệu (HTTP ${res.status || '???'})`);
+    } else {
+      const daily = res.data || [];
+      const c1 = ensureCanvas('phDaily','chartDaily');
+      if (chartDaily) chartDaily.destroy();
+      chartDaily = new Chart(c1,{ type:'line',
+        data:{ labels: daily.map(x=>String(x.date).slice(5)),
+               datasets:[{label:'Doanh thu (₫)', data: daily.map(x=>x.revenue), tension:.3}]},
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmtVND(v)}}}}
+      });
+    }
+
+    // Monthly
+    res = await tryFetchJson(`/revenue/monthly?year=${year}`);
+    if (!res.ok){
+      showStatus('phMonthly', `Không thể tải dữ liệu (HTTP ${res.status || '???'})`);
+    } else {
+      const monthly = res.data || [];
+      const c2 = ensureCanvas('phMonthly','chartMonthly');
+      if (chartMonthly) chartMonthly.destroy();
+      chartMonthly = new Chart(c2,{ type:'bar',
+        data:{ labels: monthly.map(x=>x.month),
+               datasets:[{label:'Doanh thu (₫)', data: monthly.map(x=>x.revenue)}]},
+        options:{ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmtVND(v)}}}}
+      });
+    }
+
+    // Top products
+    res = await tryFetchJson(`/top-products?from=${from}&to=${to}&limit=10`);
+    const tb = document.querySelector('#tblTop tbody'); tb.innerHTML='';
+    if (!res.ok){
+      tb.innerHTML = `<tr><td colspan="3">Không thể tải (HTTP ${res.status || '???'}).</td></tr>`;
+    } else {
+      const top = res.data || [];
+      if (top.length===0){
+        tb.innerHTML = `<tr><td colspan="3">Không có dữ liệu trong khoảng đã chọn.</td></tr>`;
+      }else{
+        top.forEach(x=>{
+          const tr=document.createElement('tr');
+          tr.innerHTML = `<td>${x.name}</td>
+                          <td style="text-align:right">${x.qty}</td>
+                          <td style="text-align:right">${fmtVND(x.revenue)}</td>`;
+          tb.appendChild(tr);
+        });
+      }
+    }
+
+    // Export
+    btnExport.onclick = async()=>{
+      const r = await tryFetchBlob(`/export.xlsx?from=${from}&to=${to}&year=${year}&topLimit=50`);
+      if (!r.ok){ alert(`Xuất Excel thất bại (HTTP ${r.status || '???'})`); return; }
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(r.blob);
+      a.href = url;
+      a.download = `reports_${year}_${from}_${to}.xlsx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 800);
+    };
+  }
+
+  document.getElementById('btnApply').addEventListener('click', loadReports);
+  loadReports();
+})();
+</script>
+
 </body>
 </html>

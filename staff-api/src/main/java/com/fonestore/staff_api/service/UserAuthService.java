@@ -23,13 +23,13 @@ import java.time.format.DateTimeParseException;
 import java.util.HexFormat;
 
 @Service("staffUserService")
-public class UserService {
+public class UserAuthService {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepo;
     private static final SecureRandom RNG = new SecureRandom();
 
-    public UserService(UserRepository userRepo, JwtUtil jwtUtil) {
+    public UserAuthService(UserRepository userRepo, JwtUtil jwtUtil) {
         this.userRepo = userRepo;
         this.jwtUtil = jwtUtil;
     }
@@ -46,6 +46,7 @@ public class UserService {
         u.setDob(parseDob(r.dob()));
         u.setGender(r.gender());
         u.setAddress(r.address());
+        u.setRole("user");
         u = userRepo.save(u);
 
         return toResp(u);
@@ -65,6 +66,7 @@ public class UserService {
         if (r.dob() != null) u.setDob(parseDob(r.dob()));
         if (r.gender() != null) u.setGender(r.gender());
         if (r.address() != null) u.setAddress(r.address());
+        
         u = userRepo.save(u);
         return toResp(u);
     }
@@ -129,8 +131,9 @@ public class UserService {
                 u.getPhone(),
                 u.getDob() != null ? u.getDob().toString() : null,
                 u.getGender(),
-                u.getAddress(),
+                u.getRole(),
                 u.getTwofaSecret() != null
+                
         );
     }
 

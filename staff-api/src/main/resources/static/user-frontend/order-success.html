@@ -13,7 +13,7 @@
     <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -28,9 +28,22 @@
   </div>
 </main>
 <footer class="footer"><div class="container section"><div class="copyright">© 2025 fonestore</div></div></footer>
-<script src="assets/js/header-auth.js"></script>
+<!-- auto-injected: auth core -->
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
-</body></html>
+
+
+
+
+
+
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
+</body>
+</html>

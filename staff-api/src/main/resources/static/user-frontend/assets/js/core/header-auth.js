@@ -1,15 +1,33 @@
-import { getCurrentUser, doLogout } from './auth.js';
-(async () => {
-  const user = await getCurrentUser();
-  const root = document.querySelector('[data-header-user]') || document.querySelector('.auth-menu');
-  if(!root) return;
-  if(user){
-    root.innerHTML = `<span class="u-name">${user.username || user.name || 'User'}</span>
-      <a id="fs-logout" href="#" class="btn-link">Đăng xuất</a>`;
-    document.getElementById('fs-logout')?.addEventListener('click', (e)=>{
-      e.preventDefault(); doLogout();
-    });
-  }else{
-    root.innerHTML = `<a href="login.html" class="btn-link">Đăng nhập</a>`;
-  }
-})();
+// assets/js/core/header-auth.js (ESM, trimmed)
+// Responsibilities:
+// - Ensure cart link points to cart.html
+// - Hide login link when token exists
+import { getToken } from './auth.js';
+
+function boot(){
+  const nav = document.querySelector('.header .nav');
+  if (!nav) return;
+
+  // 1) Cart link -> cart.html
+  const cartLink = nav.querySelector('#navCart, .badge-cart, a[href*="cart"]');
+  if (cartLink) cartLink.setAttribute('href','cart.html');
+
+  // 2) Hide login if logged-in (UI rendering handled by auth-menu-inject.js)
+  try{
+    const token = getToken && getToken();
+    const loginLink = nav.querySelector('a[href$="login.html"]');
+    if (token && loginLink) loginLink.style.display = 'none';
+  }catch(_){/*noop*/}
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else { boot(); }
+
+
+window.addEventListener('cart:updated', function(e){
+  try { if(typeof renderHeaderCart === 'function') renderHeaderCart(); } catch(e){}
+});
+window.addEventListener('auth:changed', function(e){
+  try { if(typeof renderHeaderCart === 'function') renderHeaderCart(); } catch(e){}
+});

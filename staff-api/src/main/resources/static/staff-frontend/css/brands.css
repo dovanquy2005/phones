@@ -1,0 +1,195 @@
+
+    .table{width:100%;border-collapse:collapse;table-layout:fixed;}
+    .table thead th,.table tbody td{padding:12px 16px;border-bottom:1px solid var(--color-border)}
+    .table-wrap{overflow-x:auto;}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .page-title{margin:0}
+    .btn--danger{background:#ef4444;color:#fff}
+    .empty{padding:16px;color:#6b7280;text-align:center;}
+    .modal{
+      position: fixed; inset: 0; background: rgba(17,24,39,.45);
+      display: none; justify-content: center; align-items: flex-start;
+      padding: 32px 16px; z-index: 9999;
+    }
+    .modal[aria-hidden="false"]{ display:flex; }
+    .modal__card{
+      width: min(560px, 100%);
+      background:#fff; border-radius:16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.15);
+    }
+    .modal__header,.modal__body,.modal__footer{padding:16px}
+    .modal__header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--color-border)}
+    .modal__footer{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--color-border)}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .helper{font-size:12px;color:#6b7280}
+    .td-actions{display:flex;gap:8px;justify-content:flex-end}
+
+    /* ===== Toast ===== */
+    .toast-wrap{
+      position:fixed; top:20px; right:20px; z-index:99999;
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .toast{
+      min-width:260px; max-width:360px;
+      padding:10px 12px; border-radius:12px;
+      box-shadow:0 10px 25px rgba(0,0,0,.15);
+      display:flex; align-items:flex-start; gap:10px;
+      color:#0f172a; background:#fff; border:1px solid #e5e7eb;
+      animation:toast-in .18s ease-out;
+    }
+    .toast--success{ border-color:#86efac; background:#f0fdf4; }
+    .toast--error{   border-color:#fecaca; background:#fef2f2; }
+    .toast__title{ font-weight:600; margin-bottom:2px }
+    .toast__msg{ font-size:13px; color:#334155 }
+    @keyframes toast-in { from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:translateY(0)} }
+  
+            /* header */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+
+    /* avatar menu */
+    .avatar-menu{position:relative}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    .avatar-menu[open] .dropdown{display:block}
+    .dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+    .dropdown a:hover{background:#f3f4f6}
+
+    /* role badge color (dùng cho popup) */
+    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+    .role-badge.manager{background:#dcfce7;color: #166534}
+    .role-badge.staff{background:#dcfce7;color: #166534}
+  
+  
+/* START: unified header css */
+.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.header-spacer{flex:1}
+.header-actions{display:flex;align-items:center;gap:10px}
+.avatar-menu{position:relative}
+.avatar-menu > summary{list-style:none;cursor:pointer}
+.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+.avatar img{width:100%;height:100%;display:block}
+.avatar-menu[open] .dropdown{display:block}
+.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+.dropdown a:hover{background:#f3f4f6}
+.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+.role-badge.manager{background:#dcfce7;color: #166534}
+.role-badge.staff{background:#dcfce7;color: #166534}
+/* END: unified header css */
+
+
+/* ===== Pagination fixes & layout ===== */
+.card { border-radius: 12px; overflow: hidden; /* ensure footer rounds with card */ }
+
+/* card footer */
+.card__footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border, #eef2f6);
+  background: var(--card-footer-bg, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* đẩy toàn bộ sang phải */
+  gap: 12px;
+}
+
+/* wrapper for pagination controls (buttons) */
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  order: 2;             /* ensure buttons appear after info if needed */
+  flex-wrap: wrap;
+}
+
+/* info text (put it immediately before controls on the right) */
+.pagination-info {
+  order: 1;
+  margin-right: 8px;    /* khoảng cách giữa info và nút */
+  color: #64748b;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Pagination buttons styling */
+.pager-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:38px;
+  height:38px;
+  padding:0 10px;
+  border-radius:10px;
+  border:1px solid #e6e9ef;
+  background:white;
+  color:#374151;
+  font-size:14px;
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 1px 0 rgba(0,0,0,0.02);
+  transition: transform .08s ease, background .08s ease;
+}
+.pager-btn:hover{ transform: translateY(-2px); }
+
+/* ghost/outline for arrow buttons */
+.pager-btn--ghost{
+  background:transparent;
+  border-color:#f1f5f9;
+}
+
+/* active page button */
+.pager-btn.active, .pager-btn[aria-current="page"]{
+  background:#0f172a;
+  color:#fff;
+  border-color:transparent;
+}
+
+/* disabled state */
+.pager-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* responsiveness: if screen nhỏ, cho info xuống dòng trước controls */
+@media (max-width:520px){
+  .card__footer {
+    justify-content: center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .pagination-info { order: 0; width:100%; text-align:center; margin-right:0; }
+  .pagination-left { order: 1; width:100%; justify-content:center; }
+}
+
+
+
+
+/* ===== FIX AVATAR DROPDOWN (dán cuối cùng, sau mọi file CSS) ===== */
+.avatar-menu { position: relative !important; display: inline-block !important; z-index: 9999; }
+
+/* Force predictable dropdown placement relative to avatar */
+.avatar-menu .dropdown {
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  right: 0 !important;
+  left: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  z-index: 2147483646 !important; /* very high to appear above everything */
+  display: none; /* keep behavior same: shown via [open] or JS */
+}
+
+/* show rule when <details> is open (keep existing behavior) */
+.avatar-menu[open] .dropdown { display: block !important; }
+
+/* small protective responsive tweak */
+@media (max-width:480px){
+  .avatar-menu .dropdown { right: 8px !important; left: auto !important; }
+}
+

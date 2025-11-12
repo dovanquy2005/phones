@@ -1,7 +1,7 @@
 package com.fonestore.staff_api.controller;
 
 import com.fonestore.staff_api.dto.user.*;
-import com.fonestore.staff_api.service.UserService;
+import com.fonestore.staff_api.service.UserAuthService;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
-    private final UserService service;
-    public UserController(UserService service) { this.service = service; }
+    private final UserAuthService service;
+    public UserController(UserAuthService service) { this.service = service; }
 
     @PostMapping(
         consumes = "application/json",

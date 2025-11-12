@@ -153,9 +153,14 @@ public class ProductService {
                 .toList();
 
         String coverImage = images.stream().findFirst().map(ProductImageDTO::getFilePath).orElse(null);
-
+        // lấy sku của variant đầu tiên (nếu có)
+        long skuId = variants.stream()
+            .findFirst()
+            .map(ProductVariantDTO::getId)
+            .orElse(null);
+            
         return new ProductDetailDTO(
-                p.getId(), p.getName(), p.getSlug(), p.getBrandId(), p.getDescription(),
+                p.getId(),skuId, p.getName(), p.getSlug(), p.getBrandId(), p.getDescription(),
                 p.getSpecsJson(), p.getIsActive(), coverImage, p.getQuantity(), variants, images
         );
     }

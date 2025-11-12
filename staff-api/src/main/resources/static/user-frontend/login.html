@@ -14,6 +14,7 @@
     .error-box{display:none;margin-top:12px}
   </style>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+   <script src="/assets/js/fs_compat.js"></script>
 </head>
 <body>
 <header class="header">
@@ -24,7 +25,7 @@
     <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -66,33 +67,111 @@
 
 <script>
 (() => {
-  const API_BASE = "http://localhost:9090";  // đúng cổng BE
+  const API_BASE = "http://localhost:9090";
   const LOGIN_ENDPOINT = `${API_BASE}/api/auth/login`;
-
 
   const elForm = document.getElementById('login-form');
   const elBtn  = document.getElementById('login-btn');
   const elErr  = document.getElementById('login-error');
 
-  function setAuth({token, user}, remember) {
-    const storage = remember ? localStorage : sessionStorage;
-    storage.setItem('fs_token', token);
-    storage.setItem('fs_user', JSON.stringify(user || {}));
-    // Xóa ở kho còn lại để tránh lệch trạng thái
-    (remember ? sessionStorage : localStorage).removeItem('fs_token');
-    (remember ? sessionStorage : localStorage).removeItem('fs_user');
-  }
-
+  // Utility: try parse various response shapes to extract token
   function pickToken(obj) {
     if (!obj) return null;
-    return obj.token || obj.accessToken || obj.jwt || null;
+    // direct shapes
+    if (obj.token) return obj.token;
+    if (obj.accessToken) return obj.accessToken;
+    if (obj.jwt) return obj.jwt;
+    // nested: { data: { token: ... } }
+    if (obj.data && (obj.data.token || obj.data.accessToken)) return obj.data.token || obj.data.accessToken;
+    // sometimes axios style: { data: { user, token } }
+    return null;
   }
 
-  // Nếu đã đăng nhập thì đẩy về trang chủ
+  // canonical setter used by other modules (auth.js may define)
+  function canonicalSetToken(token) {
+    try {
+      if (typeof window.setToken === 'function') {
+        window.setToken(token);
+        return true;
+      }
+    } catch(e) { console.warn('canonicalSetToken error', e); }
+    return false;
+  }
+
+  // Improved setAuth: save token + user, fire events, add debug logs
+  function setAuth({ token, user } = {}, remember = false) {
+    if (!token) return;
+    try {
+      // try canonical setter first (auth.js)
+      const did = canonicalSetToken(token);
+      if (!did) {
+        const storage = remember ? localStorage : sessionStorage;
+        const alt = remember ? sessionStorage : localStorage;
+        // save token in both common keys used by app
+        try { storage.setItem('fs_token', token); } catch(e){}
+        try { storage.setItem('accessToken', token); } catch(e){}
+        // remove old token from alternative storage
+        try { alt.removeItem('fs_token'); } catch(e){}
+        try { alt.removeItem('accessToken'); } catch(e){}
+      }
+    } catch(e) {
+      console.warn('setAuth token store error', e);
+    }
+
+    try {
+      const storageUser = remember ? localStorage : sessionStorage;
+      storageUser.setItem('fs_user', JSON.stringify(user || {}));
+      // keep fs_user in both storages for compatibility
+      try { localStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
+      try { sessionStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
+    } catch(e) {
+      console.warn('setAuth user store error', e);
+    }
+
+    try {
+      // explicit user id convenience keys
+      const uid = user && (user.userId || user.id || user.user_id) ? String(user.userId || user.id || user.user_id) : null;
+      if (uid) {
+        try { localStorage.setItem('fs_user_id', uid); } catch(e){}
+        try { sessionStorage.setItem('fs_user_id', uid); } catch(e){}
+      } else {
+        try { localStorage.removeItem('fs_user_id'); sessionStorage.removeItem('fs_user_id'); } catch(e){}
+      }
+    } catch(e){}
+
+    // clear guest cart caches
+    try {
+      ['fs_cart','cart','shopping_cart','cartItems'].forEach(k=>{
+        try{ localStorage.removeItem(k); } catch(_) {}
+        try{ sessionStorage.removeItem(k); } catch(_) {}
+      });
+    } catch(_){}
+
+    // emit events so other modules (cart-badge, header-auth, etc.) update
+    try {
+      window.dispatchEvent(new CustomEvent('fs:auth:login', { detail: { user } }));
+      window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user } }));
+      // older listeners may expect login:success
+      window.dispatchEvent(new CustomEvent('login:success', { detail: user }));
+      // compatible custom alias
+      window.dispatchEvent(new CustomEvent('user:login', { detail: user }));
+    } catch(e) {
+      console.warn('emit events error', e);
+    }
+
+    console.debug('setAuth done, tokenLen=', token ? token.length : 0, 'uid=', user ? (user.userId||user.id) : null);
+  }
+
+  // quick check on page load: if logged in -> redirect away
   try {
-    const hasToken = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token');
-    if (hasToken) window.location.replace('index.html');
-  } catch {}
+    const hasToken = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') ||
+                     localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    if (hasToken) {
+      // optional: you could ping /api/auth/me to confirm, but redirect for now
+      window.location.replace('index.html');
+      return;
+    }
+  } catch(e){}
 
   elForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -115,19 +194,28 @@
       });
 
       if (!res.ok) {
-        const msg = await res.text().catch(()=> '');
+        // try parse json error first
+        let msg = '';
+        try { const txt = await res.text(); msg = txt || msg; } catch(_) {}
         throw new Error(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
       }
 
       const data = await res.json().catch(()=> ({}));
       const token = pickToken(data);
-      const user = data.user || { email, name: data.name || email };
+      // sometimes backend returns { user: {...}, token: '...' } or { token: '...', user: {...} }
+      const user = data.user || (data.data && data.data.user) || null;
 
-      if (!token) throw new Error('Phản hồi không có token.');
+      if (!token) {
+        // debug: show whole response to console to inspect shape
+        console.warn('login response no token, response=', data);
+        throw new Error('Phản hồi từ server không có token (kiểm tra server).');
+      }
 
       setAuth({ token, user }, remember);
-      window.location.href = 'index.html';
+      // small delay to allow other scripts to react if needed
+      setTimeout(()=> window.location.href = 'index.html', 80);
     } catch (err) {
+      console.error('login error', err);
       elErr.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
       elErr.style.display = '';
       elBtn.disabled = false; elBtn.textContent = 'Đăng nhập';
@@ -135,11 +223,19 @@
   });
 })();
 </script>
-  <script src="assets/js/auth.js"></script>
-<script src="assets/js/header-auth.js"></script>
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
+<!-- auto-injected: auth core -->
+<!-- auth.js phải load TRƯỚC -->
+<!-- header-auth phụ thuộc vào auth.js -->
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
 </body>
 </html>
+<script>window.addEventListener('login:success', (e)=>{ window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: e.detail } })); if(typeof onLoginSuccess==='function') onLoginSuccess(e.detail); });</script>

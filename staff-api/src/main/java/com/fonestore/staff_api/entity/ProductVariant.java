@@ -1,6 +1,7 @@
+// src/main/java/com/fonestore/staff_api/entity/ProductVariant.java
 package com.fonestore.staff_api.entity;
 import jakarta.persistence.*; import lombok.Getter; import lombok.Setter;
-// src/main/java/com/fonestore/staff_api/entity/ProductVariant.java
+
 @Entity
 @Table(name = "product_variants")
 @Getter @Setter

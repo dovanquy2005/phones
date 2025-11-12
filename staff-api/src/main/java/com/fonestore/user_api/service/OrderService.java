@@ -9,6 +9,7 @@ import com.fonestore.user_api.entity.OrderItem;
 import com.fonestore.user_api.entity.Payment;
 import com.fonestore.user_api.entity.Shipment;
 import com.fonestore.user_api.repository.*;
+import com.fonestore.user_api.repository.order.OrderRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -8,15 +8,20 @@ import com.fonestore.staff_api.exception.BadRequestException;
 import com.fonestore.staff_api.repository.UserRepository;
 import com.fonestore.staff_api.service.StaffAuthService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+/**
+ * AuthController: buyer login / register / me
+ * - loginBuyer: tạo token bằng jwtUtil.generateTokenForUser(...) để đảm bảo "userId" và "uid" có trong payload
+ * - me: cố gắng lấy userId từ principal hoặc details; fallback tìm user bằng email nếu cần
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -63,21 +68,20 @@ public class AuthController {
         }
         if (!ok) throw new BadRequestException("Invalid email or password");
 
-        var claims = new HashMap<String, Object>();
-        claims.put("uid", u.getId());
-        claims.put("role", "user");
-        claims.put("aud",  "buyer");
-
-        String token = jwtUtil.generateToken(u.getEmail(), claims);
-
-        return ResponseEntity.ok(Map.of(
-                "token", token,
-                "user", Map.of(
-                        "userId",  u.getId(),
-                        "email",   u.getEmail(),
-                        "fullName", u.getFullName()
-                )
+        // tạo token: dùng helper để đảm bảo userId & uid có trong claims
+        // role mặc định "user" (thay đổi nếu bạn lưu role ở entity)
+        String role = u.getRole() != null && !u.getRole().isBlank() ? u.getRole() : "user";
+        String token = jwtUtil.generateTokenForUser(u.getEmail(), u.getId(), role);
+        
+        Map<String,Object> resp = new HashMap<>();
+        resp.put("token", token);
+        resp.put("user", Map.of(
+                "userId",  u.getId(),
+                "email",   u.getEmail(),
+                "fullName", u.getFullName()
         ));
+
+        return ResponseEntity.ok(resp);
     }
 
     /* ====================== STAFF LOGIN (manager/staff) ====================== */
@@ -108,7 +112,7 @@ public class AuthController {
             u.setDob(LocalDate.parse(req.dob())); // yyyy-MM-dd
         }
         u.setGender(req.gender());
-
+        // u.setRole("user");
         userRepo.save(u);
 
         return ResponseEntity.status(201).body(Map.of(
@@ -121,18 +125,92 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication auth) {
         if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthenticated"));
         }
-        String email = String.valueOf(auth.getPrincipal());
-        var u = userRepo.findByEmail(email).orElse(null);
-        String name = (u != null && u.getFullName()!=null) ? u.getFullName() : email;
-        String role = auth.getAuthorities().stream().findFirst().map(Object::toString).orElse("user");
 
-        return ResponseEntity.ok(Map.of(
-            "email", email,
-            "name", name,
-            "role", role,
-            "userId", u != null ? u.getId() : null
-        ));
+        Long uid = null;
+        String email = null;
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof Number) {
+            uid = ((Number) principal).longValue();
+        } else if (principal instanceof String) {
+            String p = (String) principal;
+            if (p.contains("@")) {
+                email = p;
+            } else {
+                try { uid = Long.valueOf(p); } catch (Exception ignored) {}
+            }
+        } else if (principal instanceof Map) {
+            // in case principal is a Map set by the filter
+            Object idObj = ((Map<?,?>) principal).get("id");
+            if (idObj instanceof Number) uid = ((Number) idObj).longValue();
+            else if (idObj instanceof String) {
+                try { uid = Long.valueOf((String) idObj); } catch (Exception ignored) {}
+            }
+            if (email == null) {
+                Object em = ((Map<?,?>) principal).get("email");
+                if (em != null) email = String.valueOf(em);
+            }
+        } else {
+            // add other principal types if you use a CustomUserPrincipal class
+            // e.g. if (principal instanceof CustomUserPrincipal) { uid = ((CustomUserPrincipal)principal).getId(); ... }
+        }
+
+        // fallback: try details
+        Object details = auth.getDetails();
+        if (uid == null && details instanceof Map) {
+            Map<?,?> m = (Map<?,?>) details;
+            Object v = m.get("userId");
+            if (v == null) v = m.get("uid");
+            if (v == null) v = m.get("id");
+            if (v instanceof Number) uid = ((Number) v).longValue();
+            else if (v instanceof String) {
+                try { uid = Long.valueOf((String) v); } catch (Exception ignored) {}
+            }
+            if (email == null) {
+                Object em = m.get("email");
+                if (em == null) em = m.get("sub");
+                if (em != null) email = String.valueOf(em);
+            }
+        }
+
+        if (uid == null && email == null) {
+            // cannot determine user identity
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Cannot determine user identity"));
+        }
+
+        User u = null;
+        if (uid != null) {
+            u = userRepo.findById(uid).orElse(null);
+        } else if (email != null) {
+            u = userRepo.findByEmail(email).orElse(null);
+        }
+
+        // build response using HashMap so null values do NOT throw NPE
+        Map<String, Object> resp = new HashMap<>();
+        // prefer DB email if we have a user
+        String outEmail = (u != null && u.getEmail() != null) ? u.getEmail() : email;
+        resp.put("email", outEmail); // may be null but HashMap allows it; JSON serializer will include null
+        String name = (u != null && u.getFullName() != null) ? u.getFullName() : (outEmail != null ? outEmail : "unknown");
+        resp.put("name", name);
+
+        // role: try to map authorities to a readable string
+        String role = auth.getAuthorities().stream().findFirst().map(Object::toString).orElse("user");
+        resp.put("role", role);
+
+        // userId: prefer DB id if present, else uid (could be null)
+        Long outUserId = (u != null && u.getId() != null) ? u.getId() : uid;
+        resp.put("userId", outUserId);
+
+        // If user not found, maybe return 404 or still 200 with partial info — choose policy you want:
+        if (u == null) {
+            // Option A: return 404
+            // return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User not found"));
+            // Option B: return 200 with available info (below we return 200)
+        }
+
+        return ResponseEntity.ok(resp);
     }
+
 }

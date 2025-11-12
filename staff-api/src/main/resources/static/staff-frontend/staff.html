@@ -91,19 +91,19 @@
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-      <a class="sidebar__link" href="index.html">Dashboard</a>
+       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
       <a class="sidebar__link" href="products.html">Sản phẩm</a>
-      <a class="sidebar__link" href="brands.html">Danh mục</a>
+      <a class="sidebar__link" href="brands.html">Thương hiệu</a>
       <a class="sidebar__link" href="vouchers.html">Voucher</a>
     </div>
     <div class="sidebar__group" data-sec="system">
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link sidebar__link--active" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+        
     </div>
   </aside>
 
@@ -177,12 +177,7 @@
       <div class="field"><label>Số điện thoại</label>
         <input class="input" name="phone"/>
       </div>
-      <div class="field"><label>Vai trò</label>
-        <select class="input" name="role">
-          <option value="STAFF">Staff</option>
-          <option value="MANAGER">Manager</option>
-        </select>
-      </div>
+
       <div class="field"><label>Mật khẩu <span style="color:#e11d48">*</span></label>
         <input class="input" type="password" name="password" minlength="6" required/>
       </div>
@@ -407,7 +402,11 @@
     try{
       await apiFetch(API,{method:'POST', body:JSON.stringify(payload)});
       toast('Đã tạo nhân viên');
-      e.target.reset(); location.hash='#';
+      // reset form và đảm bảo role mặc định vẫn là STAFF
+      e.target.reset();
+      if (e.target.role) e.target.role.value = 'STAFF';
+      location.hash = '#';
+
       await reloadAll(true);
     }catch(err){ alert('Tạo nhân viên thất bại: '+err.message); }
     finally{ btn.disabled=false; btn.textContent='Tạo'; }

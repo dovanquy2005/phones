@@ -34,8 +34,9 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(reg -> reg
-
-                // 1) Staff Users: phân quyền chi tiết theo method
+                
+              
+                // ===== STAFF USERS =====
                 .requestMatchers(HttpMethod.GET,    "/api/staff/users", "/api/staff/users/**")
                     .hasAnyAuthority("staff","manager")
                 .requestMatchers(HttpMethod.POST,   "/api/staff/users", "/api/staff/users/**")
@@ -46,8 +47,8 @@ public class SecurityConfig {
                     .hasAuthority("manager")
                 .requestMatchers(HttpMethod.DELETE, "/api/staff/users/**")
                     .hasAuthority("manager")
-                
-                    // VOUCHERS
+
+                // ===== VOUCHERS =====
                 .requestMatchers(HttpMethod.GET,    "/api/staff/vouchers", "/api/staff/vouchers/**")
                     .hasAnyAuthority("staff","manager")
                 .requestMatchers(HttpMethod.POST,   "/api/staff/vouchers/**")
@@ -57,8 +58,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/staff/vouchers/**")
                     .hasAuthority("manager")
 
-
-                // ===== PUBLIC =====
+                // ===== PUBLIC STATIC =====
+                .requestMatchers("/uploads/**","/images/**","/api/public/**").permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/", "/index.html", "/favicon.ico",
@@ -66,10 +67,8 @@ public class SecurityConfig {
                         "/assets/**", "/images/**", "/css/**", "/js/**"
                 ).permitAll()
 
-                // Auth endpoints
+                // ===== AUTH / PUBLIC READ =====
                 .requestMatchers("/api/auth/**").permitAll()
-
-                // Public APIs (read-only)
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET,
                         "/api/products/**",
@@ -83,45 +82,48 @@ public class SecurityConfig {
                 // ===== USER =====
                 .requestMatchers("/api/user/**").hasAuthority("user")
 
-                // ===== STAFF =====
+                // ===== STAFF (bao gồm MANAGER) =====
                 .requestMatchers("/api/staff/**").hasAnyAuthority("staff", "manager")
 
-                // STAFF / MANAGER quản lý sản phẩm
+                // Quản lý sản phẩm (staff/manager)
                 .requestMatchers(HttpMethod.POST,   "/api/products/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.PUT,    "/api/products/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasAnyAuthority("staff", "manager")
 
-                // ===== ORDERS (Staff/Manager) =====
+                // ===== ORDERS (staff/manager) =====
                 .requestMatchers(HttpMethod.GET,    "/api/orders/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.POST,   "/api/orders/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.PUT,    "/api/orders/**").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.DELETE, "/api/orders/**").hasAnyAuthority("staff", "manager")
-                // ✅ NEW: Cho phép đổi trạng thái bằng PATCH
                 .requestMatchers(HttpMethod.PATCH,  "/api/orders/*/status").hasAnyAuthority("staff", "manager")
 
-                // ===== PAYMENTS (Staff/Manager) =====
+                // ===== PAYMENTS (staff/manager) =====
                 .requestMatchers(HttpMethod.GET,   "/api/orders/*/payment").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.POST,  "/api/orders/*/payment").hasAnyAuthority("staff", "manager")
                 .requestMatchers(HttpMethod.PATCH, "/api/orders/*/payment-status").hasAnyAuthority("staff", "manager")
 
-                
-            
-                // ===== CUSTOMERS =====
+                // ===== CUSTOMERS (staff/manager) =====
                 .requestMatchers("/api/customers").hasAnyAuthority("staff","manager")
                 .requestMatchers("/api/customers/**").hasAnyAuthority("staff","manager")
                 .requestMatchers("/api/customers/*/orders").hasAnyAuthority("staff","manager")
 
+                // ===== REPORTS (đúng path, có "s") — chỉ MANAGER =====
+                // Cho phép manager (hoặc tạm cả staff nếu bạn muốn test)
+                .requestMatchers("/api/reports/**", "/api/report/**").hasAnyAuthority("manager","staff")
+
 
                 // ===== MANAGER =====
                 .requestMatchers("/api/admin/**").hasAuthority("manager")
+                
 
-                // Các API còn lại → cần đăng nhập
+                // Các request còn lại → cần đăng nhập
                 .anyRequest().authenticated()
             )
 
-            // Trả về 401 khi chưa đăng nhập
+            // 401 khi chưa đăng nhập, 403 khi thiếu quyền
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+                .accessDeniedHandler((req, res, e) -> res.sendError(HttpServletResponse.SC_FORBIDDEN))
             )
 
             // Thêm JWT Filter
@@ -141,7 +143,9 @@ public class SecurityConfig {
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","PATCH","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
-        cfg.setExposedHeaders(List.of("Location"));
+        // expose để FE tải file Excel (Content-Disposition)
+        cfg.setExposedHeaders(List.of("Location", "Content-Disposition"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cfg);
         return source;

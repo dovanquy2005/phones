@@ -3,78 +3,12 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Chi tiết đơn hàng — fonestore</title>
-
-  <!-- CSS gốc (không đổi) -->
+  <title>Giỏ hàng — fonestore</title>
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
+  <link rel="stylesheet" href="assets/css/cart.css"/>
 
-  <style>
-    /* =============================
-       SCOPED STYLES — ORDER PAGE ONLY
-       Không ảnh hưởng CSS toàn site
-    ============================== */
-    .order-page{
-      --sheet-pad: 20px;
-      --bg:#f6f7fb;--card:#fff;--bd:#e5e7eb;--ink:#0f172a;--muted:#667085;--brand:#2740ff;
-      --shadow:0 4px 14px rgba(17,24,39,.06);
-      --table-head:#fafbfc;
-      --tbl-pad:14px; /* pad cho ô bảng + canh tiêu đề section */
-    }
-    .order-page body{background:var(--bg);color:var(--ink)}
-    .order-page .container-narrow{max-width:1200px;margin:0 auto}
-    .order-page .sheet{background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--shadow);padding:var(--sheet-pad)}
-    .order-page .muted{color:var(--muted)}
-    .order-page .wrap{min-height:calc(100vh - 64px - 120px)}
-
-    /* Header 1 dòng (chỉ style nội bộ) */
-    .order-page .order-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .order-page .oh-title{font-size:22px;font-weight:800;color:#111827;white-space:nowrap}
-    .order-page .oh-sep{color:var(--muted);user-select:none}
-    .order-page .oh-meta{color:var(--muted);white-space:nowrap}
-    .order-page .status{padding:6px 12px;border-radius:999px;font-weight:800;line-height:1;border:1px solid var(--bd);white-space:nowrap}
-    .order-page .st--PENDING{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
-    .order-page .st--PAID,.order-page .st--COMPLETED,.order-page .st--DELIVERED{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
-    .order-page .st--SHIPPED{background:#eef6ff;color:#0c63d6;border-color:#cfe4ff}
-    .order-page .st--CANCELLED,.order-page .st--FAILED{background:#fef2f2;color: #166534;border-color:#fecaca}
-
-    /* Divider full-bleed theo padding card */
-    .order-page .divider{height:1px;background:var(--bd);margin:16px calc(-1 * var(--sheet-pad))}
-
-    /* Strip: Tổng kết + Địa chỉ */
-    .order-page .summary{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
-    @media (max-width:900px){.order-page .summary{grid-template-columns:1fr}}
-    .order-page .sum-box{border:1px dashed var(--bd);border-radius:12px;padding:16px}
-    .order-page .sum-title{font-size:15px;font-weight:900;margin:0 0 10px;color:#111827}
-    .order-page .sum-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
-    .order-page .sum-row+.sum-row{border-top:1px solid var(--bd)}
-    .order-page .sum-label{color:var(--muted)}
-    .order-page .sum-grand{font-size:20px;font-weight:900}
-    .order-page .num{white-space:nowrap;font-variant-numeric:tabular-nums}
-
-    .order-page .addr-grid{display:grid;grid-template-columns:120px 1fr;row-gap:8px;column-gap:10px}
-    .order-page .addr-grid .lbl{color:var(--muted);font-weight:700}
-    .order-page .addr-grid > div{word-break:break-word}
-    @media (max-width:520px){.order-page .addr-grid{grid-template-columns:100px 1fr}}
-
-    /* BẢNG THỐNG NHẤT (scoped) */
-    .order-page .table-wrap{width:100%;overflow:auto;-webkit-overflow-scrolling:touch}
-    .order-page .tbl{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
-    .order-page .tbl thead th{background:var(--table-head);color:var(--ink);font-weight:800;text-transform:uppercase;letter-spacing:.02em;font-size:12px;text-align:left}
-    .order-page .tbl th,.order-page .tbl td{padding:var(--tbl-pad) var(--tbl-pad);vertical-align:middle}
-    .order-page .tbl tbody tr + tr td{border-top:1px solid var(--bd)}
-    .order-page .tbl tbody tr:hover td{background:#fbfcff}
-    .order-page .ta-r{text-align:right}.order-page .ta-c{text-align:center}
-
-    /* Tiêu đề section canh cùng lề ô bảng */
-    .order-page .section-title{font-size:15px;margin:0 0 8px;color:#111827;font-weight:900;padding-left:var(--tbl-pad)}
-
-    /* Tên sản phẩm & SKU */
-    .order-page .prod-name{font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .order-page .sku{font-size:12px;color:var(--muted);margin-top:4px}
-    .order-page .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px;border:1px solid var(--bd);background:#f6f7ff;color:#3b4ad9;white-space:nowrap}
-  </style>
 </head>
 <body>
 <header class="header">
@@ -82,275 +16,585 @@
     <a class="brand" href="index.html">
       <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="cart.html" class="badge badge-cart" id="navCart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
   </div>
 </header>
 
-<main class="container section wrap order-page">
-  <div class="container-narrow">
-    <div style="margin-bottom:16px"><a href="orders.html">← Quay lại danh sách</a></div>
-
-    <!-- 1 CARD DUY NHẤT -->
-    <section class="sheet">
-
-      <!-- Header 1 dòng -->
-      <div class="order-head">
-        <span class="oh-title" id="ohTitle">Đơn hàng #—</span>
-        <span class="oh-sep">·</span>
-        <span id="hdrStatus" class="status">—</span>
-        <span class="oh-sep">·</span>
-        <span class="oh-meta" id="hdrCode">Mã đơn: #—</span>
-        <span class="oh-sep">·</span>
-        <span class="oh-meta" id="hdrCreated">Ngày tạo: —</span>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Summary strip -->
-      <div class="summary">
-        <div class="sum-box">
-          <h3 class="sum-title">Tổng kết</h3>
-          <div class="sum-row"><div class="sum-label">Tạm tính</div><div id="sumSub" class="num">—</div></div>
-          <div class="sum-row"><div class="sum-label">Giảm giá</div><div id="sumDis" class="num">—</div></div>
-          <div class="sum-row"><div class="sum-label">Phí vận chuyển</div><div id="sumShip" class="num">—</div></div>
-          <div class="sum-row"><div class="sum-grand">Tổng cộng</div><div class="sum-grand num" id="sumTotal">—</div></div>
-        </div>
-
-        <div class="sum-box">
-          <h3 class="sum-title">Địa chỉ giao hàng</h3>
-          <div class="addr-grid">
-            <div class="lbl">Tên</div>     <div id="addrName">—</div>
-            <div class="lbl">SĐT</div>     <div id="addrPhone">—</div>
-            <div class="lbl">Địa chỉ</div> <div id="addrLine">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Sản phẩm -->
-      <h3 class="section-title">Sản phẩm</h3>
-      <div class="table-wrap">
-        <table class="tbl">
+<main class="container section cart-page">
+  <div class="cart-container">
+    <h1 class="cart-title">Giỏ hàng của bạn</h1>
+    <div class="cart-grid">
+      <section class="cart-card cart-lines">
+        <table>
           <colgroup>
-            <col style="width:56%">
+            <col style="width:48%">
+            <col style="width:14%">
+            <col style="width:14%">
+            <col style="width:14%">
             <col style="width:10%">
-            <col style="width:17%">
-            <col style="width:17%">
           </colgroup>
           <thead>
-            <tr>
-              <th>Sản phẩm</th>
-              <th class="ta-c">SL</th>
-              <th class="ta-r">Đơn giá</th>
-              <th class="ta-r">Thành tiền</th>
-            </tr>
+          <tr>
+            <th>Sản phẩm</th>
+            <th class="ta-c">Số lượng</th>
+            <th class="ta-r">Đơn giá</th>
+            <th class="ta-r">Thành tiền</th>
+            <th class="ta-r">Hành động</th>
+          </tr>
           </thead>
           <tbody id="lines">
-            <tr><td colspan="4" class="muted">Đang tải…</td></tr>
+          <tr><td colspan="5" class="muted">Đang tải…</td></tr>
           </tbody>
         </table>
-      </div>
+        <!-- phân trang trang 1.2.3... -->
+        <div id="cartPager" class="cart-pager" aria-label="Phân trang giỏ hàng"></div>
 
-      <div class="divider"></div>
+      </section>
 
-      <!-- Thanh toán -->
-      <h3 class="section-title">Thanh toán</h3>
-      <div class="table-wrap">
-        <table class="tbl">
-          <colgroup>
-            <col>                     <!-- Phương thức -->
-            <col style="width:160px"> <!-- Trạng thái -->
-            <col style="width:160px"> <!-- Số tiền -->
-            <col>                     <!-- Mã giao dịch -->
-            <col style="width:200px"> <!-- Thời gian -->
-          </colgroup>
-          <thead>
-            <tr>
-              <th>Phương thức</th>
-              <th>Trạng thái</th>
-              <th class="ta-r">Số tiền</th>
-              <th>Mã giao dịch</th>
-              <th>Thời gian</th>
-            </tr>
-          </thead>
-          <tbody id="payments">
-            <tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <aside class="cart-summary">
+        <div class="cart-card sum-box">
+          <div class="sum-row"><div class="muted">Tạm tính</div><div id="sumSub">—</div></div>
+          <div class="sum-row"><div class="muted">Giảm giá</div><div id="sumDis">0 đ</div></div>
+          <div class="sum-row"><div class="muted">Phí vận chuyển</div><div id="sumShip">Tính ở bước sau</div></div>
+          <div class="sum-row grand"><div>Tổng cộng</div><div id="sumTotal">—</div></div>
 
-      <div class="divider"></div>
+          <div class="voucher">
+            <input id="voucher" class="input" placeholder="Mã giảm giá (tuỳ chọn)"/>
+            <button id="applyVoucher" class="btn btn-outline" type="button">Áp dụng</button>
+          </div>
 
-      <!-- Vận chuyển -->
-      <h3 class="section-title">Vận chuyển</h3>
-      <div class="table-wrap">
-        <table class="tbl">
-          <colgroup>
-            <col style="width:160px"> <!-- ĐVVC -->
-            <col style="width:200px"> <!-- Mã vận đơn -->
-            <col>                     <!-- Trạng thái -->
-            <col style="width:150px"> <!-- Phí -->
-            <col style="width:200px"> <!-- Tạo lúc -->
-            <col style="width:200px"> <!-- Cập nhật -->
-          </colgroup>
-          <thead>
-            <tr>
-              <th>ĐVVC</th>
-              <th>Mã vận đơn</th>
-              <th>Trạng thái</th>
-              <th class="ta-r">Phí</th>
-              <th>Tạo lúc</th>
-              <th>Cập nhật</th>
-            </tr>
-          </thead>
-          <tbody id="ships">
-            <tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>
-          </tbody>
-        </table>
-      </div>
+          <div class="actions">
+            <a id="btnCheckout" href="#" class="btn-primary">Tiến hành thanh toán</a>
+            <a href="products.html" class="btn-outline">Tiếp tục mua sắm</a>
+          </div>
+          <div id="note" class="muted" style="margin-top:10px"></div>
+        </div>
+      </aside>
+    </div>
 
-      <div class="divider"></div>
-
-      <!-- Ghi chú -->
-      <h3 class="section-title">Ghi chú</h3>
-      <div id="note" class="muted">—</div>
-
-    </section>
+    <div id="empty" class="cart-card cart-empty" style="display:none">
+      <div class="muted">Giỏ hàng trống.</div>
+      <a href="products.html">Xem sản phẩm</a>
+    </div>
   </div>
 </main>
 
 <footer class="footer">
   <div class="container section"><div class="copyright">© 2025 fonestore</div></div>
 </footer>
-
 <script>
 (function(){
-  const API = "http://localhost:9090";
-  const qs = new URLSearchParams(location.search);
-  const orderId = qs.get('id');
-  if(!orderId){ location.replace('orders.html'); return; }
+  const API = 'http://localhost:9090';
+  const PLACEHOLDER = 'assets/img/placeholder.png';
 
-  const $ = id => document.getElementById(id);
-  const VND = n => (Number(n||0)).toLocaleString('vi-VN') + ' đ';
-  const DT  = v => {
-    if(!v) return '';
-    if(typeof v === 'number'){ if(v < 1e12) v *= 1000; return new Date(v).toLocaleString('vi-VN'); }
-    const d = new Date(v); return isNaN(d.getTime()) ? '' : d.toLocaleString('vi-VN');
+  const toImg = u => {
+    if (!u) return PLACEHOLDER;
+    if (typeof u !== 'string') return PLACEHOLDER;
+    if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('//') || u.startsWith('data:')) return u;
+    if (u.startsWith('/')) return u;
+    return '/' + u.replace(/^\/+/, '');
   };
 
-  // Header
-  $('ohTitle').textContent = `Đơn hàng #${orderId}`;
-  $('hdrCode').textContent = `Mã đơn: #${orderId}`;
+  const $ = s => document.querySelector(s);
+  const $id = s => document.getElementById(s);
+  const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN') + ' đ';
+  const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
 
-  fetch(`${API}/api/public/orders/${encodeURIComponent(orderId)}?t=${Date.now()}`)
-    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .then(o => {
-      // Trạng thái
-      const s = String(o.status||'').toUpperCase();
-      const sEl = $('hdrStatus');
-      sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='PAID'?'Đã thanh toán':
-                         s==='DELIVERED'?'Đã giao': s==='SHIPPED'?'Đang giao':
-                         s==='CANCELLED'?'Đã hủy': s==='FAILED'?'Thất bại': (o.status||'—'));
-      sEl.className = 'status st--'+s.replace(/\s+/g,'_');
+  // UID helpers (unchanged)
+  function uidFromJWT(){ try{ const t = token(); if(!t || t.split('.').length<2) return 0; const b64 = t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); const json = JSON.parse(atob(b64)); const cand = json.userId ?? json.uid ?? json.id ?? json.sub; return Number(cand)||0;}catch{ return 0; } }
+  function getUIDLocal(){ try{ const s1 = localStorage.getItem('fs_uid') || sessionStorage.getItem('fs_uid'); if (s1 && Number(s1)>0) return Number(s1); const u = JSON.parse(localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user') || 'null'); if (u && Number(u.id)>0) return Number(u.id); }catch{} return 0; }
+  async function fetchUIDFromAPI(){ const t = token(); if(!t) return 0; const headers = { 'Authorization':'Bearer '+t, 'Accept':'application/json' }; const candidates = ['/api/me','/api/user/me','/api/users/me']; for (const u of candidates){ try{ const r = await fetch(API+u, { headers, credentials: 'same-origin' }); if(!r.ok) continue; const j = await r.json(); const id = Number(j?.id ?? j?.userId ?? j?.uid); if (id>0){ try { localStorage.setItem('fs_uid', String(id)); } catch {} return id; } }catch(_){ } } return 0; }
+  async function ensureUID(){ let uid = getUIDLocal(); if (uid>0) return uid; uid = uidFromJWT(); if (uid>0){ try{ localStorage.setItem('fs_uid', String(uid)); }catch{}; return uid; } uid = await fetchUIDFromAPI(); return uid||0; }
+  const withUID = (u, uid) => `${u}${u.includes('?') ? '&' : '?'}userId=${uid}`;
 
-      // Ngày tạo
-      const created = o.createdAt ?? o.created_at ?? o.createdDate ?? o.created_on;
-      $('hdrCreated').textContent = `Ngày tạo: ${DT(created)}`;
+  // normalizer (unchanged)
+  function normLine(item){
+    if(!item) return null;
+    const id    = item.id ?? item.itemId ?? null;
+    const skuId = item.skuId ?? item.sku ?? null;
+    const price = Number(item.unitPrice ?? item.price ?? 0);
+    const qty   = Math.max(1, Number(item.qty ?? item.quantity ?? 1));
+    const total = Number(item.lineTotal ?? (price*qty));
+    const name  = item.name ?? item.productName ?? `Sản phẩm #${skuId ?? ''}`;
+    const img   = toImg(item.imagePath ?? item.imageUrl ?? item.image ?? '');
+    return { id, skuId, name, img: img||PLACEHOLDER, price, qty, total };
+  }
 
-      // Dòng hàng
-      const lines = Array.isArray(o.lines) ? o.lines : (Array.isArray(o.orderLines)?o.orderLines:[]);
-      $('lines').innerHTML = lines.length ? lines.map(l=>{
-        const name = l.productName || l.name || 'Sản phẩm';
-        const sku  = l.skuId ?? l.sku ?? l.variantCode ?? '';
-        const unit = Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0);
-        const qty  = Number(l.qty ?? l.quantity ?? 0);
-        const total= unit * qty;
-        return `
-          <tr>
-            <td>
-              <div class="prod-name">${name}</div>
-              <div class="sku">SKU ${sku ? `<span class="pill">#${sku}</span>` : '—'}</div>
-            </td>
-            <td class="ta-c">${qty}</td>
-            <td class="num ta-r">${VND(unit)}</td>
-            <td class="num ta-r">${VND(total)}</td>
-          </tr>`;
-      }).join('') : '<tr><td colspan="4" class="muted">Không có sản phẩm.</td></tr>';
+  // fetchWithAuth (unchanged)
+  function fetchWithAuth(url, opts = {}) {
+    const t = token();
+    opts.headers = opts.headers || {};
+    if (t) {
+      opts.headers['Authorization'] = 'Bearer ' + t;
+      if (!('credentials' in opts)) opts.credentials = 'same-origin';
+    } else {
+      if (!('credentials' in opts)) opts.credentials = 'include';
+    }
+    opts.headers['Accept'] = opts.headers['Accept'] || 'application/json';
+    return fetch(url, opts);
+  }
+// --- fetch full cart DTO from server (items + totals)
+async function apiGetCart() {
+  try {
+    const t = token();
+    const headers = { 'Accept': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) };
+    // prefer authenticated GET /api/cart (server should return CartDTO)
+    const res = await fetch(API + '/api/cart', { method: 'GET', headers, credentials: 'include' });
+    if (res.status === 401) {
+      // if not authed, try anonymous /api/cart endpoint (server may allow)
+      return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+    }
+    if (!res.ok) {
+      console.error('apiGetCart failed', res.status, await res.text());
+      return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+    }
+    const cart = await res.json();
+    // Normalize items to lines
+    const lines = Array.isArray(cart?.items) ? cart.items.map(normLine).filter(Boolean) : [];
+    const subtotal = Number(cart?.subtotal ?? cart?.subTotal ?? lines.reduce((s,l)=>s + l.price*l.qty,0));
+    const discount = Number(cart?.discount ?? 0);
+    const shippingFee = Number(cart?.shippingFee ?? cart?.shipping ?? 0);
+    const total = Number(cart?.total ?? subtotal - discount + shippingFee);
+    return { items: lines, subtotal, discount, shippingFee, total, rawCart: cart };
+  } catch (e) {
+    console.error('apiGetCart exception', e);
+    return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+  }
+}
 
-      // Tổng kết
-      const clientSub = lines.reduce((s,l)=> s + Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0) * Number(l.qty ?? l.quantity ?? 0), 0);
-      const subtotal  = (o.subtotal!=null) ? o.subtotal : clientSub;
-      const discount  = o.discount ?? o.promotionDiscount ?? o.voucherDiscount ?? 0;
-      const shipFee   = o.shippingFee ?? o.shipping_fee ?? 0;
-      const total     = (o.total!=null) ? o.total : (subtotal - discount + shipFee);
+  // async function apiGetCart(){
+  //   const t = token();
+  //   if (t){
+  //     try{
+  //       const r = await fetchWithAuth(API+'/api/cart', { method:'GET' });
+  //       if (r.ok){
+  //         const data = await r.json();
+  //         const lines = Array.isArray(data?.items) ? data.items
+  //                       : Array.isArray(data?.cartItems) ? data.cartItems : [];
+  //         return lines.map(normLine).filter(Boolean);
+  //       }
+  //     }catch(_){}
+  //   }
 
-      $('sumSub').textContent   = VND(subtotal);
-      $('sumDis').textContent   = VND(discount);
-      $('sumShip').textContent  = VND(shipFee);
-      $('sumTotal').textContent = VND(total);
+  //   try{
+  //     const uid = await ensureUID();
+  //     if (uid && uid>0){
+  //       const r2 = await fetchWithAuth(API + withUID('/api/cart', uid), { method: 'GET' });
+  //       if (r2.ok){
+  //         const d = await r2.json();
+  //         const lines = Array.isArray(d?.items) ? d.items : Array.isArray(d?.cartItems) ? d.cartItems : [];
+  //         return lines.map(normLine).filter(Boolean);
+  //       }
+  //     } else {
+  //       const r3 = await fetchWithAuth(API + '/api/cart', { method: 'GET' });
+  //       if (r3.ok){
+  //         const d = await r3.json();
+  //         const lines = Array.isArray(d?.items) ? d.items : Array.isArray(d?.cartItems) ? d.cartItems : [];
+  //         return lines.map(normLine).filter(Boolean);
+  //       }
+  //     }
+  //   }catch(_){}
+  //   return [];
+  // }
 
-      // Ghi chú
-      $('note').textContent = (o.note && String(o.note).trim()) ? o.note : '—';
+  async function apiUpdateQty(itemId, qty){
+    const t = token();
+    const headers = { 'Accept':'application/json', 'Content-Type':'application/json' };
+    if (t){
+      try{
+        const r = await fetchWithAuth(API+'/api/cart/items/'+encodeURIComponent(itemId), {
+          method:'PUT', headers, body: JSON.stringify({ itemId, qty })
+        });
+        if (r.ok) return true;
+      }catch(_){}
+    }
 
-      // Địa chỉ
-      const setAddr = (name, phone, addr) => {
-        $('addrName').textContent  = name  || '—';
-        $('addrPhone').textContent = phone || '—';
-        $('addrLine').textContent  = addr  || '—';
+    const uid = await ensureUID();
+    const r2 = await fetchWithAuth(API+withUID('/api/cart/items/'+encodeURIComponent(itemId), uid), {
+      method:'PUT', headers, body: JSON.stringify({ itemId, qty })
+    });
+    if(!r2.ok) throw new Error('update failed: '+r2.status);
+    return true;
+  }
+
+  async function apiRemoveItem(itemId){
+    const t = token();
+    if (t){
+      try{
+        const r = await fetchWithAuth(API+'/api/cart/items/'+encodeURIComponent(itemId), { method:'DELETE' });
+        if (r.ok) return true;
+      }catch(_){}
+    }
+    const uid = await ensureUID();
+    if (uid && uid>0){
+      const r2 = await fetchWithAuth(API + withUID('/api/cart/items/'+encodeURIComponent(itemId), uid), { method: 'DELETE' });
+      if (r2.ok) return true;
+    }
+    throw new Error('remove failed');
+  }
+
+  // ============= state + pagination config =============
+  const PAGE_SIZE = 5; // thay đổi nếu muốn
+  const cartState = {
+    allLines: [],    // tất cả items (nguồn truth)
+    currentPage: 1,
+    summary: { subtotal:0, discount:0, shippingFee:0, total:0 }
+  };
+  const busyIds = new Set();
+
+  // badge & summary use full set
+  function badgeUpdateFromAll(){
+    const count = cartState.allLines.reduce((s,l)=>s + (Number(l.qty)||0), 0);
+    const elById = document.getElementById('navCart');
+    if (elById) { elById.textContent = count>0 ? `Giỏ hàng (${count})` : 'Giỏ hàng'; return; }
+    const n = document.querySelector('.badge-cart');
+    if(n) n.textContent = count>0 ? `Giỏ hàng (${count})` : 'Giỏ hàng';
+  }
+
+  function calcAll(lines){
+    const sub = lines.reduce((s,l)=>s + l.price*l.qty, 0);
+    const discount = 0, ship = 0, total = sub - discount + ship;
+    return { sub, discount, ship, total };
+  }
+  // function updateSummaryFromAll(){
+  //   const s = calcAll(cartState.allLines);
+  //   $id('sumSub').textContent   = fmtVND(s.sub);
+  //   $id('sumDis').textContent   = fmtVND(s.discount);
+  //   $id('sumShip').textContent  = s.ship ? fmtVND(s.ship) : 'Tính ở bước sau';
+  //   $id('sumTotal').textContent = fmtVND(s.total);
+  // }
+  function updateSummaryFromAll(){
+    // if backend provided summary, use it; otherwise compute locally
+    const s = cartState.summary || {};
+    if (s && (s.total !== undefined)) {
+      $id('sumSub').textContent   = fmtVND(s.subtotal);
+      $id('sumDis').textContent   = fmtVND(s.discount);
+      $id('sumShip').textContent  = s.shippingFee ? fmtVND(s.shippingFee) : 'Tính ở bước sau';
+      $id('sumTotal').textContent = fmtVND(s.total);
+      return;
+    }
+    // fallback compute from lines
+    const computed = calcAll(cartState.allLines);
+    $id('sumSub').textContent   = fmtVND(computed.sub);
+    $id('sumDis').textContent   = fmtVND(computed.discount);
+    $id('sumShip').textContent  = computed.ship ? fmtVND(computed.ship) : 'Tính ở bước sau';
+    $id('sumTotal').textContent = fmtVND(computed.total);
+  }
+
+
+  // ============= pagination helpers ============
+  function totalPages(){
+    return Math.max(1, Math.ceil((cartState.allLines.length||0) / PAGE_SIZE));
+  }
+  function pageSlice(page){
+    const p = Math.max(1, Math.min(totalPages(), page));
+    const start = (p-1) * PAGE_SIZE;
+    return cartState.allLines.slice(start, start + PAGE_SIZE);
+  }
+
+  function goToPage(page){
+    cartState.currentPage = Math.max(1, Math.min(totalPages(), page));
+    renderPage();
+  }
+
+  function renderPagination(){
+    const pager = $id('cartPager');
+    if(!pager) return;
+    const pages = totalPages();
+    if (pages <= 1) { pager.innerHTML = ''; return; }
+
+    let html = '';
+    html += `<button class="page-btn" data-page="prev"${cartState.currentPage===1 ? ' disabled':''}>‹</button>`;
+
+    // render up to 7 page buttons (compact with dots)
+    const maxButtons = 7;
+    let start = 1, end = pages;
+    if (pages > maxButtons){
+      const mid = Math.floor(maxButtons/2);
+      start = Math.max(1, cartState.currentPage - mid);
+      end = start + maxButtons - 1;
+      if (end > pages){ end = pages; start = end - maxButtons + 1; }
+    }
+    if (start > 1) html += `<button class="page-btn" data-page="1">1</button>${start>2?'<span class="dots">…</span>':''}`;
+
+    for(let i = start; i <= end; i++){
+      html += `<button class="page-btn" data-page="${i}" ${i===cartState.currentPage ? 'aria-current="true"':''}>${i}</button>`;
+    }
+    if (end < pages) html += `${end<pages-1?'<span class="dots">…</span>':''}<button class="page-btn" data-page="${pages}">${pages}</button>`;
+
+    html += `<button class="page-btn" data-page="next"${cartState.currentPage===pages ? ' disabled':''}>›</button>`;
+    pager.innerHTML = html;
+
+    // attach events
+    pager.querySelectorAll('.page-btn').forEach(btn=>{
+      const dp = btn.getAttribute('data-page');
+      btn.addEventListener('click', (e)=>{
+        if (btn.disabled) return;
+        if (dp === 'prev') return goToPage(cartState.currentPage - 1);
+        if (dp === 'next') return goToPage(cartState.currentPage + 1);
+        const n = Number(dp);
+        if (!isNaN(n)) goToPage(n);
+      });
+    });
+  }
+
+  // ============= render row / page ============
+  function render(lines){
+    const body = $id('lines');
+    if(!lines || !lines.length){
+      body.innerHTML = '<tr><td colspan="5" class="muted">Giỏ hàng trống.</td></tr>';
+      $id('empty').style.display = '';
+      badgeUpdateFromAll();
+      updateSummaryFromAll();
+      renderPagination();
+      return;
+    }
+    $id('empty').style.display = 'none';
+
+    const arr = [...lines];
+    // note: badge/summary use full dataset
+    badgeUpdateFromAll();
+
+    body.innerHTML = arr.map(l=>`
+      <tr data-item="${l.id||''}">
+        <td>
+          <div class="prod">
+            <img class="thumb" src="${l.img}" alt="" loading="lazy" data-placeholder="${PLACEHOLDER}">
+            <div>
+              <div class="name" data-role="name">${l.name}</div>
+              <div class="sku">SKU ${l.skuId ? `<span class="pill">#${l.skuId}</span>` : '—'}</div>
+            </div>
+          </div>
+        </td>
+        <td class="ta-c">
+          <div class="qty">
+            <button data-action="dec" type="button" aria-label="Giảm số lượng">−</button>
+            <input data-role="qty" type="number" min="1" value="${l.qty}">
+            <button data-action="inc" type="button" aria-label="Tăng số lượng">+</button>
+          </div>
+        </td>
+        <td class="ta-r">${fmtVND(l.price)}</td>
+        <td class="ta-r" data-role="lineTotal">${fmtVND(l.total)}</td>
+        <td class="ta-r actions-cell">
+          <button class="btn btn-outline btn-sm" data-action="remove" type="button">Xoá</button>
+        </td>
+      </tr>`).join('');
+
+    body.querySelectorAll('tr').forEach(tr=>{
+      const itemId = tr.dataset.item;
+      tr.querySelector('[data-action="inc"]').addEventListener('click', ()=> changeQty(tr, itemId, +1));
+      tr.querySelector('[data-action="dec"]').addEventListener('click', ()=> changeQty(tr, itemId, -1));
+      let tmr;
+      tr.querySelector('[data-role="qty"]').addEventListener('input', (e)=>{
+        const v = Math.max(1, Number(e.target.value||1));
+        clearTimeout(tmr); tmr = setTimeout(()=> setQty(tr, itemId, v), 300);
+      });
+      tr.querySelector('[data-action="remove"]').addEventListener('click', ()=> removeLine(tr, itemId));
+
+      tr.querySelectorAll('img.thumb').forEach(img=>{
+        img.addEventListener('error', () => {
+          img.onerror = null;
+          img.src = img.dataset.placeholder || PLACEHOLDER;
+        });
+      });
+    });
+
+    updateSummaryFromAll();
+  }
+
+  function renderPage(){
+    const pageLines = pageSlice(cartState.currentPage);
+    render(pageLines);
+    renderPagination();
+  }
+
+  // ============= update helpers (operate on allLines) ============
+  const pickLine = itemId => cartState.allLines.find(l => String(l.id) === String(itemId));
+
+  async function setQty(tr, itemId, qty){
+    const line = pickLine(itemId); if(!line) return;
+    if (busyIds.has(itemId)) return;
+    busyIds.add(itemId);
+    try{
+      // update local master
+      line.qty = Math.max(1, Number(qty||1));
+      line.total = line.qty * line.price;
+
+      // reflect in UI (current row)
+      const input = tr.querySelector('[data-role="qty"]');
+      if (input) input.value = line.qty;
+      const lineTotalEl = tr.querySelector('[data-role="lineTotal"]');
+      if (lineTotalEl) lineTotalEl.textContent = fmtVND(line.total);
+
+      // persist
+      await apiUpdateQty(itemId, line.qty);
+
+      // refresh summary + badge
+      updateSummaryFromAll();
+      badgeUpdateFromAll();
+    } finally { busyIds.delete(itemId); }
+  }
+  function changeQty(tr, itemId, delta){
+    setQty(tr, itemId, (pickLine(itemId)?.qty||1) + delta);
+  }
+
+  async function removeLine(tr, itemId){
+    if (busyIds.has(itemId)) return;
+    busyIds.add(itemId);
+    try{
+      await apiRemoveItem(itemId);
+
+      // remove from master list
+      cartState.allLines = cartState.allLines.filter(l => String(l.id) !== String(itemId));
+
+      // if current page now empty and not first page, go back one
+      const pages = totalPages();
+      if (cartState.currentPage > pages) cartState.currentPage = pages;
+
+      renderPage();
+    } finally { busyIds.delete(itemId); }
+  }
+
+  // ============= load & sync ============
+  async function load(){
+    try {
+      const cartObj = await apiGetCart();
+      cartState.allLines = cartObj.items || [];
+      cartState.summary = {
+        subtotal: Number(cartObj.subtotal || 0),
+        discount: Number(cartObj.discount || 0),
+        shippingFee: Number(cartObj.shippingFee || 0),
+        total: Number(cartObj.total || 0)
       };
-      let snap = o.addressSnapshot ?? o.shippingAddress ?? o.address;
-      if(typeof snap === 'string'){
-        try{
-          const a = JSON.parse(snap);
-          setAddr(a.name||a.fullname||a.fullName, a.phone||a.tel, a.address||[a.line1,a.line2,a.city,a.province,a.postalCode].filter(Boolean).join(', '));
-        }catch{ setAddr(null,null,snap); }
-      }else if(typeof snap === 'object' && snap){
-        setAddr(snap.name||snap.fullname||snap.fullName, snap.phone||snap.tel, snap.address||[snap.line1,snap.line2,snap.city,snap.province,snap.postalCode].filter(Boolean).join(', '));
-      }else{
-        setAddr(null,null,null);
+    } catch (e) {
+      console.error(e);
+      cartState.allLines = [];
+      cartState.summary = { subtotal:0, discount:0, shippingFee:0, total:0 };
+    }
+    cartState.currentPage = 1;
+    renderPage();
+}
+
+  async function syncLocalCartToServer(){
+    try {
+      const t = token();
+      if (!t) return null;
+      const raw = localStorage.getItem('fs_cart');
+      if (!raw) return null;
+      const lines = JSON.parse(raw);
+      if (!Array.isArray(lines) || lines.length===0) return null;
+      const payload = {
+        items: lines.map(i => ({
+          skuId: Number(i.sku ?? i.skuId ?? i.id),
+          qty: Number(i.qty ?? 1)
+        })).filter(it => Number(it.skuId) > 0)
+      };
+      const r = await fetchWithAuth(API + '/api/cart/merge', { method:'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (r.ok){
+        try { localStorage.removeItem('fs_cart'); }catch(_){}
+        await load();
+        return true;
+      } else {
+        console.warn('merge failed', r.status);
+      }
+    }catch(err){ console.warn('syncLocalCartToServer error', err); }
+    return null;
+  }
+
+  // events (unchanged)
+  $id('applyVoucher').addEventListener('click', async () => {
+    const code = ($id('voucher').value||'').trim();
+    if (!code) { $id('note').textContent = 'Vui lòng nhập mã.'; return; }
+    $id('note').textContent = 'Đang áp dụng mã...';
+
+    try {
+      const tokenVal = token();
+      const res = await fetch(`${API}/api/cart/voucher/apply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(tokenVal ? { Authorization: 'Bearer ' + tokenVal } : {})
+        },
+        credentials: 'include',
+        body: JSON.stringify({ code })
+      });
+
+      const payload = await res.json().catch(()=>null);
+
+      if (res.status === 401) {
+        $id('note').textContent = 'Bạn cần đăng nhập để dùng mã.';
+        return;
+      }
+      if (!res.ok) {
+        // backend trả lỗi kèm message
+        const msg = payload && payload.message ? payload.message : `Lỗi server (${res.status})`;
+        $id('note').textContent = msg;
+        // nếu backend trả updated cart even on non-200, bạn vẫn có thể load()
+        return;
       }
 
-      // Payments
-      const payments = Array.isArray(o.payments)? o.payments : [];
-      document.getElementById('payments').innerHTML = payments.length ? payments.map(p=>`
-        <tr>
-          <td>${p.method || p.provider || '—'}</td>
-          <td><span class="pill">${p.status || '—'}</span></td>
-          <td class="num ta-r">${VND(p.amount)}</td>
-          <td>${p.txnRef || p.txnId || p.transactionId || ''}</td>
-          <td>${DT(p.createdAt || p.paidAt)}</td>
-        </tr>`).join('') : '<tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>';
+      // success — backend thường trả updated cart hoặc success message.
+      // reload cart từ server để đồng bộ totals
+      await load();
 
-      // Shipments
-      const ships = Array.isArray(o.shipments)? o.shipments : [];
-      document.getElementById('ships').innerHTML = ships.length ? ships.map(s=>`
-        <tr>
-          <td>${s.carrier || s.provider || '—'}</td>
-          <td>${s.trackingNo || s.tracking || '—'}</td>
-          <td><span class="pill">${s.status || '—'}</span></td>
-          <td class="num ta-r">${VND(s.fee)}</td>
-          <td>${DT(s.createdAt)}</td>
-          <td>${DT(s.updatedAt)}</td>
-        </tr>`).join('') : '<tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>';
-    })
-    .catch(err=>{
-      console.error(err);
-      alert('Không tải được chi tiết đơn hàng. Vui lòng thử lại.');
-      location.replace('orders.html');
-    });
+      $id('note').textContent = (payload && payload.message) ? payload.message : 'Áp dụng mã thành công.';
+    } catch (e) {
+      console.error('apply voucher error', e);
+      $id('note').textContent = 'Lỗi khi áp dụng mã, thử lại sau.';
+    }
+  });
+
+
+
+  $id('btnCheckout').addEventListener('click',(e)=>{
+    e.preventDefault();
+    if(!(cartState.allLines && cartState.allLines.length)) return alert('Giỏ hàng trống.');
+    location.href='checkout.html';
+  });
+
+  document.addEventListener('cart:changed', load);
+
+  window.__cartDebug = {
+    cartState,
+    normLine,
+    renderPage,
+    // helper: set raw and render (rawItems can be array)
+    setRawAndRender(rawItems) {
+      try {
+        const arr = Array.isArray(rawItems) ? rawItems : JSON.parse(rawItems);
+        cartState.allLines = arr.map(normLine).filter(Boolean);
+        cartState.currentPage = 1;
+        renderPage();
+        console.info('[cartDebug] rendered', cartState.allLines.length, 'items');
+      } catch (e) { console.error('[cartDebug] parse/render error', e); }
+    }
+  };
+
+  (async ()=>{
+    if (token()){
+      await syncLocalCartToServer();
+    }
+    await load();
+  })();
+
 })();
 </script>
-<script src="assets/js/header-auth.js"></script>
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
+<!-- core scripts (kept as in original) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script type="module" src="assets/js/core/cart-badge.js"></script>
+
 </body>
 </html>

@@ -36,7 +36,7 @@
     <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -63,7 +63,7 @@
           </div>
 
           <div class="row" style="grid-column:1/-1;justify-content:space-between;margin-top:8px">
-            <a href="/user-frontend/cart.html" class="btn">← Quay lại giỏ</a>
+            <a href="cart.html" class="btn">← Quay lại giỏ</a>
             <button class="btn primary" type="submit">Đặt hàng</button>
           </div>
           <div id="form-error" class="muted" style="color:#ef4444;display:none">Vui lòng điền đúng và đủ thông tin.</div>
@@ -188,11 +188,22 @@
   window.addEventListener('storage', (e)=>{ if(e.key==='cart') renderSummary(); });
 })();
 </script>
+<!-- auto-injected: auth core -->
 
-<script src="assets/js/header-auth.js"></script>
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
+
+
+
+
+
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
 </body>
 </html>

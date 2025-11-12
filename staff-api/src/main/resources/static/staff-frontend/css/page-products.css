@@ -1,125 +1,317 @@
 /* =========================
-   page-products.css (FIXED for 5 columns)
+   page-products.css (CLEANED & MERGED)
    ========================= */
 
 /* Ảnh thumbnail */
-.product-thumb{
-  width:48px; height:48px;
-  border-radius:10px; object-fit:cover;
-  border:1px solid var(--color-border); background:#fff;
-  display:block;
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px; /* Giữ 8px từ phiên bản 2 */
+  object-fit: cover;
+  border: 1px solid var(--color-border);
+  background: #fff;
+  display: block;
 }
 
-/* Bộ lọc trên cùng */
-.toolbar-filters{
-  display:grid; gap:10px;
-  grid-template-columns:1fr;
+/* Bộ lọc trên cùng - Lấy theo phiên bản 2 (chi tiết hơn) */
+.toolbar-filters {
+  display: grid;
+  grid-template-columns: 1fr; /* Mặc định cho mobile */
+  gap: 12px;
+  align-items: end;
 }
-@media (min-width:641px){
-  .toolbar-filters{ grid-template-columns:2fr 1fr 1fr 1fr auto; }
+/* Responsive cho bộ lọc */
+@media (min-width: 641px) {
+  .toolbar-filters {
+    grid-template-columns: 1fr 180px 160px auto; /* 4 cột trên desktop/tablet */
+  }
 }
 
-/* ===== Products table overrides (safe with base.css) ===== */
+/* ===== Products table ===== */
 
-/* Bọc bảng để có thể cuộn ngang khi rất hẹp (nhưng mặc định ẩn) */
-.table-wrap{ width:100%; overflow-x:hidden; }
+/* Bọc bảng để cuộn ngang trên màn hình hẹp */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto; /* Đổi thành 'auto' để cho phép cuộn */
+}
 
 /* Bảng sản phẩm */
-.table.table-products{
-  width:100%;
-  border-collapse:collapse !important;
-  border-spacing:0 !important;
-  table-layout:fixed; /* khóa layout cho thẳng cột */
+.table.table-products {
+  width: 100%;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  table-layout: fixed; /* khóa layout cho thẳng cột */
 }
 
 /* Header & cell */
 .table.table-products thead th,
-.table.table-products tbody td{
-  padding:12px 16px;
-  vertical-align:middle;
+.table.table-products tbody td {
+  padding: 12px 16px;
+  vertical-align: middle;
 }
-.table.table-products thead th{
-  white-space:nowrap;
+.table.table-products thead th {
+  white-space: nowrap;
 }
 
-/* ====== Khai báo bề rộng 5 cột (Ảnh, Tên, Giá, Trạng thái, Thao tác) ====== */
+/* ====== Khai báo bề rộng 6 cột (Ảnh, Tên, Giá, SL, Trạng thái, Thao tác) ====== */
+/* Cột 1: Ảnh */
 .table.table-products thead th:nth-child(1),
-.table.table-products tbody td:nth-child(1){ width:80px; }
+.table.table-products tbody td:nth-child(1) {
+  width: 80px;
+}
 
+/* Cột 3: Giá */
 .table.table-products thead th:nth-child(3),
-.table.table-products tbody td:nth-child(3){
-  width:160px; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+.table.table-products tbody td:nth-child(3) {
+  width: 160px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Cột 4: Số lượng */
 .table.table-products thead th:nth-child(4),
-.table.table-products tbody td:nth-child(4){
-  width:130px; text-align:center;
+.table.table-products tbody td:nth-child(4) {
+  width: 110px;
+  text-align: center;
 }
 
+/* Cột 5: Trạng thái */
 .table.table-products thead th:nth-child(5),
-.table.table-products tbody td:nth-child(5){
-  width:200px;
+.table.table-products tbody td:nth-child(5) {
+  width: 130px;
+  text-align: center;
 }
 
-/* Cột Tên chiếm phần còn lại, cắt tràn gọn */
-.table.table-products tbody td:nth-child(2){
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+/* Cột 6: Thao tác */
+.table.table-products thead th:nth-child(6),
+.table.table-products tbody td:nth-child(6) {
+  width: 220px;
+  /* text-align: right; (Đã có trong .td-actions) */
+}
+
+/* Cột 2: Tên (chiếm phần còn lại) */
+.table.table-products tbody td:nth-child(2) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Subtext cho tên */
-.helper{
-  font-size:12px; color:#64748B;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+.helper {
+  font-size: 12px;
+  color: #7a869a; /* Giữ màu từ phiên bản 2 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Badge trạng thái */
-.badge{
-  display:inline-flex; align-items:center; justify-content:center;
-  padding:4px 10px; border-radius:999px;
+/* Badge trạng thái (Layout chung) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600; /* Thêm để chữ rõ hơn */
+  font-size: 12px; /* Thêm để chữ rõ hơn */
+}
+/* Các loại badge (MỚI từ phiên bản 2) */
+.badge.active {
+  background: #DCFCE7;
+  color: #166534;
+}
+.badge.warn {
+  background: #FFEFD5;
+  color: #92400e;
+}
+.badge.inactive {
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
-/* Hàng kẻ mảnh */
-.table.table-products tbody tr + tr td{
-  border-top:1px solid var(--color-border);
+/* Nút thao tác */
+.td-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  white-space: nowrap;
+  text-align: right; /* Đảm bảo căn phải */
+}
+.td-actions .btn {
+  margin-left: 0;
 }
 
-/* Nút thao tác gọn, không đẩy rộng cột */
-.td-actions{
-  display:flex; gap:8px; justify-content:flex-end;
-  white-space:nowrap; text-align:right;
-}
-.td-actions .btn{ margin-left:0; }
-
-/* Responsive tinh chỉnh */
-@media (max-width:1024px){
-  .table.table-products thead th:nth-child(3),
-  .table.table-products tbody td:nth-child(3){ width:140px; }
-  .table.table-products thead th:nth-child(5),
-  .table.table-products tbody td:nth-child(5){ width:160px; }
+/* (MỚI từ phiên bản 2) Hàng rỗng */
+.empty {
+  padding: 16px;
+  color: #6b7280;
+  text-align: center;
 }
 
-/* Đường kẻ & zebra theo HÀNG (override base.css theo ô) */
-.table.table-products thead { border-bottom:1px solid var(--color-border); }
+/* ===== Zebra striping & Borders (Gộp từ cả 2) ===== */
+.table.table-products thead {
+  border-bottom: 1px solid var(--color-border);
+}
 
 .table.table-products td,
-.table.table-products th{
-  border:0 !important;
-  background:transparent !important;
+.table.table-products th {
+  border: 0 !important;
+  background: transparent !important;
 }
 
-.table.table-products tbody tr{
-  border-bottom:1px solid var(--color-border);
+.table.table-products tbody tr {
+  border-bottom: 1px solid var(--color-border);
 }
-.table.table-products tbody tr:last-child{
-  border-bottom:0;
+.table.table-products tbody tr:last-child {
+  border-bottom: 0;
 }
-.table.table-products tbody tr:nth-child(even){
-  background:#fafbff;
+/* Sọc ngựa vằn */
+.table.table-products tbody tr:nth-child(even) {
+  background: #fafbff;
 }
 
 /* Ô Thao tác không bị nền khác */
-.table.table-products tbody td:last-child{
-  background:inherit !important;
+.table.table-products tbody td:last-child {
+  background: inherit !important;
 }
 
+/* ===== Pagination (MỚI từ phiên bản 2) ===== */
+.pagination {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px 16px;
+}
+.page-btn {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px; /* Thêm */
+  line-height: 1; /* Thêm */
+}
+.page-btn.is-active {
+  background: #111827;
+  color: #fff;
+  border-color: #111827;
+}
+.page-btn[disabled] {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.pagination-info {
+  margin-left: 8px;
+  color: #6b7280;
+  font-size: 12px;
+}
 
+/* ===== Modal (Chỉ giữ 1 bản) ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, .45);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Giữ nguyên căn lề trên */
+  padding: 32px 16px;
+  z-index: 9999;
+}
+.modal[aria-hidden="true"] {
+  display: none;
+}
+.modal__card {
+  width: min(920px, 100%);
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+}
+.hidden-field {
+  display: none;
+}
+
+/* ===== Unified Header (Chỉ giữ 1 bản) ===== */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.header-spacer {
+  flex: 1;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar-menu {
+  position: relative;
+}
+.avatar-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  display: inline-block;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar-menu[open] .dropdown {
+  display: block;
+}
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 180px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .08);
+  padding: 6px;
+  display: none;
+  z-index: 50;
+}
+.dropdown a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: #111827;
+  text-decoration: none;
+  font-size: 14px;
+}
+.dropdown a:hover {
+  background: #f3f4f6;
+}
+.role-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.role-badge.manager,
+.role-badge.staff { /* Gộp chung 2 style giống nhau */
+  background: #dcfce7;
+  color: #166534;
+}

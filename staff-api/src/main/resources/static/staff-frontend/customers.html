@@ -67,6 +67,10 @@
     .role-badge.staff{background:#dcfce7;color: #166534}
     /* END: unified header css */
   </style>
+    <style>
+    .search-inline{display:flex;align-items:center;gap:8px;margin:8px 0 12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+    .search-inline input{flex:1;border:none;outline:none;background:transparent;font-size:14px}
+  </style>
 </head>
 <body>
 <!-- START: unified header -->
@@ -97,7 +101,7 @@
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link sidebar__link--active" href="customers.html">Khách hàng</a>
-      <a class="sidebar__link" href="index.html">Dashboard</a>
+       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -109,7 +113,7 @@
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-      <a class="sidebar__link" href="settings.html">Cấu hình & phân quyền</a>
+        
     </div>
   </aside>
 
@@ -117,12 +121,13 @@
     <section class="toolbar">
       <h1 class="page-title">Khách hàng</h1>
       <!-- Ô tìm kiếm được thêm vào đây -->
-      <div class="search">
+       <div class="search-inline" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke-linecap="round"/></svg>
         <input id="q" class="input" placeholder="Tìm theo tên/SĐT"/>
       </div>
     </section>
 
-    <section class="card">
+    <section class="card">  
       <div class="card__body table-wrap">
         <table class="table" aria-describedby="pager-summary">
           <thead>
@@ -336,9 +341,9 @@
     for (let i=start;i<=end;i++) pages.push(i);
 
     wrap.innerHTML = `
-      <button class="btn" data-page="prev" ${page<=1?'disabled':''}>Prev</button>
+      <button class="btn" data-page="prev" ${page<=1?'disabled':''}>‹‹</button>
       ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-page="${p}">${p}</button>`).join('')}
-      <button class="btn" data-page="next" ${page>=totalPages?'disabled':''}>Next</button>
+      <button class="btn" data-page="next" ${page>=totalPages?'disabled':''}>››</button>
     `;
   }
 
@@ -353,7 +358,7 @@
       case 'PAID':      return 'Đã thanh toán';
       case 'COD':       return 'COD';
       case 'CANCELED':
-      case 'CANCELLED': return 'Đã hủy';
+      case 'CANCELED': return 'Đã hủy';
       case 'REFUNDED':  return 'Đã hoàn tiền';
       default:          return status;
     }
@@ -437,9 +442,9 @@
     for (let i=start;i<=end;i++) pages.push(i);
 
     wrap.innerHTML = `
-      <button class="btn" data-mpage="prev" ${page<=1?'disabled':''}>Prev</button>
+      <button class="btn" data-mpage="prev" ${page<=1?'disabled':''}>‹‹</button>
       ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-mpage="${p}">${p}</button>`).join('')}
-      <button class="btn" data-mpage="next" ${page>=totalPages?'disabled':''}>Next</button>
+      <button class="btn" data-mpage="next" ${page>=totalPages?'disabled':''}>››</button>
     `;
   }
 

@@ -56,7 +56,7 @@
     }
     .status--PAID,.status--DELIVERED,.status--COMPLETED{ background:#E6F6EF; color:#0B8E4A; }
     .status--SHIPPED{ background:#EEF6FF; color:#0C63D6; }
-    .status--CANCELLED,.status--FAILED{ background:#FFEEEE; color:#D72323; }
+    .status--CANCELED,.status--FAILED{ background:#FFEEEE; color:#D72323; }
 
     /* Skeleton khi đang tải */
     .sk{border:1px solid var(--border); border-radius:12px; background:#fff; overflow:hidden;}
@@ -101,7 +101,7 @@
     <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="/user-frontend/cart.html" class="badge badge-cart">Giỏ hàng</a>
+      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
       <a href="login.html">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
@@ -145,9 +145,7 @@
       <div class="copyright">© 2025 fonestore</div>
     </div>
   </footer>
-
-  <script src="assets/js/auth.js"></script>
-  <script>
+<script>
   (function(){
     const API = "http://localhost:9090";
 
@@ -198,7 +196,7 @@
         case 'SHIPPED': return 'Đang giao';
         case 'DELIVERED': return 'Đã giao';
         case 'COMPLETED': return 'Hoàn tất';
-        case 'CANCELLED': return 'Đã hủy';
+        case 'CANCELED': return 'Đã hủy';
         case 'FAILED': return 'Thất bại';
         default: return s || '';
       }
@@ -255,10 +253,22 @@
     });
   })();
   </script>
-<script src="assets/js/header-auth.js"></script>
+<!-- auto-injected: auth core -->
 
-  <!-- auto-injected: auth core -->
-  <script src="assets/js/core/fetch-cred-patch.js"></script>
-  <script type="module" src="assets/js/core/header-auth.js"></script>
+
+
+
+
+
+
+<!-- core scripts (standardized) -->
+<script src="assets/js/core/fetch-cred-patch.js"></script>
+<script type="module" src="assets/js/core/auth.js"></script>
+<script type="module" src="assets/js/core/header-auth.js"></script>
+<script src="assets/js/core/dropdown-fix.js"></script>
+<script src="assets/js/core/auth-menu-inject.js"></script>
+<script src="assets/js/core/cart-guard.js"></script>
+<script src="assets/js/core/compat-pid.js"></script>
+<script src="assets/js/core/cart-badge.js"></script>
 </body>
 </html>

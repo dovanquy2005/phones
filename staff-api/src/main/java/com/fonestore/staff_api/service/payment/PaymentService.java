@@ -2,12 +2,12 @@ package com.fonestore.staff_api.service.payment;
 
 import com.fonestore.staff_api.dto.payment.*;
 import com.fonestore.user_api.entity.Payment;
+import com.fonestore.user_api.repository.order.OrderRepository;
 import com.fonestore.staff_api.entity.enums.PaymentStatus;
 import com.fonestore.staff_api.exception.BadRequestException;
 import com.fonestore.staff_api.exception.NotFoundException;
 import com.fonestore.staff_api.repository.payment.StaffPaymentRepository;
 import com.fonestore.user_api.entity.Order;
-import com.fonestore.user_api.repository.OrderRepository;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
