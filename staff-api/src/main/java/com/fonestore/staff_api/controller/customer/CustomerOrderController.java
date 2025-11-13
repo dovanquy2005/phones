@@ -1,7 +1,7 @@
 package com.fonestore.staff_api.controller.customer;
 
 import com.fonestore.user_api.entity.Order;
-import com.fonestore.user_api.repository.order.OrderRepository;
+import com.fonestore.user_api.repository.order.UserOrderRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CustomerOrderController {
 
-    private final OrderRepository orderRepo;
+    private final UserOrderRepository orderRepo;
 
     @GetMapping("/{id}/orders")
     public Page<Map<String, Object>> ordersOfCustomer(

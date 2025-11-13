@@ -2,7 +2,7 @@ package com.fonestore.staff_api.service.payment;
 
 import com.fonestore.staff_api.dto.payment.*;
 import com.fonestore.user_api.entity.Payment;
-import com.fonestore.user_api.repository.order.OrderRepository;
+import com.fonestore.user_api.repository.order.UserOrderRepository;
 import com.fonestore.staff_api.entity.enums.PaymentStatus;
 import com.fonestore.staff_api.exception.BadRequestException;
 import com.fonestore.staff_api.exception.NotFoundException;
@@ -19,9 +19,9 @@ import java.util.Locale;
 public class PaymentService {
 
     private final StaffPaymentRepository payRepo;
-    private final OrderRepository orderRepo;
+    private final UserOrderRepository orderRepo;
 
-    public PaymentService(StaffPaymentRepository payRepo, OrderRepository orderRepo) {
+    public PaymentService(StaffPaymentRepository payRepo, UserOrderRepository orderRepo) {
         this.payRepo = payRepo;
         this.orderRepo = orderRepo;
     }

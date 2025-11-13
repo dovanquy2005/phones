@@ -11,10 +11,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
+public interface UserOrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     // === giữ nguyên các method cũ ===
     List<OrderItem> findAllByOrder_Id(Long orderId);
+        // optional helper to load items by order
+    List<OrderItem> findByOrder_Id(Long orderId);
 
     Optional<OrderItem> findByOrder_IdAndSkuId(Long orderId, Long skuId);
 

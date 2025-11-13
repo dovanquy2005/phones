@@ -6,8 +6,8 @@ import com.fonestore.user_api.dto.checkout.CheckoutOrderResponse ;
 import com.fonestore.user_api.dto.checkout.PlaceOrderRequest;
 import com.fonestore.user_api.entity.Order;
 
-import com.fonestore.user_api.repository.order.OrderItemRepository;
-import com.fonestore.user_api.repository.order.OrderRepository;
+import com.fonestore.user_api.repository.order.UserOrderItemRepository;
+import com.fonestore.user_api.repository.order.UserOrderRepository;
 import com.fonestore.staff_api.repository.product.ProductVariantRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,8 @@ import java.util.Optional;
 public class CheckoutService {
 
     private final CartService cartService; // reuse to get cart/draft
-    private final OrderRepository orderRepo;
-    private final OrderItemRepository itemRepo;
+    private final UserOrderRepository orderRepo;
+    private final UserOrderItemRepository itemRepo;
     private final ProductVariantRepository variantRepo;
 
     // Preview: read-only-ish (may call recalc via CartService)

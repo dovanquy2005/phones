@@ -9,87 +9,7 @@
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
-
-  <style>
-    /* ----- Orders layout (bám token ở base.css) ----- */
-    .orders-wrap{min-height:calc(100vh - var(--header-h) - 120px)}
-    .orders-card{padding:16px}
-
-    /* Khai báo cột một lần để header & row dùng chung → luôn thẳng hàng */
-    .orders-grid{ --cols: 120px 1fr 140px 140px 140px 160px 140px; }
-
-    .orders-head,
-    .order-row{
-      display:grid;
-      grid-template-columns: var(--cols);
-      gap:12px;
-      align-items:center;
-    }
-
-    .orders-head{
-      font-weight:700;
-      color:var(--muted);
-      padding:8px 8px 12px;
-    }
-
-    .order-row{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:12px 10px;
-      box-shadow:var(--shadow-sm);
-      transition: box-shadow .15s ease, transform .05s ease;
-    }
-    .order-row:hover{ box-shadow:var(--shadow-md); }
-
-    .num{text-align:right; font-variant-numeric:tabular-nums;}
-    .actions a{ color:var(--brand); font-weight:700; }
-    .actions a:hover{ text-decoration:underline; }
-
-    /* Badge trạng thái */
-    .status{
-      display:inline-flex; align-items:center; gap:6px;
-      padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800;
-      background:#EFF6FF; color:var(--brand);
-      border:1px solid var(--border);
-      white-space:nowrap;
-    }
-    .status--PAID,.status--DELIVERED,.status--COMPLETED{ background:#E6F6EF; color:#0B8E4A; }
-    .status--SHIPPED{ background:#EEF6FF; color:#0C63D6; }
-    .status--CANCELED,.status--FAILED{ background:#FFEEEE; color:#D72323; }
-
-    /* Skeleton khi đang tải */
-    .sk{border:1px solid var(--border); border-radius:12px; background:#fff; overflow:hidden;}
-    .sk-row{
-      display:grid; grid-template-columns: var(--cols); gap:12px; align-items:center; padding:12px 10px;
-    }
-    .bar{height:16px; background:linear-gradient(90deg,#eee 25%,#f6f6f6 37%,#eee 63%); background-size:400% 100%; animation:shimmer 1.2s infinite;}
-    .s1{width:60px}.s2{width:50%}.s3{width:90px}.s4{width:100px}.s5{width:110px}.s6{width:140px}.s7{width:80px}
-    @keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
-
-    .empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);padding:24px 0}
-
-    /* Mobile: chuyển thành thẻ có nhãn */
-    @media (max-width: 900px){
-      .orders-head{ display:none; }
-      .order-row{
-        grid-template-columns: 1fr;
-        row-gap:8px;
-      }
-      .cell{
-        display:grid; grid-template-columns: 140px 1fr; column-gap:10px; align-items:center;
-      }
-      .cell::before{
-        content: attr(data-label);
-        color:var(--muted);
-        font-size:13px;
-      }
-      .num{ justify-self:end; }
-      .actions{ display:flex; justify-content:flex-end; }
-      .sk-row{ grid-template-columns: 1fr; }
-      .s1,.s2,.s3,.s4,.s5,.s6,.s7{ width:100%; }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/orders.css">
 </head>
 <body>
   <!-- Header chuẩn (base.css + auth-menu.css) -->
@@ -145,33 +65,32 @@
       <div class="copyright">© 2025 fonestore</div>
     </div>
   </footer>
+
 <script>
   (function(){
     const API = "http://localhost:9090";
 
-    // ---- Auth menu nhỏ gọn (khớp auth-menu.css) ----
-    const btn = document.getElementById('userBtn');
-    const drop = document.getElementById('userDrop');
-    btn?.addEventListener('click', ()=> drop.style.display = drop.style.display==='block' ? 'none' : 'block');
-    document.addEventListener('click', (e)=>{ if(!btn.contains(e.target) && !drop.contains(e.target)) drop.style.display='none'; });
+    // ---- Auth helpers ----
+    function getToken(){
+      return localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || null;
+    }
+
+    function getUser(){
+      try{ const u = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null'); if(u) return u; }catch(_){}
+      try{ const u2 = JSON.parse(localStorage.getItem('fs_user') || 'null'); if(u2) return u2; }catch(_){}
+      const t = getToken();
+      if(t && t.split('.').length===3){
+        try{ const p = JSON.parse(atob(t.split('.')[1])); return { userId: p.uid ?? p.userId ?? p.sub, name: p.name ?? p.email }; }catch(_){}
+      }
+      return null;
+    }
 
     function setUserBadge(nameOrEmail){
       const ua = document.getElementById('ua');
       const un = document.getElementById('un');
       const name = (nameOrEmail||'User').toString();
-      un.textContent = name;
-      ua.textContent = name.trim()[0]?.toUpperCase() || 'U';
-    }
-
-    // Lấy user từ localStorage/sessionStorage/JWT như các trang khác
-    function getUser(){
-      try{ const u = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || 'null'); if(u) return u; }catch(_){}
-      try{ const u2 = JSON.parse(localStorage.getItem('fs_user') || 'null'); if(u2) return u2; }catch(_){}
-      const t = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token');
-      if(t && t.split('.').length===3){
-        try{ const p = JSON.parse(atob(t.split('.')[1])); return { userId: p.uid ?? p.userId ?? p.sub, name: p.name ?? p.email }; }catch(_){}
-      }
-      return null;
+      if(un) un.textContent = name;
+      if(ua) ua.textContent = name.trim()[0]?.toUpperCase() || 'U';
     }
 
     const user = getUser();
@@ -205,13 +124,14 @@
     const statusCls = (s) => 'status status--' + String(s||'').toUpperCase().replace(/\s+/g,'_');
 
     function rowHTML(o){
-      const id = o.orderId ?? o.id ?? o.code ?? '';
+      const id = o.orderId ?? o.id ?? o.order_id ?? '';
       const created = toDate(o.createdAt ?? o.created_at ?? o.createdDate);
       const st = String(o.status ?? '').toUpperCase();
 
-      const subtotal = money(o.subtotal ?? o.sub_total ?? o.itemsSubtotal ?? o.tempTotal);
-      const ship = money(o.shippingFee ?? o.shipping_fee ?? o.ship_fee);
-      const total = money(o.total ?? o.grandTotal ?? o.amount);
+      // subtotal may be nested or null — try multiple keys
+      const subtotal = money(o.subtotal ?? o.sub_total ?? (o.lines && Array.isArray(o.lines) ? o.lines.reduce((acc,l)=>acc + (Number(l.unitPrice||0) * Number(l.qty||0)),0) : 0));
+      const ship = money(o.shippingFee ?? o.shipping_fee ?? 0);
+      const total = money(o.total ?? o.grandTotal ?? (Number(o.subtotal||0) + Number(o.shippingFee||o.shipping_fee||0)));
 
       return `
         <div class="order-row">
@@ -235,31 +155,63 @@
       </div>`;
     }
 
-    fetch(`${API}/api/public/orders?userId=${encodeURIComponent(uid)}&t=${Date.now()}`, { headers: {'Accept':'application/json'} })
-      .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-      .then(arr => {
-        if(!Array.isArray(arr) || arr.length===0){ $list.innerHTML = emptyHTML(); return; }
+    function showError(msg){
+      $list.innerHTML = `<div class="alert-inline">${msg}</div>`;
+    }
+
+    // build headers: include Authorization if token present
+    const headers = {'Accept':'application/json'};
+    const token = getToken();
+    if(token) headers['Authorization'] = 'Bearer ' + token;
+
+    // Note: backend controller expects userIdParam (or Authorization). We include both for compatibility.
+    const url = `${API}/api/user/orders?userIdParam=${encodeURIComponent(uid)}&t=${Date.now()}`;
+
+    fetch(url, { headers, credentials: 'include' })
+      .then(resp => {
+        if(resp.status === 401){ // not authenticated
+          // if token exists but 401, clear & redirect
+          ['user','fs_user','fs_token'].forEach(k=>{ localStorage.removeItem(k); sessionStorage.removeItem(k); });
+          location.replace('login.html');
+          throw new Error('Unauthenticated');
+        }
+        if(!resp.ok){
+          throw new Error('HTTP '+resp.status);
+        }
+        return resp.json();
+      })
+      .then(body => {
+        // backend may return array, or object { items: [...], ... } if paging used previously
+        let arr = [];
+        if(Array.isArray(body)) arr = body;
+        else if(body == null) arr = [];
+        else if(Array.isArray(body.items)) arr = body.items;
+        else if(Array.isArray(body.data)) arr = body.data;
+        else {
+          // fallback: if object looks like a single order, show single item
+          if(body.orderId || body.id) arr = [body];
+          else arr = [];
+        }
+
+        if(!Array.isArray(arr) || arr.length === 0){
+          $list.innerHTML = emptyHTML();
+          return;
+        }
+
         $list.innerHTML = arr.map(rowHTML).join('');
       })
       .catch(err => {
-        console.error(err);
-        $list.innerHTML = `<div class="alert">Không tải được danh sách đơn hàng. Vui lòng thử lại sau.</div>`;
+        console.error('Load orders failed', err);
+        showError('Không tải được danh sách đơn hàng. Vui lòng thử lại sau.');
       });
 
     // Đăng xuất nhanh
-    document.getElementById('logoutBtn')?.addEventListener('click', ()=>{
+    document.getElementById('logoutBtn')?.addEventListener('click', ()=> {
       ['user','fs_user','fs_token'].forEach(k=>{ localStorage.removeItem(k); sessionStorage.removeItem(k); });
       location.replace('login.html');
     });
   })();
   </script>
-<!-- auto-injected: auth core -->
-
-
-
-
-
-
 
 <!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>

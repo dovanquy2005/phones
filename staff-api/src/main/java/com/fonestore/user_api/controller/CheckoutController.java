@@ -1,6 +1,5 @@
 package com.fonestore.user_api.controller;
 
-import com.fonestore.user_api.service.CartService;
 import com.fonestore.user_api.service.CheckoutService;
 
 import lombok.RequiredArgsConstructor;

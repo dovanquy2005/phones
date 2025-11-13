@@ -1,0 +1,106 @@
+/* ----- Orders layout (bám token ở base.css) ----- */
+    .orders-wrap{min-height:calc(100vh - var(--header-h) - 120px)}
+    .orders-card{padding:16px}
+
+    /* Khai báo cột một lần để header & row dùng chung → luôn thẳng hàng */
+    .orders-grid{ --cols: 120px 1fr 140px 140px 140px 160px 140px; }
+
+    .orders-head,
+    .order-row{
+      display:grid;
+      grid-template-columns: var(--cols);
+      gap:12px;
+      align-items:center;
+    }
+
+    .orders-head{
+      font-weight:700;
+      color:var(--muted);
+      padding:8px 8px 12px;
+    }
+
+    .order-row{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px 10px;
+      box-shadow:var(--shadow-sm);
+      transition: box-shadow .15s ease, transform .05s ease;
+    }
+    .order-row:hover{ box-shadow:var(--shadow-md); }
+
+    .num{text-align:right; font-variant-numeric:tabular-nums;}
+    .actions a{ color:var(--brand); font-weight:700; }
+    .actions a:hover{ text-decoration:underline; }
+
+    /* Badge trạng thái */
+    .status{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 10px; border-radius:999px; font-size:12px; font-weight:800;
+      background:#EFF6FF; color:var(--brand);
+      border:1px solid var(--border);
+      white-space:nowrap;
+    }
+    .status--PAID,.status--DELIVERED,.status--COMPLETED{ background:#E6F6EF; color:#0B8E4A; }
+    .status--SHIPPED{ background:#EEF6FF; color:#0C63D6; }
+    .status--CANCELED,.status--FAILED{ background:#FFEEEE; color:#D72323; }
+
+    /* Skeleton khi đang tải */
+    .sk{border:1px solid var(--border); border-radius:12px; background:#fff; overflow:hidden;}
+    .sk-row{
+      display:grid; grid-template-columns: var(--cols); gap:12px; align-items:center; padding:12px 10px;
+    }
+    .bar{height:16px; background:linear-gradient(90deg,#eee 25%,#f6f6f6 37%,#eee 63%); background-size:400% 100%; animation:shimmer 1.2s infinite;}
+    .s1{width:60px}.s2{width:50%}.s3{width:90px}.s4{width:100px}.s5{width:110px}.s6{width:140px}.s7{width:80px}
+    @keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+    .empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);padding:24px 0}
+
+    /* Mobile: chuyển thành thẻ có nhãn */
+    @media (max-width: 900px){
+      .orders-head{ display:none; }
+      .order-row{
+        grid-template-columns: 1fr;
+        row-gap:8px;
+      }
+      .cell{
+        display:grid; grid-template-columns: 140px 1fr; column-gap:10px; align-items:center;
+      }
+      .cell::before{
+        content: attr(data-label);
+        color:var(--muted);
+        font-size:13px;
+      }
+      .num{ justify-self:end; }
+      .actions{ display:flex; justify-content:flex-end; }
+      .sk-row{ grid-template-columns: 1fr; }
+      .s1,.s2,.s3,.s4,.s5,.s6,.s7{ width:100%; }
+    }
+
+    /* small alert box */
+    .alert-inline { padding:12px; border-radius:8px; background:#FFF4E5; color:#8A4B00; border:1px solid #F8D7A6; }
+  /* chips style (thêm để consistent với index) */
+    .chips { display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 12px; }
+    .chips .chip {
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid #e6e9ef;
+      background:#fff;
+      color:#0f172a;
+      font-weight:600;
+      font-size:14px;
+      text-decoration:none;
+      box-shadow: 0 1px 0 rgba(15,23,42,0.02);
+    }
+    .chips .chip:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(15,23,42,0.06); }
+    /* Ẩn vùng chips (những pill trên cùng) — chỉ show checkbox list */
+
+    /* product card tweaks */
+    .prod-card { background:#fff; border-radius:12px; padding:12px; box-shadow: 0 4px 12px rgba(2,6,23,0.03); display:flex; flex-direction:column; gap:8px; align-items:stretch; }
+    .prod-thumb{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:12px}
+    .prod-title{font-weight:600;margin-top:6px}
+    .price-now{font-weight:700;color:#0f172a}
+    .grid-cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    @media (max-width: 900px){ .grid-cols-4{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width: 600px){ .grid-cols-4{grid-template-columns:repeat(1,1fr);} }

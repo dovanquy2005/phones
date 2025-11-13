@@ -5,7 +5,7 @@ import com.fonestore.staff_api.dto.product.ProductDetailDTO;
 import com.fonestore.staff_api.dto.product.ProductListDTO;
 import com.fonestore.staff_api.service.product.ProductService;
 import com.fonestore.user_api.dto.order.CreateOrderRequest;
-import com.fonestore.user_api.dto.order.OrderResponse;
+import com.fonestore.user_api.dto.order.PagedOrderResponse;
 import com.fonestore.user_api.service.OrderService;
 
 import org.springframework.http.ResponseEntity;
@@ -44,14 +44,14 @@ public class PublicApiController {
 
   // --- orders ---
   @PostMapping("/orders")
-  public OrderResponse create(@RequestBody @Valid CreateOrderRequest req) {
+  public PagedOrderResponse create(@RequestBody @Valid CreateOrderRequest req) {
     return orderService.create(req);
   }
 
   // Lấy danh sách đơn theo userId (phục vụ trang lịch sử mua hàng)
   // GET /api/public/orders?userId=14
   @GetMapping(value = "/orders", params = "userId")
-  public List<OrderResponse> listByUser(@RequestParam Long userId) {
+  public List<PagedOrderResponse> listByUser(@RequestParam Long userId) {
     return orderService.findByUserId(userId);
   }
 
@@ -64,7 +64,7 @@ public class PublicApiController {
   // Chi tiết 1 đơn
   // GET /api/public/orders/7
   @GetMapping("/orders/{orderId}")
-  public OrderResponse getOne(@PathVariable Long orderId) {
+  public PagedOrderResponse getOne(@PathVariable Long orderId) {
     return orderService.getById(orderId);
   }
 }

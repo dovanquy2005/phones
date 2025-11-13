@@ -8,8 +8,8 @@ import com.fonestore.user_api.dto.voucher.VoucherApplyRequest;
 import com.fonestore.user_api.dto.voucher.VoucherApplyResponse;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.OrderItem;
-import com.fonestore.user_api.repository.order.OrderItemRepository;
-import com.fonestore.user_api.repository.order.OrderRepository;
+import com.fonestore.user_api.repository.order.UserOrderItemRepository;
+import com.fonestore.user_api.repository.order.UserOrderRepository;
 import com.fonestore.user_api.repository.voucher.UserVoucherRepository;
 import com.fonestore.user_api.repository.voucher.UserVoucherUsageRepository;
 
@@ -30,8 +30,8 @@ public class CartService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
-    private final OrderRepository orderRepo;
-    private final OrderItemRepository itemRepo;
+    private final UserOrderRepository orderRepo;
+    private final UserOrderItemRepository itemRepo;
     private final ProductVariantRepository variantRepo;
     private final UserVoucherRepository voucherRepo;
     private final UserVoucherUsageRepository voucherUsageRepo;

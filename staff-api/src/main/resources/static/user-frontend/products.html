@@ -8,9 +8,16 @@
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
 
+  <style>
+      /* ẩn chips (nếu bạn muốn chỉ hiện checkbox list) */
+      #brandChips { display: none; }
+      .prod-thumb{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border-radius:12px}
+    /* nhỏ: đảm bảo sidebar box đẹp */
+    .sidebar .chips { margin-bottom: 12px; }
+  </style>
 </head>
-
 <body>
+
 <header class="header">
   <div class="container inner">
     <a class="brand" href="index.html">
@@ -20,8 +27,8 @@
 
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
-      <a href="login.html">Đăng nhập</a>
+      <a href="cart.html" class="badge badge-cart" id="navCart">Giỏ hàng</a>
+      <a href="login.html" id="navLogin">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
   </div>
@@ -35,14 +42,12 @@
     <aside class="sidebar">
       <div class="filter-group">
         <div class="title">Thương hiệu</div>
-        <ul class="muted" id="brand-filters">
-          <li><label><input type="checkbox" value="Apple"> Apple</label></li>
-          <li><label><input type="checkbox" value="Samsung"> Samsung</label></li>
-          <li><label><input type="checkbox" value="Xiaomi"> Xiaomi</label></li>
-          <li><label><input type="checkbox" value="OPPO"> OPPO</label></li>
-          <li><label><input type="checkbox" value="vivo"> vivo</label></li>
-        </ul>
+        <!-- CHIPS (ẩn bằng CSS nhưng để lại nếu muốn bật lại) -->
+        <div class="chips" id="brandChips"></div>
+        <!-- Checkbox filters (hiển thị chính) -->
+        <ul class="muted" id="brand-filters"></ul>
       </div>
+
       <div class="filter-group">
         <div class="title">Khoảng giá</div>
         <div class="row">
@@ -56,7 +61,8 @@
           <button class="chip" data-min="10000000" data-max="">≥ 10tr</button>
         </div>
       </div>
-      <div class="alert">Filter tạm thời áp dụng ở client (MVP).</div>
+
+      <div class="alert">Chúc quý khách mua sắm vui vẻ.</div>
     </aside>
 
     <section>
@@ -73,7 +79,7 @@
       </div>
 
       <div class="grid grid-cols-4" id="product-grid"></div>
-      <nav class="pagination" id="pagination"></nav>
+      <nav class="pagination" id="pagination" style="margin-top:18px"></nav>
     </section>
   </div>
 </main>
@@ -89,67 +95,153 @@
     <div class="copyright">© 2025 fonestore — All rights reserved.</div>
   </div>
 </footer>
-<script>
-(() => {
-  const BASE_API = window.location.origin; // http://localhost:9090
-  let page = 1, size = 12, total = 0;
-  let productsCache = [];
-  let q = '', sort = 'newest', priceMin = '', priceMax = '';
-  let brands = new Set();
 
+<script>
+(async function(){
+  // CONFIG
+  const ORIGIN = location.origin;
+  const BASES = [ '/api/user', '/api/public', '/api' ].map(p => ORIGIN + p);
+  const AUTH_H = (localStorage.getItem('accessToken') || localStorage.getItem('fs_token') || '') ? { 'Authorization': 'Bearer ' + (localStorage.getItem('accessToken') || localStorage.getItem('fs_token')) } : {};
+
+  // DOM
   const gridEl = document.getElementById('product-grid');
   const countTextEl = document.getElementById('countText');
   const paginationEl = document.getElementById('pagination');
   const sortEl = document.getElementById('sort');
-  const qEl = document.getElementById('q');
+  const qInput = document.getElementById('q');
+
+  const brandChipsEl = document.getElementById('brandChips');
   const brandFiltersEl = document.getElementById('brand-filters');
   const priceMinEl = document.getElementById('priceMin');
   const priceMaxEl = document.getElementById('priceMax');
-  const quickChips = document.querySelectorAll('.chip');
+  const quickChips = document.querySelectorAll('.filter-group .chip');
 
-  const money = n => (n==null || isNaN(n)) ? '' : Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'});
-  const pickPrice = p => p?.minPrice ?? p?.price ?? null;
-  const pickBrand = p => p?.brandName ?? p?.brand ?? '';
-  const pageSlice = (arr,p,sz) => arr.slice((p-1)*sz,(p-1)*sz+sz);
+  // state
+  let page = 1, size = 12, total = 0;
+  let productsCache = [];
+  let q = '', sort = 'newest', priceMin = '', priceMax = '';
+  let brandsSet = new Set();
 
-  function pickImg(p){
-    const raw = p?.imagePath ?? p?.thumbnail ?? p?.imageUrl ?? p?.image ?? null;
-    if (!raw){
-      if (Array.isArray(p?.images)){
-        const f = p.images[0];
-        const s = (typeof f === 'string') ? f : (f?.url || f?.src || f?.path);
-        if (s) return absolutize(s);
-      }
-      return 'assets/img/placeholder.png';
-    }
-    return absolutize(raw);
+  // helpers
+  function money(n){ return (Number(n)||0).toLocaleString('vi-VN') + ' đ'; }
+  function pickPrice(p){ return p?.minPrice ?? p?.price ?? p?.salePrice ?? p?.finalPrice ?? null; }
+
+  // BRAND key helper:
+  // produce a stable key for brand used both in brand list and product matching
+  function brandKeyFromObj(b){
+    return String(b?.id ?? b?.brandId ?? b?.code ?? b?.slug ?? b?.name ?? '').trim();
   }
+  // for product objects, extract same key space
+  function pickBrand(p){
+    // Try multiple fields - must match how brand list keys are generated
+    return String(
+      p?.brandId ??
+      p?.brand ??           // sometimes backend sets brand as text or id
+      p?.brandCode ??
+      p?.manufacturer ??
+      p?.brandName ??
+      p?.brand_slug ??
+      p?.brandSlug ??
+      p?.vendor ??
+      p?.seller ??
+      p?.brand?.id ??
+      p?.brand?.slug ??
+      p?.brand?.code ??
+      p?.brand?.name ??
+      ''
+    ).trim();
+  }
+
+  function pageSlice(arr,p,sz){ return arr.slice((p-1)*sz, (p-1)*sz + sz); }
   function absolutize(u){
-    const s = String(u||'').trim();
-    if (!s) return 'assets/img/placeholder.png';
-    if (/^https?:\/\//i.test(s) || s.startsWith('data:') || s.startsWith('/')) return s;
-    return '/' + s;
+    if(!u) return 'assets/img/placeholder.png';
+    u = String(u);
+    if (/^https?:\/\//i.test(u) || u.startsWith('data:') || u.startsWith('/')) return u;
+    return '/' + u.replace(/^\/+/, '');
   }
 
-  function buildApiUrl(){ return `${BASE_API}/api/products`; }
-
-  async function fetchProducts(){
-    const res = await fetch(buildApiUrl());
-    if (!res.ok) throw new Error(`Fetch products failed: ${res.status}`);
-    const data = await res.json();
-    if (Array.isArray(data)) {
-      productsCache = data.slice();
-      total = productsCache.length;
-      return pageSlice(productsCache, page, size);
+  // robust path trial
+  async function tryPaths(paths, opts={mapList:true}) {
+    for (const base of BASES){
+      for (const path of paths){
+        try {
+          const r = await fetch(base + path, { headers: {...AUTH_H} });
+          if (!r.ok) continue;
+          const data = await r.json();
+          if (!opts.mapList) return data;
+          const list = Array.isArray(data) ? data
+                    : Array.isArray(data?.content) ? data.content
+                    : Array.isArray(data?.items) ? data.items
+                    : Array.isArray(data?.data) ? data.data
+                    : null;
+          if (list) return list;
+        } catch(e){ /* ignore */ }
+      }
     }
-    total = 0; return [];
+    return [];
   }
 
+  // load brands -> checkbox list (+ chips optionally)
+  async function loadBrands(){
+    if (!brandChipsEl && !brandFiltersEl) return;
+    const list = await tryPaths(['/brands?limit=12','/brands','/catalog/brands?limit=12']);
+    if (!list || !list.length) {
+      if (brandChipsEl) brandChipsEl.innerHTML = '<span class="muted">Chưa có thương hiệu.</span>';
+      if (brandFiltersEl) brandFiltersEl.innerHTML = '<li class="muted">Không có</li>';
+      return;
+    }
+
+    // render chips (kept but CSS may hide them)
+    if (brandChipsEl){
+      brandChipsEl.innerHTML = '';
+      list.slice(0,12).forEach(b=>{
+        const id = brandKeyFromObj(b);
+        const name = b?.name ?? b?.brandName ?? b?.title ?? 'Brand';
+        const a = document.createElement('a');
+        a.className = 'chip';
+        a.href = `products.html?brand=${encodeURIComponent(id)}`;
+        a.textContent = name;
+        brandChipsEl.appendChild(a);
+      });
+    }
+
+    // render checkbox list
+    if (brandFiltersEl){
+      brandFiltersEl.innerHTML = '';
+      list.forEach(b=>{
+        const id = brandKeyFromObj(b) || '';
+        const name = b?.name ?? b?.brandName ?? b?.title ?? String(b?.name || 'Brand');
+        const li = document.createElement('li');
+        li.innerHTML = `<label><input type="checkbox" value="${escapeHtmlAttr(id)}"> ${escapeHtml(name)}</label>`;
+        brandFiltersEl.appendChild(li);
+      });
+
+      // listen changes and re-dispatch a unified change event
+      brandFiltersEl.querySelectorAll('input[type="checkbox"]').forEach(ch=>{
+        ch.addEventListener('change', ()=> brandFiltersEl.dispatchEvent(new Event('change', { bubbles:true })));
+      });
+    }
+  }
+
+  // load all products
+  async function fetchProducts(){
+    const list = await tryPaths(['/products','/catalog/products','/products?limit=1000']);
+    if (!list.length) {
+      productsCache = [];
+      total = 0;
+      return [];
+    }
+    productsCache = list.slice();
+    total = productsCache.length;
+    return pageSlice(productsCache, page, size);
+  }
+
+  // client-side filter: uses brand keys (pickBrand)
   function clientFilter(arr){
     return arr.filter(p=>{
-      const price = Number(pickPrice(p)??0);
-      const brand = pickBrand(p);
-      if (brands.size && !brands.has(brand)) return false;
+      const price = Number(pickPrice(p) ?? 0);
+      const brandKey = pickBrand(p) || '';
+      if (brandsSet.size && !brandsSet.has(brandKey)) return false;
       if (priceMin && !(price >= Number(priceMin))) return false;
       if (priceMax && !(price <= Number(priceMax))) return false;
       if (q && !(String(p?.name||'').toLowerCase().includes(q.toLowerCase()))) return false;
@@ -157,79 +249,113 @@
     });
   }
 
+  // render helpers
   function renderProducts(list){
-    gridEl.innerHTML='';
-    if(!list.length){ gridEl.innerHTML='<div class="muted">Không có sản phẩm phù hợp.</div>'; return; }
-    const frag=document.createDocumentFragment();
+    gridEl.innerHTML = '';
+    if (!list.length){ gridEl.innerHTML = '<div class="muted">Không có sản phẩm phù hợp.</div>'; return; }
+    const frag = document.createDocumentFragment();
     list.forEach(p=>{
-      const id=p.productId??p.id??'';
-      const el=document.createElement('article');
-      el.className='prod-card';
-      const imgUrl=pickImg(p);
-      el.innerHTML=`
-        <img class="prod-thumb" src="${imgUrl}" alt="${p.name||'Điện thoại'}"
-             onerror="this.src='assets/img/placeholder.png'"/>
-        <div class="prod-title">${p.name||'(Không tên)'}</div>
+      const id = p.productId ?? p.id ?? p.skuId ?? '';
+      const el = document.createElement('article');
+      el.className = 'prod-card';
+      const imgUrl = absolutize(p.imagePath ?? p.thumbnail ?? p.imageUrl ?? (Array.isArray(p.images)?(typeof p.images[0]==='string'?p.images[0]:p.images[0]?.url):null));
+      el.innerHTML = `
+        <img class="prod-thumb" src="${imgUrl}" alt="${escapeHtml(p.name||'Điện thoại')}" onerror="this.src='assets/img/placeholder.png'"/>
+        <div class="prod-title">${escapeHtml(p.name||p.title||'(Không tên)')}</div>
         <div class="price"><div class="price-now">${money(pickPrice(p))}</div></div>
-        <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>`;
+        <a class="btn btn-ghost" href="product-detail.html?id=${encodeURIComponent(id)}">Xem chi tiết</a>
+      `;
       frag.appendChild(el);
     });
     gridEl.appendChild(frag);
   }
 
-  function renderCount(shown){ countTextEl.textContent=`Hiển thị ${shown} / ${total} sản phẩm`; }
+  function renderCount(shown){ countTextEl.textContent = `Hiển thị ${shown} / ${total} sản phẩm`; }
 
-  function renderPagination(){
-    const totalPages = total ? Math.max(1, Math.ceil(total/size)) : 1;
-    paginationEl.innerHTML=''; if (totalPages<=1) return;
-    const mk=(label,tgt,act=false,dis=false)=>{
-      const a=document.createElement('a');
-      a.className='page-btn'+(act?' active':'')+(dis?' disabled':'');
-      a.href='#'; a.textContent=label;
-      if(!dis) a.onclick=e=>{e.preventDefault(); if(tgt!==page){page=tgt;load();window.scrollTo({top:0,behavior:'smooth'});} };
+  function renderPagination(totalItems){
+    const totalPages = totalItems ? Math.max(1, Math.ceil(totalItems/size)) : 1;
+    paginationEl.innerHTML = '';
+    if (totalPages <= 1) return;
+    const mk = (label, tgt, act=false, dis=false) => {
+      const a = document.createElement('a');
+      a.className = 'page-btn' + (act ? ' active' : '') + (dis ? ' disabled' : '');
+      a.href = '#';
+      a.textContent = label;
+      if (!dis) a.addEventListener('click', (e)=>{ e.preventDefault(); if (tgt !== page){ page = tgt; load(); window.scrollTo({top:0,behavior:'smooth'}); }});
       return a;
     };
     paginationEl.appendChild(mk('«', Math.max(1,page-1), false, page===1));
-    const maxBtn=Math.min(7, Math.ceil(total/size));
-    for(let i=1;i<=maxBtn;i++) paginationEl.appendChild(mk(String(i), i, i===page));
-    if (Math.ceil(total/size)>7){
-      const s=document.createElement('span'); s.className='page-btn muted'; s.textContent='...'; paginationEl.appendChild(s);
-      paginationEl.appendChild(mk(String(Math.ceil(total/size)), Math.ceil(total/size), Math.ceil(total/size)===page));
+    const maxBtn = Math.min(7, totalPages);
+    for (let i=1;i<=maxBtn;i++) paginationEl.appendChild(mk(String(i), i, i===page));
+    if (totalPages > 7){
+      const dots = document.createElement('span'); dots.className='page-btn muted'; dots.textContent='...';
+      paginationEl.appendChild(dots);
+      paginationEl.appendChild(mk(String(totalPages), totalPages, totalPages===page));
     }
-    paginationEl.appendChild(mk('»', Math.max(1, Math.min(page+1, Math.ceil(total/size))), false, page===Math.ceil(total/size)));
+    paginationEl.appendChild(mk('»', Math.min(totalPages, page+1), false, page===totalPages));
   }
 
+  // top-level load
   async function load(){
     try{
       const raw = await fetchProducts();
+      // sync checked checkboxes into set
+      const checked = [...(brandFiltersEl ? brandFiltersEl.querySelectorAll('input:checked') : [])].map(i => i.value);
+      brandsSet = new Set(checked);
+
+      // apply sort
       let list = productsCache.length ? productsCache.slice() : raw.slice();
-      if (sort==='price,asc')  list.sort((a,b)=>(pickPrice(a)??0)-(pickPrice(b)??0));
-      if (sort==='price,desc') list.sort((a,b)=>(pickPrice(b)??0)-(pickPrice(a)??0));
+      if (sort === 'price,asc') list.sort((a,b)=>(Number(pickPrice(a)??0) - Number(pickPrice(b)??0)));
+      if (sort === 'price,desc') list.sort((a,b)=>(Number(pickPrice(b)??0) - Number(pickPrice(a)??0)));
+      // apply client filters
       list = clientFilter(list);
-      if (productsCache.length){ total=list.length; list = pageSlice(list, page, size); }
-      renderProducts(list); renderCount(list.length); renderPagination();
-    }catch(e){
+      total = list.length;
+      const pageList = pageSlice(list, page, size);
+      renderProducts(pageList);
+      renderCount(pageList.length);
+      renderPagination(total);
+    } catch(e){
       console.error(e);
-      gridEl.innerHTML='<div class="alert">Không tải được danh sách sản phẩm.</div>';
-      paginationEl.innerHTML=''; countTextEl.textContent='Hiển thị 0 / 0 sản phẩm';
+      gridEl.innerHTML = '<div class="alert">Không tải được danh sách sản phẩm.</div>';
+      paginationEl.innerHTML = ''; countTextEl.textContent = 'Hiển thị 0 / 0 sản phẩm';
     }
   }
 
-  sortEl.onchange=()=>{sort=sortEl.value;page=1;load();};
-  qEl.onkeydown=e=>{if(e.key==='Enter'){q=qEl.value.trim();page=1;load();}};
-  brandFiltersEl.onchange=()=>{brands=new Set([...brandFiltersEl.querySelectorAll('input:checked')].map(i=>i.value));page=1;load();};
-  quickChips.forEach(btn=>btn.onclick=()=>{priceMin=btn.dataset.min||'';priceMax=btn.dataset.max||'';priceMinEl.value=priceMin;priceMaxEl.value=priceMax;page=1;load();});
-  priceMinEl.onchange=()=>{priceMin=priceMinEl.value;page=1;load();};
-  priceMaxEl.onchange=()=>{priceMax=priceMaxEl.value;page=1;load();};
+  // small helpers
+  function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeHtmlAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
 
-  load();
+  // events
+  sortEl.addEventListener('change', ()=>{ sort = sortEl.value; page = 1; load(); });
+  qInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ q = qInput.value.trim(); page = 1; load(); }});
+  if (brandFiltersEl) brandFiltersEl.addEventListener('change', ()=>{ page = 1; load(); });
+  quickChips.forEach(btn => btn.addEventListener('click', ()=>{ priceMin = btn.dataset.min || ''; priceMax = btn.dataset.max || ''; priceMinEl.value = priceMin; priceMaxEl.value = priceMax; page = 1; load(); }));
+  priceMinEl.addEventListener('change', ()=>{ priceMin = priceMinEl.value; page = 1; load(); });
+  priceMaxEl.addEventListener('change', ()=>{ priceMax = priceMaxEl.value; page = 1; load(); });
+
+  // initial: ensure brands loaded first so checkboxes exist before first load()
+  await loadBrands();
+  await load();
+
+  // cart badge (optional)
+  (async function fillCartBadge(){
+    const navCart = document.getElementById('navCart');
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('fs_token') || '';
+    if (!token || !navCart) return;
+    for (const base of BASES){
+      try {
+        const r = await fetch(base + '/cart/summary', { headers: {...AUTH_H} });
+        if (!r.ok) continue;
+        const d = await r.json();
+        const n = Number(d?.count ?? d?.quantity ?? d?.totalItems ?? d?.itemsCount ?? d?.size ?? 0);
+        if (n > 0) navCart.textContent = `Giỏ hàng (${n})`;
+        return;
+      } catch(e){}
+    }
+  })();
+
 })();
 </script>
-
-
-
-
-
 
 <!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>

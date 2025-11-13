@@ -7,7 +7,7 @@ import java.util.List;
 import com.fonestore.user_api.dto.PaymentDTO;
 import com.fonestore.user_api.dto.ShipmentDTO;
 
-public record OrderResponse(
+public record PagedOrderResponse(
         Long orderId,
         String status,
         BigDecimal subtotal,
@@ -28,3 +28,4 @@ public record OrderResponse(
             String productName
     ) {}
 }
+
