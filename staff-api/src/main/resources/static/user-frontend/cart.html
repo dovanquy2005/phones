@@ -168,40 +168,6 @@ async function apiGetCart() {
   }
 }
 
-  // async function apiGetCart(){
-  //   const t = token();
-  //   if (t){
-  //     try{
-  //       const r = await fetchWithAuth(API+'/api/cart', { method:'GET' });
-  //       if (r.ok){
-  //         const data = await r.json();
-  //         const lines = Array.isArray(data?.items) ? data.items
-  //                       : Array.isArray(data?.cartItems) ? data.cartItems : [];
-  //         return lines.map(normLine).filter(Boolean);
-  //       }
-  //     }catch(_){}
-  //   }
-
-  //   try{
-  //     const uid = await ensureUID();
-  //     if (uid && uid>0){
-  //       const r2 = await fetchWithAuth(API + withUID('/api/cart', uid), { method: 'GET' });
-  //       if (r2.ok){
-  //         const d = await r2.json();
-  //         const lines = Array.isArray(d?.items) ? d.items : Array.isArray(d?.cartItems) ? d.cartItems : [];
-  //         return lines.map(normLine).filter(Boolean);
-  //       }
-  //     } else {
-  //       const r3 = await fetchWithAuth(API + '/api/cart', { method: 'GET' });
-  //       if (r3.ok){
-  //         const d = await r3.json();
-  //         const lines = Array.isArray(d?.items) ? d.items : Array.isArray(d?.cartItems) ? d.cartItems : [];
-  //         return lines.map(normLine).filter(Boolean);
-  //       }
-  //     }
-  //   }catch(_){}
-  //   return [];
-  // }
 
   async function apiUpdateQty(itemId, qty){
     const t = token();

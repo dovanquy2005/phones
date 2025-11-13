@@ -364,5 +364,33 @@ private CartDTO toDTO(Order o) {
         return true;
     }
 
+    // --- add to CartService (inside the class) ---
+
+    /**
+     * Ensure the user's draft order exists, recalc totals and persist.
+     * Returns the persisted Order entity (fresh).
+     *
+     * Use when the caller needs entity-level access (e.g. CheckoutService).
+     */
+    @Transactional
+    public Order refreshDraftAndGetEntity(Long userId) {
+        Order draft = getOrCreateDraft(userId); // existing helper in your service
+        // reuse private recalc(Order) logic which persists totals
+        recalc(draft);
+        // re-fetch or return draft (draft should be attached because we are in @Transactional)
+        return draft;
+    }
+
+    /**
+     * Ensure the user's draft order exists and return a CartDTO snapshot.
+     * Prefer this when controller/service only needs DTO data.
+     */
+    @Transactional
+    public com.fonestore.user_api.dto.cart.CartDTO refreshDraftAndGetDto(Long userId) {
+        Order draft = refreshDraftAndGetEntity(userId);
+        // toDTO uses itemRepo.findLinesWithInfo(draft.getId()) which you already have
+        return toDTO(draft);
+    }
+
 
 }

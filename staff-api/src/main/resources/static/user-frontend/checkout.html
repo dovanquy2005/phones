@@ -24,7 +24,7 @@
     .radio label{display:flex;align-items:center;gap:8px;border:1px solid #e5e7eb;border-radius:10px;padding:8px 12px;cursor:pointer}
     .summary ul{list-style:none;margin:0;padding:0}
     .summary li{display:flex;justify-content:space-between;padding:6px 0}
-    .code-hint{font-size:12px;color:#64748B;margin-top:6px}
+    .muted-small{color:#64748B;font-size:13px;margin-top:8px}
   </style>
 </head>
 <body>
@@ -45,7 +45,9 @@
 
 <main class="container">
   <h1 class="h1">Thanh toán</h1>
+
   <div class="grid grid-2">
+    <!-- left: form -->
     <section class="card">
       <div class="inner">
         <div class="h3">Thông tin giao hàng</div>
@@ -64,139 +66,186 @@
 
           <div class="row" style="grid-column:1/-1;justify-content:space-between;margin-top:8px">
             <a href="cart.html" class="btn">← Quay lại giỏ</a>
-            <button class="btn primary" type="submit">Đặt hàng</button>
+            <button class="btn primary" id="placeOrder" type="submit">Đặt hàng</button>
           </div>
           <div id="form-error" class="muted" style="color:#ef4444;display:none">Vui lòng điền đúng và đủ thông tin.</div>
         </form>
       </div>
     </section>
 
+    <!-- right: simplified summary (only totals) -->
     <aside class="card summary">
       <div class="inner">
-        <div class="h3">Tóm tắt</div>
-        <div id="mini"></div>
-        <hr/>
-        <div class="row" style="gap:8px">
-          <input id="voucher" class="input" placeholder="Nhập mã giảm giá (SALE10 / SALE50K / FREESHIP)" />
-          <button id="apply" class="btn">Áp dụng</button>
-        </div>
-        <div class="code-hint">Mã mẫu: <b>SALE10</b>, <b>SALE50K</b>, <b>FREESHIP</b></div>
-        <hr/>
         <ul>
           <li><span>Tạm tính</span><span id="sub">0₫</span></li>
           <li><span>Giảm giá</span><span id="discount">−0₫</span></li>
-          <li><span>Phí vận chuyển</span><span id="ship">0₫</span></li>
+          <li><span>Phí vận chuyển</span><span id="ship">Tính ở bước sau</span></li>
           <li style="font-weight:800"><span>Tổng cộng</span><span id="total">0₫</span></li>
         </ul>
+
+        <div id="checkout-note" class="muted" style="margin-top:8px"></div>
       </div>
     </aside>
   </div>
 </main>
 
+<footer class="footer">
+  <div class="container section"><div class="copyright">© 2025 fonestore</div></div>
+</footer>
+
 <script>
 (() => {
-  const BASE_URL = window.location.origin;
-  const $ = s => document.querySelector(s);
-  const money = n => (n==null||isNaN(n)) ? '' : Number(n).toLocaleString('vi-VN',{style:'currency',currency:'VND'});
+  const API = 'http://localhost:9090'; // chỉnh nếu khác
+  const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
+  const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
 
-  function readCart(){try{return JSON.parse(localStorage.getItem('cart')||'[]')}catch{return[]}}
-  function updateBadge(){const t=readCart().reduce((s,it)=>s+(+it.qty||0),0);const el=$('#cartBadge');if(el)el.textContent=t?`Giỏ hàng (${t})`:'Giỏ hàng';}
-
-  // ----- Render tóm tắt đơn hàng -----
-  function renderSummary() {
-    const cart = readCart();
-    const listEl = $('#orderLines'); listEl.innerHTML = '';
-    let subtotal = 0;
-    cart.forEach(it => {
-      const line = (Number(it.price)||0) * (Number(it.qty)||0);
-      subtotal += line;
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${it.name} x ${it.qty}</span><b>${money(line)}</b>`;
-      listEl.appendChild(li);
-    });
-    const shipping = 30000; // tạm phí ship cố định
-    const discount = 0;     // có thể đọc từ voucherCode nếu bạn implement
-    const total = subtotal - discount + shipping;
-
-    $('#sumSubtotal').textContent = money(subtotal);
-    $('#sumShipping').textContent = money(shipping);
-    $('#sumDiscount').textContent = discount ? ('- ' + money(discount)) : money(0);
-    $('#sumTotal').textContent = money(total);
-    return {subtotal, shipping, discount, total};
-  }
-
-  // ----- Submit order -----
-  async function submitOrder(e){
-    e.preventDefault();
-    const cart = readCart();
-    if (!cart.length) { alert('Giỏ hàng trống'); return; }
-
-    const name = $('#name').value.trim();
-    const phone = $('#phone').value.trim();
-    const address = $('#address').value.trim();
-    if (!name || !phone || !address) { alert('Vui lòng điền đầy đủ tên, SĐT, địa chỉ'); return; }
-
-    const sums = renderSummary(); // đảm bảo đồng bộ
-    const addressSnapshot = JSON.stringify({name, phone, address});
-    const userId = Number(localStorage.getItem('userId')||0) || 0; // nếu chưa đăng nhập thì 0
-
-    // Lưu ý: skuId dùng id sản phẩm nếu bạn chưa có bảng SKU riêng
-    const items = cart.map(it => ({
-      skuId: Number(it.id),
-      qty: Number(it.qty),
-      unitPrice: Number(it.price)||0
-    }));
-
-    const payload = {
-      userId,
-      status: "PENDING",
-      subtotal: sums.subtotal,
-      discount: sums.discount,
-      shippingFee: sums.shipping,
-      total: sums.total,
-      addressSnapshot,
-      note: $('#note').value || '',
-      items
-    };
-
+  // GET /api/checkout -> returns full checkout DTO (server-side recalc)
+  async function apiGetCheckout() {
     try {
-      const res = await fetch(`${BASE_URL}/api/public/orders`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok){
-        const t = await res.text();
-        throw new Error(`HTTP ${res.status}: ${t}`);
+      const headers = { 'Accept': 'application/json' };
+      const t = token();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch(API + '/api/checkout', { method: 'GET', headers, credentials: 'include' });
+      if (!res.ok) {
+        console.error('apiGetCheckout failed', res.status);
+        return { ok:false, status: res.status, body: null };
       }
-      const data = await res.json();
-      // Clear cart, chuyển trang success
-      localStorage.removeItem('cart');
-      updateBadge();
-      const oid = data?.orderId ?? '';
-      window.location.href = `order-success.html?id=${encodeURIComponent(oid)}`;
-    } catch(err){
-      console.error(err);
-      alert('Đặt hàng thất bại. Vui lòng thử lại!');
+      const body = await res.json();
+      return { ok:true, body };
+    } catch (e) {
+      console.error('apiGetCheckout err', e);
+      return { ok:false, status:0, body:null };
     }
   }
 
-  // ----- Khởi tạo -----
-  updateBadge();
-  renderSummary();
-  $('#checkoutForm')?.addEventListener('submit', submitOrder);
-  window.addEventListener('storage', (e)=>{ if(e.key==='cart') renderSummary(); });
+  // POST /api/checkout -> place order
+  async function apiPlaceOrder(payload) {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const t = token();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch(API + '/api/checkout', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
+      const body = await res.json().catch(()=>({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (e) {
+      console.error('apiPlaceOrder err', e);
+      return { ok:false, status:0, body:null };
+    }
+  }
+
+  // render totals into UI (we only show totals)
+  function renderTotalsFromResponse(body) {
+    const subtotal = Number(body.subtotal ?? body.subTotal ?? body.totals?.subtotal ?? 0);
+    const discount = Number(body.discount ?? body.discountAmount ?? body.totals?.discount ?? 0);
+    const shipping = Number(body.shipping ?? body.shippingFee ?? body.totals?.shipping ?? 0);
+    const total = Number(body.total ?? body.grand_total ?? body.totals?.grand_total ?? subtotal - discount + shipping);
+    const subEl = document.getElementById('sub');
+    const disEl = document.getElementById('discount');
+    const shipEl = document.getElementById('ship');
+    const totalEl = document.getElementById('total');
+    if (subEl) subEl.textContent = fmt(subtotal);
+    if (disEl) disEl.textContent = (discount>0) ? '−' + fmt(discount) : '−0₫';
+    if (shipEl) shipEl.textContent = (shipping>0) ? fmt(shipping) : 'Tính ở bước sau';
+    if (totalEl) totalEl.textContent = fmt(total);
+  }
+
+  // load checkout totals (called on page load)
+  async function loadCheckoutTotals() {
+    const note = document.getElementById('checkout-note');
+    if (note) note.textContent = 'Đang tải tổng tiền...';
+    const r = await apiGetCheckout();
+    if (!r.ok) {
+      if (note) note.textContent = 'Không thể lấy tổng tiền. Vui lòng thử lại.';
+      renderTotalsFromResponse({});
+      return;
+    }
+    const body = r.body || {};
+    renderTotalsFromResponse(body);
+
+    // if warnings exist, redirect user back to cart (simple UX)
+    if (Array.isArray(body.warnings) && body.warnings.length > 0) {
+      alert('Có thay đổi trong giỏ hàng (ví dụ: giá, mã giảm, hoặc hết hàng). Bạn sẽ được chuyển về Giỏ hàng để kiểm tra lại.');
+      window.location.href = '/cart.html';
+      return;
+    }
+    if (note) note.textContent = '';
+  }
+
+  // form submit: re-check then place order
+  async function handleSubmit(ev) {
+    ev.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const addr = document.getElementById('addr').value.trim();
+    const email = document.getElementById('email').value.trim();
+    if (!name || !phone || !addr) {
+      document.getElementById('form-error').style.display = 'block';
+      return;
+    } else {
+      document.getElementById('form-error').style.display = 'none';
+    }
+
+    const placeBtn = document.getElementById('placeOrder');
+    placeBtn.disabled = true; placeBtn.textContent = 'Đang kiểm tra...';
+
+    // re-check server-side
+    const check = await apiGetCheckout();
+    if (!check.ok) {
+      alert('Không thể kiểm tra tổng tiền. Thử lại sau.');
+      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
+      return;
+    }
+    if (Array.isArray(check.body?.warnings) && check.body.warnings.length > 0) {
+      alert('Phát hiện thay đổi trong giỏ hàng. Bạn sẽ được chuyển về Giỏ hàng để kiểm tra lại.');
+      window.location.href = '/cart.html';
+      return;
+    }
+
+    // build payload (server reads cart/voucher from server-side cart)
+    const payload = {
+      payment_method: document.querySelector('input[name="pay"]:checked').value,
+      shipping_address: { name, phone, email, address: addr }
+    };
+
+    placeBtn.textContent = 'Đang đặt...';
+    const res = await apiPlaceOrder(payload);
+    if (!res.ok) {
+      // expected: 409 with reason or validation error
+      if (res.status === 409 && res.body && res.body.reason) {
+        alert('Không thể đặt hàng: ' + res.body.reason);
+      } else {
+        alert('Đặt hàng thất bại. Vui lòng thử lại.');
+      }
+      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
+      // if server returned warnings or updated totals, reload totals for user
+      if (res.body?.warnings) {
+        alert('Có thay đổi trong giỏ hàng — chuyển về giỏ để kiểm tra.');
+        window.location.href = '/cart.html';
+      } else {
+        // refresh totals in case server adjusted something
+        await loadCheckoutTotals();
+      }
+      return;
+    }
+
+    // success
+    const orderId = res.body?.order_id || res.body?.id || '';
+    alert('Đặt hàng thành công! Mã đơn: ' + (orderId || '---'));
+    window.location.href = `/order-success.html?order=${encodeURIComponent(orderId)}`;
+  }
+
+  // bind
+  document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
+
+  // init on load
+  (async () => {
+    await loadCheckoutTotals();
+  })();
+
 })();
 </script>
-<!-- auto-injected: auth core -->
 
-
-
-
-
-
-
-<!-- core scripts (standardized) -->
+<!-- core scripts (unchanged) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>
@@ -204,6 +253,7 @@
 <script src="assets/js/core/auth-menu-inject.js"></script>
 <script src="assets/js/core/cart-guard.js"></script>
 <script src="assets/js/core/compat-pid.js"></script>
-<script src="assets/js/core/cart-badge.js"></script>
+<script type="module" src="assets/js/core/cart-badge.js"></script>
+
 </body>
 </html>

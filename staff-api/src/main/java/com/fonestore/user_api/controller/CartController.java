@@ -184,12 +184,13 @@ public class CartController {
         return ResponseEntity.ok(cart.clear(uid));
     }
 
-    @PostMapping("/checkout")
-    public ResponseEntity<CartDTO> checkout(@RequestParam(required = false) Long userId) {
-        Long uid = resolveUserId(userId);
-        if (uid == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(cart.checkout(uid));
-    }
+     @PostMapping("/checkout")
+    
+     public ResponseEntity<CartDTO> checkout(@RequestParam(required = false) Long userId) {
+         Long uid = resolveUserId(userId);
+         if (uid == null) return ResponseEntity.status(401).build();
+         return ResponseEntity.ok(cart.checkout(uid));
+     }
 
     @PostMapping("/merge")
     public ResponseEntity<CartDTO> merge(@RequestParam(required = false) Long userId,
