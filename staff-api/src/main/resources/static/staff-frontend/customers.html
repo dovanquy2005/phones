@@ -16,7 +16,7 @@
     .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
     .empty{padding:16px;color:#6b7280;text-align:center}
 
-    /* Pager (dưới bảng chính) */
+    /* Pager */
     .pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;padding:12px 8px;border-top:1px solid var(--border)}
     .pager .btn{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer}
     .pager .btn[disabled]{opacity:.45;cursor:not-allowed}
@@ -37,16 +37,42 @@
     .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
 
     /* Modal */
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60}
-    .modal.is-open{display:flex}
-    .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
-    .modal__dialog{position:relative;background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.25);width:clamp(320px, 92vw, 840px);max-height:92vh;display:flex;flex-direction:column}
-    .modal__header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    .modal__title{margin:0;font-size:18px}
-    .modal__body{padding:0}
-    .modal__footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
-    .btn-close{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer}
-    .btn--sm{padding:6px 10px;border:1px solid var(--border);background:#fff;border-radius:8px;cursor:pointer}
+/* Modal */
+    .modal {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 60;
+    }
+    .modal.is-open { display: flex; }
+    
+    .modal__backdrop {
+      position: absolute; inset: 0; background: rgba(0,0,0,.35);
+    }
+
+    /* [ĐÃ SỬA] Gộp chung để cả 2 loại modal đều nổi lên trên nền đen */
+    .modal__dialog, 
+    .modal__card {
+      position: relative;       /* Bắt buộc */
+      z-index: 10;              /* Nổi lên trên backdrop */
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      display: flex;
+      flex-direction: column;
+      max-height: 92vh;
+      width: clamp(320px, 92vw, 840px); /* Width mặc định, có thể override bằng inline style */
+    }
+
+    .modal__header {
+      padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal__title { margin: 0; font-size: 18px; font-weight: 700; }
+    .modal__body { padding: 20px; overflow-y: auto; }
+    .modal__footer {
+      padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;
+    }
+    .btn-close{border:none;background:transparent;font-size:20px;cursor:pointer;color:#6b7280}
+    .btn-close:hover{color:#111827}
+    
+    .btn--sm{padding:6px 10px;border:1px solid var(--border);background:#fff;border-radius:8px;cursor:pointer; font-size: 13px;}
     .muted{color:#6b7280}
 
     /* START: unified header css */
@@ -67,13 +93,31 @@
     .role-badge.staff{background:#dcfce7;color: #166534}
     /* END: unified header css */
   </style>
-    <style>
+  <style>
     .search-inline{display:flex;align-items:center;gap:8px;margin:8px 0 12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 12px}
     .search-inline input{flex:1;border:none;outline:none;background:transparent;font-size:14px}
+    /* Grid helper for info modal */
+    .grid{display:grid;gap:16px}
+    .grid--2{grid-template-columns:repeat(2,1fr)}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:13px;color:#64748b}
+    .input{padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;width:100%; font-size:14px;}
+    /* Style cho input readonly giống ảnh */
+    .input[readonly], .input:disabled{background:#f9fafb;color:#374151;border-color:#e5e7eb;}
+    
+    /* Role badge trong modal */
+    .badge-role-modal {
+        background-color: #dcfce7; color: #166534; 
+        padding: 4px 10px; border-radius: 6px; 
+        font-size: 12px; font-weight: 600; display: inline-block;
+    }
+    .table thead th, .table tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
   </style>
 </head>
 <body>
-<!-- START: unified header -->
 <header class="app-header">
   <a class="brand" href="orders.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -92,8 +136,6 @@
     </details>
   </div>
 </header>
-<!-- END: unified header -->
-
 <div class="app-shell">
   <aside class="sidebar" aria-label="Điều hướng">
     <div class="sidebar__group" data-sec="sales">
@@ -101,7 +143,6 @@
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link sidebar__link--active" href="customers.html">Khách hàng</a>
-       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -113,17 +154,15 @@
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        
     </div>
   </aside>
 
   <main class="content">
     <section class="toolbar">
       <h1 class="page-title">Khách hàng</h1>
-      <!-- Ô tìm kiếm được thêm vào đây -->
-       <div class="search-inline" role="search">
+      <div class="search-inline" role="search" style="width: 300px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke-linecap="round"/></svg>
-        <input id="q" class="input" placeholder="Tìm theo tên/SĐT"/>
+        <input id="q" class="input" style="border:none; padding:0; height:auto" placeholder="Tìm theo tên/SĐT"/>
       </div>
     </section>
 
@@ -131,7 +170,13 @@
       <div class="card__body table-wrap">
         <table class="table" aria-describedby="pager-summary">
           <thead>
-            <tr><th>Khách</th><th>Điện thoại</th><th>Tổng chi tiêu</th><th>Gần nhất</th><th style="width:140px;text-align:right"></th></tr>
+            <tr>
+              <th>Khách</th>
+              <th>Điện thoại</th>
+              <th>Tổng chi tiêu</th>
+              <th>Gần nhất</th>
+              <th style="width:180px;text-align:right">Hành động</th>
+            </tr>
           </thead>
           <tbody id="rows">
             <tr><td colspan="5" class="empty">Đang tải…</td></tr>
@@ -144,19 +189,48 @@
   </main>
 </div>
 
-<!-- Toast + aria live -->
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="aria-live" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden" aria-live="polite"></div>
 
-<!-- Modal: Lịch sử đơn hàng -->
+<div id="modal-customer-info" class="modal" role="dialog" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__dialog" style="width:600px">
+    <div class="modal__header">
+      <h3 class="modal__title">Thông tin khách hàng</h3>
+      <button class="btn-close" data-close>✕</button>
+    </div>
+    <div class="modal__body">
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+        <img id="info-avatar" src="" alt="AV" style="width:64px;height:64px;border-radius:50%;object-fit:cover; flex-shrink:0"/>
+        <div>
+           <h3 id="info-name" style="margin:0 0 6px 0;font-size:18px;font-weight:700; line-height:1.2">...</h3>
+           <span class="badge-role-modal">Customer</span>
+        </div>
+      </div>
+
+      <div class="grid grid--2">
+        <div class="field"><label>Họ tên</label><input id="info-fullname-input" class="input" readonly></div>
+        <div class="field"><label>Email</label><input id="info-email" class="input" readonly></div>
+        <div class="field"><label>Số điện thoại</label><input id="info-phone" class="input" readonly></div>
+        <div class="field"><label>Ngày sinh</label><input id="info-dob" class="input" readonly></div>
+        <div class="field"><label>Giới tính</label><input id="info-gender" class="input" readonly></div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Địa chỉ</label>
+          <input id="info-address" class="input" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="modal-orders" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-orders-title">
   <div class="modal__backdrop" data-close></div>
   <div class="modal__dialog">
     <div class="modal__header">
       <h3 id="modal-orders-title" class="modal__title">Lịch sử đơn hàng</h3>
-      <button class="btn-close" data-close>Đóng</button>
+      <button class="btn-close" data-close>✕</button>
     </div>
-    <div class="modal__body">
+    <div class="modal__body" style="padding:0">
       <div class="table-wrap">
         <table class="table">
           <thead><tr><th>Mã</th><th>Tổng</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
@@ -168,8 +242,40 @@
       <div id="pager-orders" class="pager"></div>
       <p id="pager-orders-summary" class="muted" style="margin:0 12px 12px;"></p>
     </div>
-    <div class="modal__footer">
-      <button class="btn-close" data-close>Đóng</button>
+  </div>
+</div>
+
+<div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle" style="width:600px; max-width:95vw">
+    <header class="modal__header">
+      <h3 id="profileTitle" class="modal__title">Thông tin tài khoản</h3>
+      <button class="btn-close" data-close>✕</button>
+    </header>
+    
+    <div class="modal__body">
+       <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+          <img id="profileAvatar" src="" alt="AV" style="width:64px;height:64px;border-radius:50%;object-fit:cover; flex-shrink:0"/>
+          <div>
+             <h3 id="profileName" style="margin:0 0 6px 0;font-size:18px;font-weight:700; line-height:1.2">...</h3>
+             <span id="profileRoleLabel" class="badge-role-modal">...</span>
+          </div>
+       </div>
+
+       <div class="grid grid--2">
+        <div class="field">
+          <label>Họ tên</label>
+          <input class="input" id="profile_name" readonly/>
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input class="input" id="profile_email" readonly/>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Vai trò</label>
+          <input class="input" id="profile_role" readonly/>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -198,13 +304,11 @@
     if (s.length < 7) return s;
     return s.slice(0,4) + 'xxx' + s.slice(-3);
   };
-  const getStaffToken = () =>
-    (typeof window.getToken === 'function'
-      ? window.getToken()
-      : (localStorage.getItem('accessToken') || ''));
+  const getStaffToken = () => (typeof window.getToken === 'function' ? window.getToken() : (localStorage.getItem('accessToken') || ''));
   if (!getStaffToken()) location.href = '/staff-frontend/auth-login.html';
 
-  async function _fallbackApiFetch(url, opts={}){
+  // Fetch wrapper
+  async function _apiFetch(url, opts={}){
     const headers = new Headers(opts.headers || {});
     const token = getStaffToken();
     if (token) headers.set('Authorization','Bearer '+token);
@@ -220,34 +324,20 @@
     }
     return res.status===204 ? null : res.json();
   }
-  const __baseFetch = (typeof window.apiFetch === 'function') ? window.apiFetch : _fallbackApiFetch;
-  async function _apiFetch(url, opts={}){
-    const token = getStaffToken();
-    const headers = new Headers(opts.headers || {});
-    if (token && !headers.has('Authorization')) headers.set('Authorization','Bearer '+token);
-    if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')){
-      headers.set('Content-Type','application/json');
-    }
-    return __baseFetch(url, { ...opts, headers });
-  }
 
-  /* ===== State (bảng chính) ===== */
+  /* ===== State ===== */
   let all = [];
   let filters = { q:'' };
   let pagination = { page:1, perPage:10, totalPages:1 };
-
-  /* ===== State (modal lịch sử) ===== */
   let modalState = { customerId:null, customerName:'', page:1, perPage:10, totalPages:1 };
-
-  /* ===== Toast ===== */
   let toastTimer=null;
+
   function showToast(msg, timeout=1500){
     const t = qs('#toast');
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(()=>t.classList.remove('show'), timeout);
-    document.getElementById('aria-live').textContent = msg;
   }
 
   /* ===== Load customers ===== */
@@ -264,12 +354,12 @@
                 : Array.isArray(raw?.items) ? raw.items : [];
 
       all = arr.map(c => {
-        const id = c.id ?? c.customerId ?? c.userId ?? c.customer_id ?? c.user_id;
-        const name = c.name ?? c.fullName ?? c.customerName ?? c.full_name ?? c.customer_name;
-        const phone = c.phone ?? c.phoneNumber ?? c.phone_number ?? c.mobile;
-        const totalSpent = c.totalSpent ?? c.spentTotal ?? c.total_spent ?? c.lifetimeValue ?? 0;
-        const lastCode = c.lastOrderCode ?? c.last_order_code ?? c.lastOrderCodeFormatted;
-        const lastAt = c.lastOrderAt ?? c.last_order_at ?? c.lastOrderDate ?? c.last_order_date;
+        const id = c.id ?? c.customerId ?? c.userId;
+        const name = c.name ?? c.fullName ?? c.customerName;
+        const phone = c.phone ?? c.phoneNumber;
+        const totalSpent = c.totalSpent ?? c.spentTotal ?? 0;
+        const lastCode = c.lastOrderCode ?? c.last_order_code;
+        const lastAt = c.lastOrderAt ?? c.last_order_at;
         return { id, name, phone, totalSpent, lastCode, lastAt };
       });
 
@@ -279,8 +369,6 @@
     }catch(err){
       console.error(err);
       tb.innerHTML = `<tr><td colspan="5" class="empty">Lỗi tải: ${err.message}</td></tr>`;
-      document.getElementById('pager').innerHTML = '';
-      document.getElementById('pager-summary').textContent = '';
     }
   }
 
@@ -292,7 +380,6 @@
 
   function renderRows(list){
     const tb = document.getElementById('rows');
-
     const total = list.length;
     pagination.totalPages = Math.max(1, Math.ceil(total / pagination.perPage));
     if (pagination.page > pagination.totalPages) pagination.page = pagination.totalPages;
@@ -302,8 +389,7 @@
 
     const startIdx = total ? start + 1 : 0;
     const endIdx = total ? Math.min(end, total) : 0;
-    document.getElementById('pager-summary').textContent =
-      total ? `Hiển thị ${startIdx}–${endIdx} trong tổng ${total} khách hàng` : '';
+    document.getElementById('pager-summary').textContent = total ? `Hiển thị ${startIdx}–${endIdx} trong tổng ${total} khách hàng` : '';
 
     if (!pageItems.length){
       tb.innerHTML = `<tr><td colspan="5" class="empty">Không có khách hàng</td></tr>`;
@@ -311,6 +397,7 @@
       return;
     }
 
+    // CẬP NHẬT: Render 2 nút bấm
     tb.innerHTML = pageItems.map(c => {
       const last = (c.lastCode ? c.lastCode : '-') + (c.lastAt ? ` (${fmtDate(c.lastAt)})` : '');
       return `
@@ -319,8 +406,9 @@
           <td>${maskPhone(c.phone)}</td>
           <td>${fmtVND(c.totalSpent)}</td>
           <td>${last}</td>
-          <td style="text-align:right">
-            <button class="btn--sm" data-view="${c.id ?? ''}">Xem chi tiết</button>
+          <td style="text-align:right; white-space:nowrap">
+            <button class="btn--sm" style="margin-right:4px" data-profile="${c.id ?? ''}">Hồ sơ</button>
+            <button class="btn--sm" data-view="${c.id ?? ''}">Đơn hàng</button>
           </td>
         </tr>
       `;
@@ -332,7 +420,6 @@
   function renderPagination(){
     const wrap = document.getElementById('pager');
     const { page, totalPages } = pagination;
-
     const pages = [];
     const maxBtns = 5;
     let start = Math.max(1, page - Math.floor(maxBtns/2));
@@ -347,126 +434,85 @@
     `;
   }
 
-  /* ===== Dịch trạng thái sang tiếng Việt ===== */
   function viStatus(status){
     if (!status) return '-';
     switch ((status+'').toUpperCase()){
-      case 'PENDING':   return 'Chờ giao';
-      case 'SHIPPING':
-      case 'SHIPPED':   return 'Đang giao';
+      case 'PENDING': return 'Chờ giao';
+      case 'SHIPPING': return 'Đang giao';
       case 'DELIVERED': return 'Đã giao';
-      case 'PAID':      return 'Đã thanh toán';
-      case 'COD':       return 'COD';
-      case 'CANCELED':
+      case 'PAID': return 'Đã thanh toán';
       case 'CANCELED': return 'Đã hủy';
-      case 'REFUNDED':  return 'Đã hoàn tiền';
-      default:          return status;
+      default: return status;
     }
   }
 
-  /* ===== Modal: Lịch sử đơn hàng ===== */
+  /* ===== Modal Orders ===== */
   function openOrdersModal(customerId, customerName){
     modalState.customerId = customerId;
     modalState.customerName = customerName || '';
     modalState.page = 1;
-    qs('#modal-orders-title').textContent = `Lịch sử đơn hàng · ${customerName || ('ID ' + customerId)}`;
+    qs('#modal-orders-title').textContent = `Lịch sử đơn hàng · ${customerName}`;
     qs('#modal-orders').classList.add('is-open');
     document.body.style.overflow = 'hidden';
     loadCustomerOrders();
   }
-  function closeOrdersModal(){
-    qs('#modal-orders').classList.remove('is-open');
-    document.body.style.overflow = '';
-  }
-
   async function loadCustomerOrders(){
     const tb = qs('#rows-orders-history');
     tb.innerHTML = `<tr><td colspan="4" class="empty">Đang tải…</td></tr>`;
     try{
       let url = `${API_CUSTOMERS}/${encodeURIComponent(modalState.customerId)}/orders?page=${modalState.page-1}&size=${modalState.perPage}`;
       let raw;
-      try {
-        raw = await _apiFetch(url);
-      } catch (e) {
-        // fallback nếu BE chưa có endpoint trên
+      try { raw = await _apiFetch(url); } catch (e) {
         url = `${BASE}/api/orders?userId=${encodeURIComponent(modalState.customerId)}&page=${modalState.page-1}&size=${modalState.perPage}`;
         raw = await _apiFetch(url);
       }
-
-      const arr = Array.isArray(raw) ? raw
-                : Array.isArray(raw?.content) ? raw.content
-                : Array.isArray(raw?.items) ? raw.items : [];
-
+      const arr = Array.isArray(raw) ? raw : (Array.isArray(raw?.content) ? raw.content : []);
+      
       const total = (typeof raw?.totalElements === 'number') ? raw.totalElements : arr.length;
       modalState.totalPages = Math.max(1, (typeof raw?.totalPages === 'number') ? raw.totalPages : Math.ceil(total / modalState.perPage));
 
-      if (!arr.length){
-        tb.innerHTML = `<tr><td colspan="4" class="empty">Chưa có đơn hàng</td></tr>`;
-      } else {
+      if (!arr.length) { tb.innerHTML = `<tr><td colspan="4" class="empty">Chưa có đơn hàng</td></tr>`; }
+      else {
         tb.innerHTML = arr.map(o=>{
-          const id = o.id ?? o.orderId ?? o.order_id;
+          const id = o.id ?? o.orderId;
           const code = o.code || `OD-${String(id).padStart(6,'0')}`;
-          const total = o.total ?? (o.subtotal - (o.discount||0) + (o.shippingFee||o.shipping_fee||0));
-          const status = viStatus(o.status);
-          const date = o.createdAt ?? o.created_at;
-          return `
-            <tr>
-              <td>${code}</td>
-              <td>${fmtVND(total)}</td>
-              <td>${status}</td>
-              <td>${fmtDate(date)}</td>
-            </tr>
-          `;
+          const total = o.total ?? 0;
+          return `<tr><td>${code}</td><td>${fmtVND(total)}</td><td>${viStatus(o.status)}</td><td>${fmtDate(o.createdAt)}</td></tr>`;
         }).join('');
       }
-
       renderOrdersPagination();
       qs('#pager-orders-summary').textContent = `Trang ${modalState.page}/${modalState.totalPages}`;
     }catch(err){
-      console.error(err);
       tb.innerHTML = `<tr><td colspan="4" class="empty">Lỗi tải: ${err.message}</td></tr>`;
-      qs('#pager-orders').innerHTML = '';
-      qs('#pager-orders-summary').textContent = '';
     }
   }
-
   function renderOrdersPagination(){
     const wrap = qs('#pager-orders');
     const { page, totalPages } = modalState;
-
     const pages = [];
-    const maxBtns = 5;
-    let start = Math.max(1, page - Math.floor(maxBtns/2));
-    let end = start + maxBtns - 1;
-    if (end > totalPages){ end = totalPages; start = Math.max(1, end - maxBtns + 1); }
+    let start = Math.max(1, page - 2);
+    let end = Math.min(totalPages, start + 4);
     for (let i=start;i<=end;i++) pages.push(i);
-
-    wrap.innerHTML = `
-      <button class="btn" data-mpage="prev" ${page<=1?'disabled':''}>‹‹</button>
+    wrap.innerHTML = `<button class="btn" data-mpage="prev" ${page<=1?'disabled':''}>‹‹</button>
       ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-mpage="${p}">${p}</button>`).join('')}
-      <button class="btn" data-mpage="next" ${page>=totalPages?'disabled':''}>››</button>
-    `;
+      <button class="btn" data-mpage="next" ${page>=totalPages?'disabled':''}>››</button>`;
   }
 
   /* ===== Events ===== */
   document.addEventListener('DOMContentLoaded', async ()=>{
     document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 
-    // Tìm nhanh (thêm null-guard)
+    // Tìm kiếm
     const qInput = document.getElementById('q');
     let t=null;
     if (qInput){
       qInput.addEventListener('input', e=>{
         clearTimeout(t);
-        t = setTimeout(()=>{
-          filters.q = e.target.value || '';
-          pagination.page = 1;
-          renderRows(applyClientFilter(all));
-        }, 200);
+        t = setTimeout(()=>{ filters.q = e.target.value || ''; pagination.page = 1; renderRows(applyClientFilter(all)); }, 200);
       });
     }
 
-    // Phân trang bảng chính
+    // Phân trang
     document.getElementById('pager').addEventListener('click', e=>{
       const btn = e.target.closest('[data-page]'); if (!btn) return;
       const val = btn.dataset.page;
@@ -476,29 +522,78 @@
       renderRows(applyClientFilter(all));
     });
 
-    // Mở modal lịch sử đơn hàng
-    document.getElementById('rows').addEventListener('click', e=>{
-      const btn = e.target.closest('[data-view]'); if (!btn) return;
-      const id = btn.dataset.view;
-      const tr = btn.closest('tr');
-      const name = tr?.dataset?.name || '';
-      openOrdersModal(id, name);
+    // Click trên bảng chính
+    document.getElementById('rows').addEventListener('click', async e=>{
+      // 1. Xem Đơn hàng
+      const btnView = e.target.closest('[data-view]');
+      if (btnView){
+        const id = btnView.dataset.view;
+        const tr = btnView.closest('tr');
+        openOrdersModal(id, tr?.dataset?.name);
+        return;
+      }
+
+      // 2. Xem Hồ sơ (NEW)
+      const btnProfile = e.target.closest('[data-profile]');
+      if (btnProfile){
+        const id = btnProfile.dataset.profile;
+        showToast('Đang tải thông tin...', 10000);
+        try {
+          const u = await _apiFetch(`${API_CUSTOMERS}/${id}`);
+          // Fill modal
+          qs('#info-name').textContent = u.fullName || 'Không tên';
+          qs('#info-fullname-input').value = u.fullName || '';
+          // qs('#info-role').textContent = (u.role || 'user').toUpperCase(); // Customer luôn là User
+          qs('#info-email').value   = u.email || '';
+          qs('#info-phone').value   = u.phone || '';
+          qs('#info-dob').value     = u.dob || '';
+          qs('#info-gender').value  = u.gender || '';
+          qs('#info-address').value = u.address || '';
+          
+          const initials = (u.fullName||'U').charAt(0).toUpperCase();
+          qs('#info-avatar').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials)}`;
+
+          qs('#modal-customer-info').classList.add('is-open');
+          const t = qs('#toast'); t.classList.remove('show');
+        } catch (err) {
+          showToast('Lỗi tải hồ sơ: ' + err.message);
+        }
+      }
     });
 
-    // Đóng modal
-    document.getElementById('modal-orders').addEventListener('click', e=>{
-      if (e.target.matches('[data-close]')) closeOrdersModal();
+    // Đóng modal (chung)
+    document.addEventListener('click', e=>{
+      // Đóng khi bấm nút [data-close] hoặc bấm ra nền .modal__backdrop
+      if (e.target.matches('[data-close]') || e.target.matches('.modal__backdrop')){
+        qs('#modal-orders').classList.remove('is-open');
+        qs('#modal-customer-info').classList.remove('is-open');
+        // Đóng luôn profile modal nếu đang mở (vì cùng cơ chế)
+        qs('#modal-profile').classList.remove('is-open');
+        // Xóa style="display:flex" của .modal[aria-hidden="false"] nếu có
+        const allModals = document.querySelectorAll('.modal');
+        allModals.forEach(m => {
+             m.classList.remove('is-open');
+             m.setAttribute('aria-hidden', 'true');
+        });
+        document.body.style.overflow = '';
+      }
     });
     window.addEventListener('keydown', e=>{
-      if (e.key === 'Escape' && qs('#modal-orders').classList.contains('is-open')) closeOrdersModal();
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(m => {
+            m.classList.remove('is-open');
+            m.setAttribute('aria-hidden', 'true');
+        });
+        document.body.style.overflow = '';
+      }
     });
 
-    // Phân trang trong modal
+    // Phân trang modal
     document.getElementById('pager-orders').addEventListener('click', e=>{
       const btn = e.target.closest('[data-mpage]'); if (!btn) return;
       const val = btn.dataset.mpage;
       if (val === 'prev' && modalState.page > 1) modalState.page--;
-      else if (val === 'next' && modalState.totalPages && modalState.page < modalState.totalPages) modalState.page++;
+      else if (val === 'next' && modalState.page < modalState.totalPages) modalState.page++;
       else if (!isNaN(+val)) modalState.page = +val;
       loadCustomerOrders();
     });
@@ -508,109 +603,54 @@
 })();
 </script>
 
-<!-- START: profile modal -->
-<div class="modal" id="modal-profile" aria-hidden="true">
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
-    <header class="modal__header">
-      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
-    </header>
-    <div class="modal__body grid grid--2" id="profile-view">
-      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
-        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
-        <div>
-          <div id="profileName" style="font-weight:600">—</div>
-          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
-        </div>
-      </div>
-      <div class="field">
-        <label>Họ tên</label>
-        <input class="input" id="profile_name" disabled/>
-      </div>
-      <div class="field">
-        <label>Email</label>
-        <input class="input" id="profile_email" disabled/>
-      </div>
-      <div class="field">
-        <label>Vai trò</label>
-        <input class="input" id="profile_role" disabled/>
-      </div>
-    </div>
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
-    </footer>
-  </div>
-</div>
-<!-- END: profile modal -->
 
 <script>
-// START: role-based sidebar control (robust) + header render hook ensure
+/* [SỬA 3] Logic fill Staff/Manager profile - Đồng bộ với giao diện mới */
 (function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-  function __extractRoles(payload){
-    try{
-      let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
-      let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
-      list = list
-        .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x)
-        .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
-      return list.filter(Boolean);
-    }catch(e){ return []; }
-  }
-  function __deriveRole(list){
-    if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
-    if (list.includes('staff') || list.includes('employee')) return 'staff';
-    if (list.includes('user')) return 'user';
-    return list[0] || 'user';
-  }
-  function __applyRoleUI(role){
-    try{
-      const sys = document.querySelector('.sidebar__group[data-sec="system"]');
-      if (sys && role !== 'manager') sys.remove();
-    }catch(e){}
-  }
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
+  const getToken = () => (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+  function decodeJwt(token){ try{ const p = token.split('.')[1]; const json = atob(p.replace(/-/g,'+').replace(/_/g,'/')); return JSON.parse(decodeURIComponent(escape(json))); }catch{ return null; } }
+  function __extractRoles(payload){ try{ let raw = payload?.authorities ?? payload?.roles ?? []; let list = Array.isArray(raw) ? raw : String(raw).split(/[,\s]+/); return list.map(s => String(s).trim().toLowerCase().replace(/^role[_:\-]/, '')).filter(Boolean); }catch{ return []; } }
+  function __deriveRole(list){ if (list.includes('manager')) return 'manager'; if (list.includes('staff')) return 'staff'; return 'user'; }
+  function initials(s){ const t = (s||'').trim(); if(!t) return '--'; const parts = t.split(/\s+/); const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||''; return (a+b).toUpperCase(); }
+  
   function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    // 1. Fill avatar nhỏ trên header
+    document.getElementById('avatarImg').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    
+    // 2. Fill modal profile
+    document.getElementById('profileAvatar').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileName').textContent = name;
+    
+    // Role Badge
+    const rLabel = document.getElementById('profileRoleLabel'); 
+    if(rLabel){ 
+        rLabel.textContent = role==='manager'?'Manager':'Staff'; 
     }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+    
+    // Inputs
+    document.getElementById('profile_name').value = name;
+    document.getElementById('profile_email').value = email;
+    document.getElementById('profile_role').value = role==='manager'?'Manager':'Staff';
   }
 
   const token = getToken(); if (!token) return;
   const payload = decodeJwt(token) || {};
   const roles = __extractRoles(payload);
   const role  = __deriveRole(roles);
-  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-  const email = payload.email || payload.username || '—';
-
+  const name  = payload.name || payload.fullName || 'Người dùng';
+  const email = payload.email || '—';
   fillProfile({name,email,role});
-  __applyRoleUI(role);
 
-  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+  // Xử lý mở modal profile từ header
+  document.getElementById('open-profile').addEventListener('click', (e) => {
+      e.preventDefault();
+      const m = document.getElementById('modal-profile');
+      m.classList.add('is-open');
+      m.setAttribute('aria-hidden', 'false');
+      // Đóng dropdown menu
+      document.getElementById('avatarMenu').removeAttribute('open');
+  });
+
 })();
 </script>
 </body>

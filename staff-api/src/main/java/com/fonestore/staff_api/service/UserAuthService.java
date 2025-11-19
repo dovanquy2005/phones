@@ -132,8 +132,8 @@ public class UserAuthService {
                 u.getDob() != null ? u.getDob().toString() : null,
                 u.getGender(),
                 u.getRole(),
-                u.getTwofaSecret() != null
-                
+                u.getTwofaSecret() != null,
+                u.getAddress()
         );
     }
 
@@ -143,16 +143,16 @@ public class UserAuthService {
         return toResp(u);
     }
 
-    @Transactional
-    public void changePassword(Long id, String oldPassword, String newPassword) {
-        User u = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
-        String oldHash = hashPassword(oldPassword);
-        if (!oldHash.equals(u.getPasswordHash())) {
-            throw new BadRequestException("Old password is incorrect");
-        }
-        u.setPasswordHash(hashPassword(newPassword));
-        userRepo.save(u);
-    }
+    // @Transactional
+    // public void changePassword(Long id, String oldPassword, String newPassword) {
+    //     User u = userRepo.findById(id).orElseThrow(() -> new NotFoundException("User not found"));
+    //     String oldHash = hashPassword(oldPassword);
+    //     if (!oldHash.equals(u.getPasswordHash())) {
+    //         throw new BadRequestException("Old password is incorrect");
+    //     }
+    //     u.setPasswordHash(hashPassword(newPassword));
+    //     userRepo.save(u);
+    // }
 
     @Transactional(readOnly = true)
     public com.fonestore.staff_api.dto.auth.LoginResponse login(String email, String password) {

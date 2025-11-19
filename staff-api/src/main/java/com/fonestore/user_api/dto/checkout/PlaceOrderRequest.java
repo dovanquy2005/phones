@@ -10,7 +10,8 @@ import jakarta.validation.constraints.NotNull;
 @AllArgsConstructor
 public class PlaceOrderRequest {
     @NotNull private String payment_method;
+    private String note;
     // shipping address
     private ShippingAddress shipping_address;
-    @Data public static class ShippingAddress { private String name; private String phone; private String email; private String address; }
+    @Data public static class ShippingAddress { private String name; private String note; private String phone; private String email; private String address; }
 }

@@ -110,6 +110,8 @@
     const viStatus = (s) => {
       const k = String(s||'').toUpperCase();
       switch(k){
+        case 'SHIPPING': return 'Đang giao';
+        case 'CREATED': return 'Vừa đặt đơn';
         case 'PENDING': return 'Đang xử lý';
         case 'PAID': return 'Đã thanh toán';
         case 'SHIPPED': return 'Đang giao';
@@ -166,7 +168,6 @@
 
     // Note: backend controller expects userIdParam (or Authorization). We include both for compatibility.
     const url = `${API}/api/user/orders?userIdParam=${encodeURIComponent(uid)}&t=${Date.now()}`;
-
     fetch(url, { headers, credentials: 'include' })
       .then(resp => {
         if(resp.status === 401){ // not authenticated

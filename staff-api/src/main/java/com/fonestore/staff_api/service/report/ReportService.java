@@ -86,10 +86,9 @@ public class ReportService {
         return out;
     }
 
-
     public List<TopProductDTO> topProducts(LocalDate from, LocalDate to, int limit){
         Timestamp f = Timestamp.valueOf(from.atStartOfDay());
-        Timestamp t = Timestamp.valueOf(to.plusDays(1).atStartOfDay()); // [from, to] inclusive
+        Timestamp t = Timestamp.valueOf(to.plusDays(1).atStartOfDay()); 
 
         List<Object[]> rows = safe(
             () -> repo.topSkuRaw(f, t),
@@ -101,14 +100,16 @@ public class ReportService {
 
         List<TopProductDTO> out = new ArrayList<>(rows.size());
         for (Object[] r : rows) {
-            Long skuId      = r[0] == null ? 0L : ((Number) r[0]).longValue();
-            Long qty        = r[1] == null ? 0L : ((Number) r[1]).longValue();
-            BigDecimal rev  = (r[2] instanceof BigDecimal bd) ? bd
-                            : new BigDecimal(String.valueOf(r[2]));
-            String name     = "SKU " + skuId;
-            out.add(new TopProductDTO(skuId, name, qty, rev));
+            // [SỬA] Map theo thứ tự mới của Query
+            Long pId        = r[0] == null ? 0L : ((Number) r[0]).longValue();
+            String name     = (String) r[1]; // Lấy tên thật
+            Long qty        = r[2] == null ? 0L : ((Number) r[2]).longValue();
+            BigDecimal rev  = toDecimal(r[3]);
+            
+            out.add(new TopProductDTO(pId, name, qty, rev));
         }
         return out;
     }
+
 
 }

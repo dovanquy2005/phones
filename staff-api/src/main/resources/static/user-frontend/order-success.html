@@ -29,13 +29,45 @@
 </main>
 <footer class="footer"><div class="container section"><div class="copyright">© 2025 fonestore</div></div></footer>
 <!-- auto-injected: auth core -->
+ <!-- === BẮT ĐẦU: SCRIPT LÀM TRANG SUCCESS "HOẠT ĐỘNG" === -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        // 1. Lấy mã đơn hàng từ URL
+        const params = new URLSearchParams(window.location.search);
+        
+        // (Dựa theo checkout.html, bạn dùng ?order=)
+        const orderId = params.get('order') || params.get('orderId'); 
 
+        // 2. Tìm thẻ <strong> để hiển thị mã đơn
+        const orderCodeElement = document.querySelector('.card strong');
 
+        if (orderId && orderCodeElement) {
+            // 3. Cập nhật mã đơn hàng thật vào giao diện
+            // (Bạn có thể format lại nếu muốn, ví dụ "OD-000123")
+            orderCodeElement.textContent = `#${orderId}`;
+        }
 
+        // 4. (Quan trọng) Xóa giỏ hàng khỏi localStorage
+        // Dựa trên file cart-client.js, key của bạn là 'fs_cart_local_v1'
+        // Hoặc bạn có thể dùng các hàm trong cart-guard.js nếu chúng global
+        localStorage.removeItem('fs_cart_local_v1'); // Xóa giỏ hàng local
+        localStorage.removeItem('fs_cart'); // Xóa key cũ (nếu có)
+        
+        // (Nếu bạn có giỏ hàng riêng cho user đã đăng nhập, cũng nên xóa)
+        // Ví dụ, nếu bạn dùng 'fs_cart_<userId>', bạn cần logic để lấy userId và xóa
+        
+        // 5. Báo cho cart-badge.js (và các script khác) biết giỏ hàng đã thay đổi
+        // để nó cập nhật số lượng trên header về 0.
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('cart:changed', { detail: { count: 0 } }));
 
-
-
-
+    } catch (e) {
+        console.error("Lỗi xử lý trang success:", e);
+    }
+});
+</script>
+<!-- === KẾT THÚC: SCRIPT === -->
 <!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
@@ -45,5 +77,7 @@
 <script src="assets/js/core/cart-guard.js"></script>
 <script src="assets/js/core/compat-pid.js"></script>
 <script src="assets/js/core/cart-badge.js"></script>
+
+
 </body>
 </html>

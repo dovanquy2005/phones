@@ -260,8 +260,9 @@
       // Trạng thái
       const s = String(o.status||'').toUpperCase();
       const sEl = $('hdrStatus');
-      sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='PAID'?'Đã thanh toán':
-                         s==='DELIVERED'?'Đã giao': s==='SHIPPED'?'Đang giao':
+      sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='CREATED'?'Vừa đặt đơn': 
+                          s==='PAID'?'Đã thanh toán': 
+                         s==='DELIVERED'?'Đã giao': s==='SHIPPING'?'Đang giao':
                          s==='CANCELED'?'Đã hủy': s==='FAILED'?'Thất bại': (o.status||'—'));
       sEl.className = 'status st--'+s.replace(/\s+/g,'_');
 

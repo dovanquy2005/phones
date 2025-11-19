@@ -15,15 +15,22 @@
     .table-wrap{overflow-x:auto}
     .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#f3f4f6}
     .badge--ok{background:#dcfce7}
-    .badge--off{background:#dcfce7}
+    .badge--off{background:#fee2e2;color:#991b1b}
 
-    /* header */
+    /* Pager */
+    .pager{display:flex;gap:6px;align-items:center;justify-content:flex-end;padding:12px 8px;border-top:1px solid #e5e7eb}
+    .pager .btn{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer}
+    .pager .btn[disabled]{opacity:.45;cursor:not-allowed}
+    .pager .page{min-width:34px;text-align:center}
+    .pager .is-active{background:#111827;color:#fff;border-color:#111827}
+
+    /* Header */
     .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
     .header-spacer{flex:1}
     .header-actions{display:flex;align-items:center;gap:10px}
 
-    /* avatar menu */
+    /* Avatar menu */
     .avatar-menu{position:relative}
     .avatar-menu > summary{list-style:none;cursor:pointer}
     .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
@@ -33,32 +40,37 @@
     .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
     .dropdown a:hover{background:#f3f4f6}
 
-    /* role badge color (dùng cho popup) */
+    /* Role badge */
     .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
     .role-badge.manager{background:#dcfce7;color: #166534}
     .role-badge.staff{background:#dcfce7;color: #166534}
-  
-/* START: unified header css */
-.app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.header-spacer{flex:1}
-.header-actions{display:flex;align-items:center;gap:10px}
-.avatar-menu{position:relative}
-.avatar-menu > summary{list-style:none;cursor:pointer}
-.avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
-.avatar img{width:100%;height:100%;display:block}
-.avatar-menu[open] .dropdown{display:block}
-.dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
-.dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
-.dropdown a:hover{background:#f3f4f6}
-.role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
-.role-badge.manager{background:#dcfce7;color: #166534}
-.role-badge.staff{background:#dcfce7;color: #166534}
-/* END: unified header css */
-</style>
+
+    /* [SỬA] Modal Styles - Áp dụng cho cả .modal__card */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60}
+    .modal.is-open{display:flex}
+    
+    .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+
+    .modal__dialog, 
+    .modal__card {
+      position:relative; 
+      z-index:10; /* Quan trọng: nổi lên trên nền đen */
+      background:#fff;
+      border-radius:12px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:clamp(320px, 92vw, 600px);
+      max-height:92vh;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal__header{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+    .modal__title{margin:0;font-size:18px;font-weight:700}
+    .modal__body{padding:20px;overflow-y:auto}
+    .modal__footer{padding:12px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px}
+    .btn-close{border:none;background:transparent;font-size:20px;cursor:pointer;color:#6b7280}
+  </style>
 </head>
 <body>
-<!-- START: unified header -->
 <header class="app-header">
   <a class="brand" href="orders.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -77,9 +89,6 @@
     </details>
   </div>
 </header>
-<!-- END: unified header -->
-
-
 <div class="app-shell">
   <aside class="sidebar" aria-label="Điều hướng">
     <div class="sidebar__group" data-sec="sales">
@@ -87,7 +96,6 @@
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -97,10 +105,8 @@
     </div>
     <div class="sidebar__group" data-sec="system">
       <p class="sidebar__heading">Hệ thống</p>
-      
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        
     </div>
   </aside>
 
@@ -117,7 +123,7 @@
             <thead>
               <tr>
                 <th>Mã</th><th>Loại</th><th>Giá trị</th><th>ĐH tối thiểu</th>
-                <th>Giới hạn</th><th>Per-user</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th style="width:1%"></th>
+                <th>Giới hạn</th><th>Per-user</th><th>Bắt đầu</th><th>Kết thúc</th><th>Trạng thái</th><th style="width:1%">Hành động</th>
               </tr>
             </thead>
             <tbody id="tb">
@@ -125,18 +131,19 @@
             </tbody>
           </table>
         </div>
-        <p id="summary" class="muted" style="margin-top:8px"></p>
+        
+        <div id="pager" class="pager"></div>
+        <p id="summary" class="muted" style="margin:0;padding:0 12px 12px; font-size:12px"></p>
       </div>
     </section>
   </main>
 </div>
 
-<!-- MODAL: Tạo -->
 <div class="modal" id="modal-create" aria-hidden="true">
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="createTitle">
+  <div class="modal__backdrop" data-close></div> <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="createTitle">
     <header class="modal__header">
-      <h3 id="createTitle" style="margin:0">Tạo voucher</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+      <h3 id="createTitle" class="modal__title">Tạo voucher</h3>
+      <button class="btn-close" data-close>✕</button>
     </header>
 
     <form class="modal__body grid grid--2" id="form-create">
@@ -176,19 +183,18 @@
       </div>
     </form>
 
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Hủy</a>
+    <footer class="modal__footer">
+      <button class="btn" data-close>Hủy</button>
       <button class="btn btn--primary" id="btn-create" type="submit" form="form-create">Tạo</button>
     </footer>
   </div>
 </div>
 
-<!-- MODAL: Sửa -->
 <div class="modal" id="modal-edit" aria-hidden="true">
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+  <div class="modal__backdrop" data-close></div> <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="editTitle">
     <header class="modal__header">
-      <h3 id="editTitle" style="margin:0">Sửa voucher</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+      <h3 id="editTitle" class="modal__title">Sửa voucher</h3>
+      <button class="btn-close" data-close>✕</button>
     </header>
 
     <form class="modal__body grid grid--2" id="form-edit">
@@ -214,46 +220,45 @@
       </div>
     </form>
 
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Hủy</a>
+    <footer class="modal__footer">
+      <button class="btn" data-close>Hủy</button>
       <button class="btn btn--primary" id="btn-update" type="submit" form="form-edit">Lưu</button>
     </footer>
   </div>
 </div>
 
-<!-- MODAL: Thông tin tài khoản -->
 <div class="modal" id="modal-profile" aria-hidden="true">
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+  <div class="modal__backdrop" data-close></div> <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">
-      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+      <h3 id="profileTitle" class="modal__title">Thông tin tài khoản</h3>
+      <button class="btn-close" data-close>✕</button>
     </header>
 
     <div class="modal__body grid grid--2" id="profile-view">
-      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
-        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
+      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:16px;margin-bottom:12px">
+        <img id="profileAvatar" alt="AV" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0"/>
         <div>
-          <div id="profileName" style="font-weight:600">—</div>
-          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
+          <div id="profileName" style="font-size:18px;font-weight:700;margin-bottom:4px">—</div>
+          <div id="profileRole" class="role-badge" style="display:inline-block">—</div>
         </div>
       </div>
 
       <div class="field">
         <label>Họ tên</label>
-        <input class="input" id="profile_name" disabled/>
+        <input class="input" id="profile_name" readonly disabled style="background:#f9fafb"/>
       </div>
       <div class="field">
         <label>Email</label>
-        <input class="input" id="profile_email" disabled/>
+        <input class="input" id="profile_email" readonly disabled style="background:#f9fafb"/>
       </div>
-      <div class="field">
+      <div class="field" style="grid-column:1/-1">
         <label>Vai trò</label>
-        <input class="input" id="profile_role" disabled/>
+        <input class="input" id="profile_role" readonly disabled style="background:#f9fafb"/>
       </div>
     </div>
 
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
+    <footer class="modal__footer">
+      <button class="btn" data-close>Đóng</button>
     </footer>
   </div>
 </div>
@@ -272,11 +277,10 @@
 
   function toast(m,t=1600){const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t);}
   const fmtMoney=v=> (v==null?'': Number(v).toLocaleString('vi-VN'));
+  function normalizeCode(s){ return String(s||'').trim().replace(/\s+/g,'').toUpperCase(); }
 
-  // ---- NEW: chuẩn hoá code ở FE
-  function normalizeCode(s){
-    return String(s||'').trim().replace(/\s+/g,'').toUpperCase();
-  }
+  /* State */
+  let pagination = { page: 1, size: 5, totalPages: 1 };
 
   async function apiFetch(url, opts = {}) {
     const headers = new Headers(opts.headers || {});
@@ -285,10 +289,9 @@
     if (opts.body && !(opts.body instanceof FormData) && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
     }
-    const res = await fetch(url, { ...opts, headers });   // <- chuẩn
+    const res = await fetch(url, { ...opts, headers });
     if (!res.ok) {
-      let d = '';
-      try { const j = await res.json(); d = j.message || j.error || '' } catch {}
+      let d = ''; try { const j = await res.json(); d = j.message || j.error || '' } catch {}
       if (res.status === 401) { alert('Phiên đăng nhập hết hạn'); localStorage.removeItem('accessToken'); location.href='/staff-frontend/auth-login.html'; return; }
       if (res.status === 403) { alert('Bạn không có quyền thao tác này'); }
       throw new Error(`HTTP ${res.status}${d ? ': ' + d : ''}`);
@@ -296,17 +299,28 @@
     return res.status === 204 ? null : res.json();
   }
 
-
   function typeIcon(t){ return t==='percent'?'%':'₫'; }
   function typeValue(t,v){ return t==='percent'? (Number(v).toLocaleString('vi-VN')+'%') : fmtMoney(v); }
 
+  /* Load List kèm phân trang */
   async function loadList(){
     const tb=qs('#tb');
     tb.innerHTML=`<tr><td colspan="10" class="muted">Đang tải… <span class="spinner"></span></td></tr>`;
     try{
-      const page=await apiFetch(API);
-      const arr=Array.isArray(page?.content)?page.content:(Array.isArray(page)?page:[]);
-      if(!arr.length){ tb.innerHTML=`<tr><td colspan="10" class="muted">Chưa có voucher</td></tr>`; qs('#summary').textContent=''; return; }
+      const url = `${API}?page=${pagination.page - 1}&size=${pagination.size}`;
+      const resp = await apiFetch(url);
+      
+      const arr = resp.content || [];
+      pagination.totalPages = resp.totalPages || 1;
+      const totalElements = resp.totalElements || 0;
+
+      if(!arr.length){ 
+        tb.innerHTML=`<tr><td colspan="10" class="muted">Chưa có voucher</td></tr>`; 
+        qs('#summary').textContent=''; 
+        qs('#pager').innerHTML = '';
+        return; 
+      }
+      
       tb.innerHTML=arr.map(v=>`
         <tr data-id="${v.voucherId}">
           <td><b>${v.code}</b></td>
@@ -324,14 +338,65 @@
             <a class="btn" href="#" data-del="${v.voucherId}">Xoá</a>
           </td>
         </tr>`).join('');
-      qs('#summary').textContent=`Tổng ${arr.length} voucher (trang đầu)`;
+      
+      const start = (pagination.page - 1) * pagination.size + 1;
+      const end = Math.min(start + pagination.size - 1, totalElements);
+      qs('#summary').textContent=`Hiển thị ${start}–${end} trong tổng ${totalElements} voucher`;
+      
+      renderPagination();
+
     }catch(e){
       tb.innerHTML=`<tr><td colspan="10" class="muted">Lỗi: ${e.message}</td></tr>`;
       qs('#summary').textContent='';
     }
   }
 
-  // CREATE
+  /* Render nút phân trang */
+  function renderPagination(){
+    const wrap = qs('#pager');
+    const { page, totalPages } = pagination;
+    const pages = [];
+    const maxBtns = 5;
+    let start = Math.max(1, page - Math.floor(maxBtns/2));
+    let end = start + maxBtns - 1;
+    if (end > totalPages){ end = totalPages; start = Math.max(1, end - maxBtns + 1); }
+    for (let i=start;i<=end;i++) pages.push(i);
+
+    wrap.innerHTML = `
+      <button class="btn" data-page="prev" ${page<=1?'disabled':''}>‹‹</button>
+      ${pages.map(p=>`<button class="btn page ${p===page?'is-active':''}" data-page="${p}">${p}</button>`).join('')}
+      <button class="btn" data-page="next" ${page>=totalPages?'disabled':''}>››</button>
+    `;
+  }
+
+  // Event Listener cho Pager
+  qs('#pager').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-page]'); if (!btn) return;
+    const val = btn.dataset.page;
+    if (val === 'prev' && pagination.page > 1) pagination.page--;
+    else if (val === 'next' && pagination.page < pagination.totalPages) pagination.page++;
+    else if (!isNaN(+val)) pagination.page = +val;
+    loadList();
+  });
+
+  // --- Open/Close Handlers ---
+  // Open Create Modal (from Header)
+  document.querySelectorAll('a[href="#modal-create"]').forEach(el => {
+      el.addEventListener('click', (e) => {
+          e.preventDefault();
+          qs('#modal-create').classList.add('is-open');
+      });
+  });
+
+  // Close Modal Handler
+  document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-close]') || e.target.matches('.modal__backdrop')) {
+          const m = e.target.closest('.modal');
+          if (m) m.classList.remove('is-open');
+      }
+  });
+
+  // CREATE Submit
   qs('#form-create').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const btn=qs('#btn-create'); btn.disabled=true; btn.innerHTML='Đang tạo… <span class="spinner"></span>';
@@ -353,7 +418,9 @@
     };
     try{
       await apiFetch(API,{method:'POST', body:JSON.stringify(payload)});
-      toast('Đã tạo voucher'); e.target.reset(); location.hash='#'; await loadList();
+      toast('Đã tạo voucher'); e.target.reset(); 
+      qs('#modal-create').classList.remove('is-open');
+      pagination.page = 1; await loadList();
     }catch(err){ alert('Tạo voucher thất bại: '+err.message); }
     finally{ btn.disabled=false; btn.textContent='Tạo'; }
   });
@@ -361,6 +428,7 @@
   // Prefill EDIT
   document.addEventListener('click',(e)=>{
     const edit=e.target.closest('[data-edit]'); if(!edit) return;
+    e.preventDefault();
     const v=JSON.parse(edit.getAttribute('data-edit'));
     const f=qs('#form-edit');
     f.voucher_id.value=v.voucherId;
@@ -373,9 +441,10 @@
     f.starts_at.value=v.startsAt? v.startsAt.slice(0,16):'';
     f.ends_at.value=v.endsAt? v.endsAt.slice(0,16):'';
     f.active.value=v.active?'1':'0';
+    qs('#modal-edit').classList.add('is-open');
   });
 
-  // UPDATE
+  // UPDATE Submit
   qs('#form-edit').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const btn=qs('#btn-update'); btn.disabled=true; btn.innerHTML='Đang lưu… <span class="spinner"></span>';
@@ -384,7 +453,6 @@
       code: fd.get('code') ? normalizeCode(fd.get('code')) : null,
       type: fd.get('type') || null,
       value: fd.get('value')? Number(fd.get('value')): null,
-      // default 0 nếu để trống
       minOrder: fd.get('min_order') ? Number(fd.get('min_order')) : 0,
       usageLimit: fd.get('usage_limit')? Number(fd.get('usage_limit')): null,
       perUserLimit: fd.get('per_user_limit')? Number(fd.get('per_user_limit')): null,
@@ -394,7 +462,9 @@
     };
     try{
       await apiFetch(`${API}/${id}`,{method:'PATCH', body:JSON.stringify(payload)});
-      toast('Đã cập nhật'); e.target.reset(); location.hash='#'; await loadList();
+      toast('Đã cập nhật'); e.target.reset(); 
+      qs('#modal-edit').classList.remove('is-open');
+      await loadList();
     }catch(err){ alert('Cập nhật thất bại: '+err.message); }
     finally{ btn.disabled=false; btn.textContent='Lưu'; }
   });
@@ -402,6 +472,7 @@
   // Toggle active
   document.addEventListener('click', async (e)=>{
     const tgl = e.target.closest('[data-toggle]'); if(!tgl) return;
+    e.preventDefault();
     const id = tgl.getAttribute('data-toggle');
     const current = tgl.getAttribute('data-active')==='1';
     try{
@@ -413,6 +484,7 @@
   // Delete
   document.addEventListener('click', async (e)=>{
     const del=e.target.closest('[data-del]'); if(!del) return;
+    e.preventDefault();
     if(!confirm('Xoá voucher này?')) return;
     const id=del.getAttribute('data-del');
     try{ await apiFetch(`${API}/${id}`,{method:'DELETE'}); toast('Đã xoá'); await loadList(); }
@@ -427,207 +499,44 @@
 
 /* ====================== Avatar + Profile Modal ====================== */
 (function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-
-  function pickRole(payload){
-    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
-    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
-    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
-    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
-    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
-    return '—';
-  }
-
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-
+  const getToken = () => (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+  function decodeJwt(token){ try{ const p = token.split('.')[1]; const json = atob(p.replace(/-/g,'+').replace(/_/g,'/')); return JSON.parse(decodeURIComponent(escape(json))); }catch{ return null; } }
+  function __extractRoles(payload){ try{ let raw = payload?.authorities ?? payload?.roles ?? []; let list = Array.isArray(raw) ? raw : String(raw).split(/[,\s]+/); return list.map(s => String(s).trim().toLowerCase().replace(/^role[_:\-]/, '')).filter(Boolean); }catch{ return []; } }
+  function __deriveRole(list){ if (list.includes('manager')) return 'manager'; if (list.includes('staff')) return 'staff'; return 'user'; }
+  function initials(s){ const t = (s||'').trim(); if(!t) return '--'; const parts = t.split(/\s+/); const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||''; return (a+b).toUpperCase(); }
+  
   function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':'')); // reset + set
+    document.getElementById('avatarImg').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileAvatar').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileName').textContent = name;
+    const r1 = document.getElementById('profileRole'); 
+    if(r1){ 
+        r1.textContent = role==='manager'?'Manager':'Staff'; 
+        r1.className = 'role-badge ' + role; 
     }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
-  }
-
-  function renderUser(){
-    const token = getToken(); if (!token) return;
-    const payload = decodeJwt(token) || {};
-    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-    const email = payload.email || payload.username || '—';
-    const role  = pickRole(payload);
-    fillProfile({name,email,role});
-  }
-
-  // Khi click "Thông tin tài khoản" chỉ cần mở modal; dữ liệu đã fill ở renderUser
-  document.getElementById('open-profile')?.addEventListener('click', ()=> {});
-
-  renderUser();
-})();
-</script>
-<script>
-// START: unified header js
-(function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-
-  function pickRole(payload){
-    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
-    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
-    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
-    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
-    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
-    return '—';
-  }
-
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-
-  function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
-  }
-
-  function renderUser(){
-    const token = getToken(); if (!token) return;
-    const payload = decodeJwt(token) || {};
-    const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-    const email = payload.email || payload.username || '—';
-    const role  = pickRole(payload);
-    fillProfile({name,email,role});
-  }
-
-  // Ensure logout link clears token
-  document.getElementById('btn-logout')?.addEventListener('click', ()=>{
-    localStorage.removeItem('accessToken');
-  });
-
-  renderUser();
-})();
-// END: unified header js
-</script>
-<script>
-// START: role-based sidebar control (robust)
-function __extractRoles(payload){
-  try{
-    let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
-    let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
-    list = list
-      .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x)
-      .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
-    return list.filter(Boolean);
-  }catch(e){ return []; }
-}
-function __deriveRole(list){
-  if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
-  if (list.includes('staff') || list.includes('employee')) return 'staff';
-  if (list.includes('user')) return 'user';
-  return list[0] || 'user';
-}
-function __applyRoleUI(role){
-  try{
-    const sys = document.querySelector('.sidebar__group[data-sec="system"]');
-    if (sys && role !== 'manager') {
-      sys.remove();
-    }
-  }catch(e){}
-}
-// END: role-based sidebar control (robust)
-</script>
-<script>
-// START: header render hook ensure
-(function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-  function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+    document.getElementById('profile_name').value = name;
+    document.getElementById('profile_email').value = email;
+    document.getElementById('profile_role').value = role==='manager'?'Manager':'Staff';
   }
 
   const token = getToken(); if (!token) return;
   const payload = decodeJwt(token) || {};
   const roles = __extractRoles(payload);
   const role  = __deriveRole(roles);
-  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-  const email = payload.email || payload.username || '—';
-
+  const name  = payload.name || payload.fullName || 'Người dùng';
+  const email = payload.email || '—';
   fillProfile({name,email,role});
-  if (typeof __applyRoleUI === 'function') __applyRoleUI(role);
 
-  // ensure logout clears token
-  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+  // Header Open Profile
+  document.getElementById('open-profile')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const m = document.getElementById('modal-profile');
+      m.classList.add('is-open');
+      m.setAttribute('aria-hidden', 'false');
+      document.getElementById('avatarMenu').removeAttribute('open');
+  });
+
 })();
-// END: header render hook ensure
 </script>
 </body>
 </html>

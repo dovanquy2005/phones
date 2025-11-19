@@ -128,6 +128,7 @@ public class ProductService {
 
             list.add(new ProductListDTO(
                     p.getId(),
+                    p.getBrandId(),
                     p.getName(),
                     brandNameById.getOrDefault(p.getBrandId(), ""),
                     minPrice,

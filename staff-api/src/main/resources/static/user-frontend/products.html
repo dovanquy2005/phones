@@ -100,7 +100,7 @@
 (async function(){
   // CONFIG
   const ORIGIN = location.origin;
-  const BASES = [ '/api/user', '/api/public', '/api' ].map(p => ORIGIN + p);
+  const BASES = ['/api/public', '/api' ].map(p => ORIGIN + p);
   const AUTH_H = (localStorage.getItem('accessToken') || localStorage.getItem('fs_token') || '') ? { 'Authorization': 'Bearer ' + (localStorage.getItem('accessToken') || localStorage.getItem('fs_token')) } : {};
 
   // DOM
@@ -184,7 +184,7 @@
   // load brands -> checkbox list (+ chips optionally)
   async function loadBrands(){
     if (!brandChipsEl && !brandFiltersEl) return;
-    const list = await tryPaths(['/brands?limit=12','/brands','/catalog/brands?limit=12']);
+    const list = await tryPaths(['/brands']);
     if (!list || !list.length) {
       if (brandChipsEl) brandChipsEl.innerHTML = '<span class="muted">Chưa có thương hiệu.</span>';
       if (brandFiltersEl) brandFiltersEl.innerHTML = '<li class="muted">Không có</li>';

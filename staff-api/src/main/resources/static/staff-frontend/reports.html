@@ -8,42 +8,121 @@
   <script src="/staff-frontend/assets/js/api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Header */
+    /* --- STYLE RIÊNG CHO TRANG BÁO CÁO --- */
+    
+    /* Toolbar */
+    .report-toolbar {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      background: #fff; padding: 12px 16px; border-radius: 12px;
+      border: 1px solid #e5e7eb; margin-bottom: 20px;
+    }
+    .report-group { display: flex; align-items: center; gap: 8px; }
+    .report-label { font-size: 14px; color: #6b7280; font-weight: 500; white-space: nowrap; }
+    
+    .input-date {
+      border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px;
+      font-size: 14px; max-width: 140px;
+    }
+    .input-select {
+      border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 24px 8px 10px;
+      font-size: 14px; background-color: #fff;
+    }
+
+    .btn-action {
+      padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px;
+      cursor: pointer; border: 1px solid transparent;
+    }
+    .btn-primary { background: #111827; color: #fff; }
+    .btn-outline { background: #fff; border-color: #e5e7eb; color: #374151; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-outline:hover { background: #f9fafb; }
+
+    /* Grid Layout */
+    .dashboard-grid {
+      display: grid; gap: 20px;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .full-width { grid-column: 1 / -1; }
+    @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+    /* Card */
+    .card {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .card-head {
+      padding: 16px; border-bottom: 1px solid #f3f4f6;
+      font-weight: 700; font-size: 16px; color: #111827;
+    }
+    .card-body { padding: 16px; flex: 1; }
+
+    /* Chart Box */
+    .chart-box { position: relative; height: 300px; width: 100%; }
+
+    /* [SỬA] Table Top Products - Căn chỉnh lại */
+    .table-top { 
+      width: 100%; border-collapse: collapse; font-size: 14px; 
+      table-layout: fixed; /* Cố định layout để không bị nhảy */
+    }
+    
+    .table-top th {
+      background: #f9fafb; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 12px;
+      padding: 12px 16px; border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table-top td {
+      padding: 12px 16px; border-bottom: 1px solid #f3f4f6; color: #111827;
+      vertical-align: middle;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    /* Định dạng riêng từng cột */
+    .t-name { text-align: left; white-space: normal !important; line-height: 1.4; }
+    .t-qty  { text-align: center; }
+    .t-rev  { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .table-top tr:last-child td { border-bottom: none; }
+
+    /* Unified Header CSS */
     .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
     .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .brand__logo{width:28px;height:28px}
-    .brand__text{font-weight:700;color:#111827}
     .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    .avatar-menu{position:relative}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
     .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
     .avatar img{width:100%;height:100%;display:block}
-    .dropdown{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e5e7eb;border-radius:10px;min-width:180px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:8px}
-    details[open] > .dropdown{display:block}
-    .dropdown a{display:block;padding:8px 10px;color:#111827;text-decoration:none;border-radius:8px}
+    .avatar-menu[open] .dropdown{display:block}
+    .dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
     .dropdown a:hover{background:#f3f4f6}
+    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+    .role-badge.manager{background:#dcfce7;color: #166534}
+    .role-badge.staff{background:#dcfce7;color: #166534}
 
-    /* Toolbar + controls */
-    .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-    .input{height:36px;border:1px solid #e5e7eb;border-radius:10px;padding:0 10px}
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #e5e7eb;border-radius:10px;background:#111827;color:#fff;text-decoration:none;cursor:pointer}
-    .btn:hover{opacity:.92}
-
-    /* Cards + chart placeholder */
-    .grid{display:grid;gap:12px}
-    .grid--3{grid-template-columns:repeat(3,minmax(0,1fr))}
-    @media (max-width:1024px){.grid--3{grid-template-columns:1fr}}
-    .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px}
-    .card__header{padding:12px 14px;border-bottom:1px solid #e5e7eb}
-    .card__body{padding:12px 14px}
-    .chart{min-height:160px;display:flex;align-items:center;justify-content:center;color:#6b7280;border:1px dashed #e5e7eb;border-radius:10px;padding:12px}
-
-    /* Table */
-    .table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .table th,.table td{padding:10px 12px;border-bottom:1px solid #e5e7eb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .table-wrap{overflow-x:auto}
+    /* Modal styles */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:60}
+    .modal.is-open{display:flex}
+    .modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+    .modal__dialog, .modal__card {
+      position:relative; z-index:10; background:#fff; border-radius:12px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25); display:flex; flex-direction:column;
+      max-height:92vh; width:clamp(320px, 92vw, 600px);
+    }
+    .modal__header{padding:16px 20px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}
+    .modal__title{margin:0;font-size:18px;font-weight:700}
+    .modal__body{padding:20px;overflow-y:auto}
+    .modal__footer{padding:12px 20px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:8px}
+    .btn-close{border:none;background:transparent;font-size:20px;cursor:pointer;color:#6b7280}
+    .grid{display:grid;gap:16px}
+    .grid--2{grid-template-columns:repeat(2,1fr)}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:13px;color:#64748b}
+    .input{padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;width:100%;font-size:14px}
+    .badge-role-modal { background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
   </style>
 </head>
 <body>
-<!-- Header -->
 <header class="app-header">
   <a class="brand" href="orders.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -63,15 +142,13 @@
   </div>
 </header>
 
-<div class="app-shell" style="display:flex">
-  <!-- Sidebar -->
+<div class="app-shell">
   <aside class="sidebar" aria-label="Điều hướng">
     <div class="sidebar__group" data-sec="sales">
       <p class="sidebar__heading">Bán hàng</p>
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -83,270 +160,289 @@
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link sidebar__link--active" href="reports.html">Báo cáo</a>
-        
     </div>
   </aside>
 
-  <!-- Main -->
-  <main class="content" style="flex:1">
-    <section class="toolbar">
-      <h1 class="page-title">Báo cáo</h1>
+  <main class="content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+       <h1 style="font-size:24px; font-weight:700; margin:0;">Báo cáo doanh thu</h1>
+    </div>
+
+    <div class="report-toolbar">
+      <div class="report-group">
+        <span class="report-label">Từ ngày:</span>
+        <input id="inpFrom" type="date" class="input-date"/>
+      </div>
+      <div class="report-group">
+        <span class="report-label">Đến ngày:</span>
+        <input id="inpTo" type="date" class="input-date"/>
+      </div>
       <div style="flex:1"></div>
+      <div class="report-group">
+        <span class="report-label">Năm:</span>
+        <select id="selYear" class="input-select"></select>
+      </div>
+      <div class="report-group">
+         <button id="btnApply" class="btn-action btn-primary">Cập nhật</button>
+         <button id="btnExport" class="btn-action btn-outline">Xuất Excel</button>
+      </div>
+    </div>
 
-      <label style="font-size:14px;color:#6b7280">Từ</label>
-      <input id="inpFrom" type="date" class="input" style="min-width:150px"/>
-
-      <label style="font-size:14px;color:#6b7280;margin-left:6px">Đến</label>
-      <input id="inpTo" type="date" class="input" style="min-width:150px"/>
-
-      <label style="font-size:14px;color:#6b7280;margin-left:6px">Năm</label>
-      <select id="selYear" class="input" style="min-width:100px"></select>
-
-      <button id="btnApply" class="btn" title="Tải dữ liệu theo bộ lọc">Tải dữ liệu</button>
-      <button id="btnExport" class="btn" title="Xuất Excel theo bộ lọc">↑ Xuất Excel</button>
-    </section>
-
-    <div class="grid grid--3">
+    <div class="dashboard-grid">
       <section class="card">
-        <div class="card__header"><strong>Doanh thu theo ngày</strong></div>
-        <div class="card__body"><div class="chart" id="phDaily">Đang tải…</div></div>
+        <div class="card-head">Doanh thu theo ngày</div>
+        <div class="card-body">
+          <div class="chart-box" id="phDaily"><canvas id="chartDaily"></canvas></div>
+        </div>
       </section>
 
       <section class="card">
-        <div class="card__header"><strong>Doanh thu theo tháng</strong></div>
-        <div class="card__body"><div class="chart" id="phMonthly">Đang tải…</div></div>
+        <div class="card-head">Doanh thu theo tháng</div>
+        <div class="card-body">
+          <div class="chart-box" id="phMonthly"><canvas id="chartMonthly"></canvas></div>
+        </div>
       </section>
 
-      <section class="card">
-        <div class="card__header"><strong>Top bán chạy</strong></div>
-        <div class="card__body table-wrap">
-          <table class="table" id="tblTop">
-            <thead>
-              <tr><th>Sản phẩm</th><th style="width:80px">SL</th><th style="width:140px">Doanh thu</th></tr>
-            </thead>
-            <tbody><tr><td colspan="3">Đang tải…</td></tr></tbody>
-          </table>
+      <section class="card full-width">
+        <div class="card-head">Top 10 sản phẩm bán chạy nhất</div>
+        <div class="card-body" style="padding:0">
+          <div style="overflow-x:auto">
+            <table class="table-top" id="tblTop">
+              <colgroup>
+                <col style="width: 55%;"> <col style="width: 15%;"> <col style="width: 30%;"> </colgroup>
+              <thead>
+                <tr>
+                  <th class="t-name">Tên sản phẩm</th>
+                  <th class="t-qty">Số lượng</th>
+                  <th class="t-rev">Doanh thu</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="3" style="text-align:center; padding:20px; color:#6b7280">Đang tải dữ liệu...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </div>
   </main>
 </div>
 
-<!-- Profile modal -->
 <div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__backdrop" data-close></div>
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">
-      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+      <h3 id="profileTitle" class="modal__title">Thông tin tài khoản</h3>
+      <button class="btn-close" data-close>✕</button>
     </header>
-    <div class="modal__body grid grid--2" id="profile-view">
-      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
-        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
-        <div>
-          <div id="profileName" style="font-weight:600">—</div>
-          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
-        </div>
+    <div class="modal__body">
+       <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+          <img id="profileAvatar" src="" alt="AV" style="width:64px;height:64px;border-radius:50%;object-fit:cover; flex-shrink:0"/>
+          <div>
+             <h3 id="profileName" style="margin:0 0 6px 0;font-size:18px;font-weight:700; line-height:1.2">...</h3>
+             <span id="profileRoleLabel" class="badge-role-modal">...</span>
+          </div>
+       </div>
+       <div class="grid grid--2">
+        <div class="field"><label>Họ tên</label><input class="input" id="profile_name" readonly/></div>
+        <div class="field"><label>Email</label><input class="input" id="profile_email" readonly/></div>
+        <div class="field" style="grid-column:1/-1"><label>Vai trò</label><input class="input" id="profile_role" readonly/></div>
       </div>
-      <div class="field"><label>Họ tên</label><input class="input" id="profile_name" disabled/></div>
-      <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
-      <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
+    <footer class="modal__footer">
+      <button class="btn-action btn-outline" data-close>Đóng</button>
     </footer>
   </div>
 </div>
 
 <script>
-/* ========== Unified header fill (avatar/name/role) ========== */
 (function(){
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
-
-  function decodeJwt(token){
-    try{
-      const p = token.split('.')[1];
-      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
-      return JSON.parse(decodeURIComponent(escape(json)));
-    }catch{ return null; }
-  }
-  function initials(s){
-    const t = (s||'').trim(); if(!t) return '--';
-    const parts = t.split(/\s+/);
-    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
-    return (a+b || t.slice(0,2)).toUpperCase();
-  }
-  function pickRole(payload){
-    const arr = payload?.authorities || payload?.roles || payload?.scope || [];
-    const list = Array.isArray(arr) ? arr.map(String) : String(arr||'').split(/\s+/);
-    if (list.find(v => v.toLowerCase()==='manager')) return 'manager';
-    if (list.find(v => v.toLowerCase()==='staff'))   return 'staff';
-    if (list.find(v => v.toLowerCase()==='user'))    return 'user';
-    return '—';
-  }
+  const getToken = () => (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+  function decodeJwt(token){ try{ const p = token.split('.')[1]; const json = atob(p.replace(/-/g,'+').replace(/_/g,'/')); return JSON.parse(decodeURIComponent(escape(json))); }catch{ return null; } }
+  function __extractRoles(payload){ try{ let raw = payload?.authorities ?? payload?.roles ?? []; let list = Array.isArray(raw) ? raw : String(raw).split(/[,\s]+/); return list.map(s => String(s).trim().toLowerCase().replace(/^role[_:\-]/, '')).filter(Boolean); }catch{ return []; } }
+  function __deriveRole(list){ if (list.includes('manager')) return 'manager'; if (list.includes('staff')) return 'staff'; return 'user'; }
+  function initials(s){ const t = (s||'').trim(); if(!t) return '--'; const parts = t.split(/\s+/); const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||''; return (a+b).toUpperCase(); }
+  
   function fillProfile({name,email,role}){
-    const avHeader = document.getElementById('avatarImg');
-    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const av = document.getElementById('profileAvatar');
-    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
-    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
-    const r1 = document.getElementById('profileRole');
-    if (r1){
-      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
-      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
-    }
-    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
-    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
-    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+    document.getElementById('avatarImg').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileAvatar').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileName').textContent = name;
+    const rLabel = document.getElementById('profileRoleLabel'); 
+    if(rLabel){ rLabel.textContent = role==='manager'?'Manager':'Staff'; }
+    document.getElementById('profile_name').value = name;
+    document.getElementById('profile_email').value = email;
+    document.getElementById('profile_role').value = role==='manager'?'Manager':'Staff';
   }
 
   const token = getToken(); if (!token) return;
   const payload = decodeJwt(token) || {};
-  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
-  const email = payload.email || payload.username || '—';
-  const role  = pickRole(payload);
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || 'Người dùng';
+  const email = payload.email || '—';
   fillProfile({name,email,role});
 
+  document.getElementById('open-profile')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const m = document.getElementById('modal-profile');
+      m.classList.add('is-open');
+      m.setAttribute('aria-hidden', 'false');
+      document.getElementById('avatarMenu').removeAttribute('open');
+  });
+  document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          const m = e.target.closest('.modal');
+          if(m) { m.classList.remove('is-open'); m.setAttribute('aria-hidden', 'true'); }
+      });
+  });
   document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 })();
 </script>
 
 <script>
-/* ===== Reports: filters + fetch + render + export ===== */
+/* Reports Logic */
 (function(){
   const API  = location.origin;
-  const BASE = API + '/api/reports'; // cố định 1 base
-
-  const getToken = () =>
-    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+  const BASE = API + '/api/reports'; 
+  const getToken = () => localStorage.getItem('accessToken') || '';
   const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.')+'₫';
 
-  // DOM
   const inpFrom = document.getElementById('inpFrom');
   const inpTo   = document.getElementById('inpTo');
   const selYear = document.getElementById('selYear');
   const btnApply= document.getElementById('btnApply');
   const btnExport=document.getElementById('btnExport');
 
-  // defaults: 30 ngày gần nhất
   const today = new Date();
   const fromDef = new Date(); fromDef.setDate(today.getDate()-29);
   const yNow = today.getFullYear();
+  const toISO = d => new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  
   inpFrom.value = toISO(fromDef);
   inpTo.value   = toISO(today);
+  
   if (selYear.children.length === 0) {
-    selYear.innerHTML = `<option value="${yNow}">${yNow}</option><option value="${yNow-1}">${yNow-1}</option>`;
+    for(let y = yNow; y >= yNow - 2; y--){
+       const opt = document.createElement('option');
+       opt.value = y; opt.textContent = y;
+       selYear.appendChild(opt);
+    }
     selYear.value = String(yNow);
   }
 
   let chartDaily, chartMonthly;
 
-  function toISO(d){ return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
-  function showStatus(where, text){
-    const el = document.getElementById(where);
-    if (el) el.textContent = text;
-  }
-  function setLoading(){
-    showStatus('phDaily','Đang tải…');
-    showStatus('phMonthly','Đang tải…');
-    const tb=document.querySelector('#tblTop tbody'); if(tb) tb.innerHTML='<tr><td colspan="3">Đang tải…</td></tr>';
-  }
-  function ensureCanvas(placeholderId, canvasId){
-    const box = document.getElementById(placeholderId);
-    box.innerHTML = `<canvas id="${canvasId}" height="160"></canvas>`;
-    return document.getElementById(canvasId);
-  }
-
-  // Fetch helpers (simple + log)
   async function tryFetchJson(path){
     const url = BASE + path;
     const r = await fetch(url, { headers: { 'Authorization':'Bearer '+getToken() }});
     let data = null;
     try { data = r.ok ? await r.json() : null; } catch{}
-    console.debug('[GET]', r.status, url, '→', Array.isArray(data)?`len=${data.length}`:data);
-    return { ok: r.ok, status: r.status, data, url };
+    return { ok: r.ok, status: r.status, data };
   }
   async function tryFetchBlob(path){
     const url = BASE + path;
     const r = await fetch(url, { headers: { 'Authorization':'Bearer '+getToken() }});
-    console.debug('[GET BLOB]', r.status, url);
-    if (!r.ok) return { ok:false, status:r.status, blob:null, url };
-    return { ok:true, status:r.status, blob: await r.blob(), url };
+    if (!r.ok) return { ok:false, status:r.status };
+    return { ok:true, status:r.status, blob: await r.blob() };
+  }
+  function ensureCanvas(boxId, cvsId){
+    const box = document.getElementById(boxId);
+    box.innerHTML = '';
+    const cvs = document.createElement('canvas');
+    cvs.id = cvsId;
+    box.appendChild(cvs);
+    return cvs;
   }
 
   async function loadReports(){
-    setLoading();
     const from = inpFrom.value;
     const to   = inpTo.value;
     const year = selYear.value;
+    const tb = document.querySelector('#tblTop tbody');
 
-    // Daily
+    // 1. Daily Chart
     let res = await tryFetchJson(`/revenue/daily?from=${from}&to=${to}`);
-    if (!res.ok){
-      showStatus('phDaily', `Không thể tải dữ liệu (HTTP ${res.status || '???'})`);
-    } else {
+    if (res.ok) {
       const daily = res.data || [];
-      const c1 = ensureCanvas('phDaily','chartDaily');
+      const ctx = ensureCanvas('phDaily','chartDaily').getContext('2d');
       if (chartDaily) chartDaily.destroy();
-      chartDaily = new Chart(c1,{ type:'line',
-        data:{ labels: daily.map(x=>String(x.date).slice(5)),
-               datasets:[{label:'Doanh thu (₫)', data: daily.map(x=>x.revenue), tension:.3}]},
-        options:{ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmtVND(v)}}}}
+      chartDaily = new Chart(ctx, {
+        type: 'line',
+        data: { 
+          labels: daily.map(x=> new Date(x.date).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit'})),
+          datasets: [{
+            label: 'Doanh thu', data: daily.map(x=>x.revenue),
+            borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true, tension: 0.3, pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: {display:false} },
+          scales: { y: { beginAtZero: true, ticks: { callback: v=> (v/1000000).toFixed(0) + 'M' } } }
+        }
       });
     }
 
-    // Monthly
+    // 2. Monthly Chart
     res = await tryFetchJson(`/revenue/monthly?year=${year}`);
-    if (!res.ok){
-      showStatus('phMonthly', `Không thể tải dữ liệu (HTTP ${res.status || '???'})`);
-    } else {
+    if (res.ok) {
       const monthly = res.data || [];
-      const c2 = ensureCanvas('phMonthly','chartMonthly');
+      const dataMap = new Array(12).fill(0);
+      monthly.forEach(m => { if(m.month>=1 && m.month<=12) dataMap[m.month-1] = m.revenue; });
+      const ctx2 = ensureCanvas('phMonthly','chartMonthly').getContext('2d');
       if (chartMonthly) chartMonthly.destroy();
-      chartMonthly = new Chart(c2,{ type:'bar',
-        data:{ labels: monthly.map(x=>x.month),
-               datasets:[{label:'Doanh thu (₫)', data: monthly.map(x=>x.revenue)}]},
-        options:{ plugins:{legend:{display:false}}, scales:{ y:{ ticks:{ callback:v=>fmtVND(v)}}}}
+      chartMonthly = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'],
+          datasets: [{
+            label: 'Doanh thu', data: dataMap,
+            backgroundColor: '#6366f1', borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: {display:false} },
+          scales: { y: { beginAtZero: true, ticks: { callback: v=> (v/1000000).toFixed(0) + 'M' } } }
+        }
       });
     }
 
-    // Top products
+    // 3. Top Products Table (Fix lỗi hiển thị lệch)
+    tb.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px">Đang tải...</td></tr>';
     res = await tryFetchJson(`/top-products?from=${from}&to=${to}&limit=10`);
-    const tb = document.querySelector('#tblTop tbody'); tb.innerHTML='';
-    if (!res.ok){
-      tb.innerHTML = `<tr><td colspan="3">Không thể tải (HTTP ${res.status || '???'}).</td></tr>`;
+    tb.innerHTML = '';
+    if (!res.ok || !res.data || res.data.length===0){
+      tb.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:20px;color:#6b7280">Không có dữ liệu</td></tr>`;
     } else {
-      const top = res.data || [];
-      if (top.length===0){
-        tb.innerHTML = `<tr><td colspan="3">Không có dữ liệu trong khoảng đã chọn.</td></tr>`;
-      }else{
-        top.forEach(x=>{
-          const tr=document.createElement('tr');
-          tr.innerHTML = `<td>${x.name}</td>
-                          <td style="text-align:right">${x.qty}</td>
-                          <td style="text-align:right">${fmtVND(x.revenue)}</td>`;
-          tb.appendChild(tr);
-        });
-      }
+      res.data.forEach(x=>{
+        const tr = document.createElement('tr');
+        // Sử dụng class CSS thay vì style inline để đồng bộ
+        tr.innerHTML = `
+          <td class="t-name" title="${x.name}">${x.name}</td>
+          <td class="t-qty">${x.qty}</td>
+          <td class="t-rev">${fmtVND(x.revenue)}</td>
+        `;
+        tb.appendChild(tr);
+      });
     }
 
-    // Export
+    // 4. Export
     btnExport.onclick = async()=>{
       const r = await tryFetchBlob(`/export.xlsx?from=${from}&to=${to}&year=${year}&topLimit=50`);
-      if (!r.ok){ alert(`Xuất Excel thất bại (HTTP ${r.status || '???'})`); return; }
+      if (!r.ok){ alert('Xuất Excel thất bại'); return; }
       const a = document.createElement('a');
       const url = URL.createObjectURL(r.blob);
-      a.href = url;
-      a.download = `reports_${year}_${from}_${to}.xlsx`;
+      a.href = url; a.download = `baocao_${from}_${to}.xlsx`;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(()=>URL.revokeObjectURL(url), 800);
     };
   }
 
-  document.getElementById('btnApply').addEventListener('click', loadReports);
+  btnApply.addEventListener('click', loadReports);
   loadReports();
 })();
 </script>
-
 </body>
 </html>

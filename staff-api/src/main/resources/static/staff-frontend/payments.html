@@ -118,7 +118,7 @@
     <section class="card" style="margin-top:12px">
       <div class="card__body table-wrap">
         <table class="table" aria-describedby="pgsum">
-          <thead><tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>Thanh toán</th><th>TT đơn</th><th>Ngày</th><th style="width:150px;text-align:right"></th></tr></thead>
+          <thead><tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>Thanh toán</th><th>TT đơn</th><th>Ngày</th><th style="width:150px;text-align:right">Hành động</th></tr></thead>
           <tbody id="rows"><tr><td colspan="7" class="empty">Đang tải…</td></tr></tbody>
         </table>
       </div>
@@ -157,7 +157,7 @@ let state={items:[], q:'', pay:'', from:null, to:null, page:1, per:10, pages:1};
 
 function toast(m,t=1600){ const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t); }
 function payBadge(v){ v=String(v||'').toUpperCase(); return v==='PAID' ? '<span class="badge badge--pay-paid">Đã thanh toán</span>' : '<span class="badge badge--pay-unpaid">Chưa thanh toán</span>'; }
-function stLabel(v){ v=String(v||'').toUpperCase(); if(v==='DELIVERED') return 'Đã giao'; if(v==='SHIPPING') return 'Đang giao'; if(v==='PENDING') return 'Chờ giao'; if(v==='CANCELED') return 'Hủy'; return v||'-'; }
+function stLabel(v){ v=String(v||'').toUpperCase(); if(v==='CREATED') return 'Vừa tạo'; if(v==='DELIVERED') return 'Đã giao'; if(v==='SHIPPING') return 'Đang giao'; if(v==='PENDING') return 'Chờ giao'; if(v==='CANCELED') return 'Hủy'; return v||'-'; }
 
 /* Cho phép đổi trạng thái thanh toán chỉ khi đơn đang giao/chờ giao */
 function canEditPaymentRow(o){
@@ -396,9 +396,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
       <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
+    <!-- <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
       <a class="btn" href="#">Đóng</a>
-    </footer>
+    </footer> -->
   </div>
 </div>
 

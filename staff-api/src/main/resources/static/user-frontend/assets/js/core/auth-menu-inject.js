@@ -1,4 +1,4 @@
-// assets/js/auth-menu-inject.js
+// assets/js/core/auth-menu-inject.js
 ;(function (win, doc) {
   const API = 'http://localhost:9090';
 
@@ -60,13 +60,30 @@
       doc.addEventListener('click', (e)=>{ if(!wrap.contains(e.target)) close(); });
       doc.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
 
+      // Xử lý sự kiện đăng xuất (Đã cập nhật để xóa sạch LocalStorage)
       drop.addEventListener('click', (e)=>{
         if(!e.target.closest('[data-action="logout"]')) return;
         e.preventDefault();
         try{
-          localStorage.removeItem('fs_token'); localStorage.removeItem('fs_user');
-          sessionStorage.removeItem('fs_token'); sessionStorage.removeItem('fs_user');
+          // 1. Xóa sạch sessionStorage
+          sessionStorage.clear(); 
+
+          // 2. Xóa sạch các key quan trọng trong localStorage
+          // (Xóa hết các biến thể tên gọi mà bạn từng dùng)
+          const keysToRemove = [
+            'fs_token', 'accessToken', 'access_token', 
+            'fs_user', 'fs_user_id', 
+            'fs_cart', 'fs_cart_local_v1', 
+            'cart', 'shopping_cart'
+          ];
+          
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+
+          // 3. (Tùy chọn) Nếu muốn xóa TRẮNG toàn bộ localStorage của domain này:
+          // localStorage.clear(); 
         }catch{}
+        
+        // Chuyển hướng về trang đăng nhập
         location.href = 'login.html';
       });
     }
@@ -112,14 +129,14 @@
     // 2) hydrate bằng /api/auth/me (sẽ cập nhật lại tên khi có)
     fetchMeAndHydrate(wrap);
 
-    // 3) nếu nơi khác cập nhật fs_user -> cập nhật UI (tab hiện tại nghe được sự kiện storage từ tab khác; để tab hiện tại cũng nhận, ta poll nhẹ)
+    // 3) nếu nơi khác cập nhật fs_user -> cập nhật UI
     win.addEventListener('storage', (e)=>{
       if (e.key === 'fs_user') {
         try { const u = JSON.parse(e.newValue || 'null'); setName(wrap, normUser(u).name); } catch {}
       }
     });
 
-    // 4) fallback: sau 1s kiểm tra lại fs_user một lần nữa (đề phòng getCurrentUser() set muộn trong cùng tab)
+    // 4) fallback: sau 1s kiểm tra lại fs_user một lần nữa
     setTimeout(()=>{
       const u = readUser();
       if (u) setName(wrap, normUser(u).name);

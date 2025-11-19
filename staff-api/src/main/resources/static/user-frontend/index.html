@@ -89,10 +89,10 @@
 /** Robust BE integration + graceful fallback */
 const ORIGIN = location.origin;
 const FALLBACK_IMG = 'assets/img/placeholder.png';
-const IMAGE_BASES = ['/uploads/', '/images/', '/static/img/', '/assets/products/', '/']; // chỉnh theo BE bạn
+const IMAGE_BASES = [ '/']; // chỉnh theo BE bạn
 
 // API bases (thử lần lượt)
-const BASES  = [ '/api/user', '/api/public', '/api' ].map(p => ORIGIN + p);
+const BASES  = [ '/api' ].map(p => ORIGIN + p);
 
 // Auth header nếu có đăng nhập
 const token  = localStorage.getItem('accessToken') || '';
@@ -181,9 +181,8 @@ async function loadBrands(){
   list.slice(0,6).forEach(b=>{
     const id   = b?.id ?? b?.brandId ?? b?.code ?? b?.slug ?? String(b?.name||'').toLowerCase();
     const name = b?.name ?? b?.brandName ?? b?.title ?? 'Brand';
-    const a = document.createElement('a');
+    const a = document.createElement('span');
     a.className = 'chip';
-    a.href = `products.html?brand=${encodeURIComponent(id)}`;
     a.textContent = name;
     brandChips.appendChild(a);
   });

@@ -18,6 +18,7 @@
     .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .muted{color:#64748B}
     .input{height:40px;padding:0 12px;border:1px solid #e5e7eb;border-radius:10px;width:100%}
+    textarea.input{height:auto;padding:10px 12px;font-family:inherit} /* Style riêng cho textarea */
     .btn{height:40px;padding:0 12px;border-radius:10px;border:1px solid #e5e7eb;background:#fff;cursor:pointer}
     .btn.primary{background:#3B82F6;color:#fff;border-color:#3B82F6}
     .radio{display:flex;gap:12px;flex-wrap:wrap}
@@ -47,7 +48,6 @@
   <h1 class="h1">Thanh toán</h1>
 
   <div class="grid grid-2">
-    <!-- left: form -->
     <section class="card">
       <div class="inner">
         <div class="h3">Thông tin giao hàng</div>
@@ -57,6 +57,10 @@
           <div style="grid-column:1/2"><label>Số điện thoại</label><input id="phone" class="input" pattern="[0-9]{9,11}" required></div>
           <div style="grid-column:1/-1"><label>Địa chỉ</label><input id="addr" class="input" required></div>
 
+          <div style="grid-column:1/-1">
+            <label>Ghi chú đơn hàng (Tuỳ chọn)</label>
+            <textarea id="note" class="input" rows="3" style="resize: vertical;" placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước khi giao..."></textarea>
+          </div>
           <div style="grid-column:1/-1;margin-top:8px" class="h3">Phương thức thanh toán</div>
           <div class="radio" style="grid-column:1/-1">
             <label><input type="radio" name="pay" value="cod" checked> COD (Thanh toán khi nhận hàng)</label>
@@ -73,7 +77,6 @@
       </div>
     </section>
 
-    <!-- right: simplified summary (only totals) -->
     <aside class="card summary">
       <div class="inner">
         <ul>
@@ -178,6 +181,9 @@
     const phone = document.getElementById('phone').value.trim();
     const addr = document.getElementById('addr').value.trim();
     const email = document.getElementById('email').value.trim();
+    // ▼ LẤY GIÁ TRỊ GHI CHÚ ▼
+    const note = document.getElementById('note').value.trim();
+
     if (!name || !phone || !addr) {
       document.getElementById('form-error').style.display = 'block';
       return;
@@ -204,6 +210,7 @@
     // build payload (server reads cart/voucher from server-side cart)
     const payload = {
       payment_method: document.querySelector('input[name="pay"]:checked').value,
+      note: note, // ▼ GỬI GHI CHÚ LÊN SERVER ▼
       shipping_address: { name, phone, email, address: addr }
     };
 
@@ -230,8 +237,8 @@
 
     // success
     const orderId = res.body?.order_id || res.body?.id || '';
-    alert('Đặt hàng thành công! Mã đơn: ' + (orderId || '---'));
-    window.location.href = `/order-success.html?order=${encodeURIComponent(orderId)}`;
+    // Chuyển hướng sang trang thành công
+    window.location.href = `/user-frontend/order-success.html?order=${encodeURIComponent(orderId)}`;
   }
 
   // bind
@@ -245,7 +252,6 @@
 })();
 </script>
 
-<!-- core scripts (unchanged) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>

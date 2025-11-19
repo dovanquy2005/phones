@@ -11,10 +11,46 @@
     .auth-card{width:100%;max-width:520px}
     .auth-title{text-align:center;margin-bottom:12px}
     .auth-sub{color:var(--muted);text-align:center;margin-bottom:16px}
-    .error-box{display:none;margin-top:12px}
+    .error-box{display:none;margin-top:16px;text-align:center;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:8px}
+
+    /* --- CSS ĐÃ SỬA: Căn chỉnh ô nhập mật khẩu và con mắt --- */
+    .password-wrapper {
+      position: relative;
+      width: 100%; /* Wrapper chiếm hết chiều rộng */
+    }
+    
+    .password-wrapper input {
+      width: 100%;              /* Input dài ra bằng container */
+      padding-right: 40px;      /* Chừa chỗ cho icon mắt */
+      box-sizing: border-box;   /* Đảm bảo padding không làm vỡ layout */
+    }
+    
+    .btn-eye {
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 40px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Bo góc bên phải để khớp với border của input */
+      border-top-right-radius: 8px; 
+      border-bottom-right-radius: 8px;
+    }
+    
+    .btn-eye:hover {
+      color: var(--text);
+      background-color: rgba(0,0,0,0.03);
+    }
+    /* --- HẾT CSS MỚI --- */
   </style>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
-   <script src="/assets/js/fs_compat.js"></script>
+  <script src="/assets/js/fs_compat.js"></script>
 </head>
 <body>
 <header class="header">
@@ -37,22 +73,32 @@
     <h1 class="h1 auth-title">Chào mừng trở lại</h1>
     <p class="auth-sub">Đăng nhập để theo dõi đơn hàng và mua sắm nhanh hơn</p>
 
-    <div id="login-error" class="alert error-box"></div>
-
     <form id="login-form" novalidate>
       <div class="field">
         <label class="label" for="email">Email</label>
         <input id="email" class="input" type="email" placeholder="you@example.com" autocomplete="email" required>
       </div>
+      
       <div class="field mt-16">
         <label class="label" for="password">Mật khẩu</label>
-        <input id="password" class="input" type="password" placeholder="••••••••" minlength="6" autocomplete="current-password" required>
+        <div class="password-wrapper">
+          <input id="password" class="input" type="password" placeholder="••••••••" minlength="6" autocomplete="current-password" required>
+          
+          <button type="button" id="toggle-password" class="btn-eye" tabindex="-1">
+            <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg class="icon-eye-off" style="display:none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
+        </div>
       </div>
+
       <div class="row mt-16" style="justify-content:space-between;width:100%">
         <label class="row"><input id="remember" type="checkbox"> <span>Ghi nhớ tôi</span></label>
         <a class="muted" href="#">Quên mật khẩu?</a>
       </div>
+      
       <button id="login-btn" class="btn btn-primary btn-block mt-24" type="submit">Đăng nhập</button>
+
+      <div id="login-error" class="error-box"></div>
     </form>
 
     <p class="auth-sub" style="margin-top:16px">Chưa có tài khoản? <a href="register.html" style="text-decoration:underline">Đăng ký</a></p>
@@ -67,6 +113,27 @@
 
 <script>
 (() => {
+  /* --- [MỚI] Logic ẩn hiện mật khẩu --- */
+  const toggleBtn = document.getElementById('toggle-password');
+  const passInput = document.getElementById('password');
+  const iconEye = toggleBtn.querySelector('.icon-eye');
+  const iconOff = toggleBtn.querySelector('.icon-eye-off');
+
+  toggleBtn.addEventListener('click', () => {
+    const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passInput.setAttribute('type', type);
+    
+    // Đổi icon
+    if (type === 'text') {
+      iconEye.style.display = 'none';
+      iconOff.style.display = 'block';
+    } else {
+      iconEye.style.display = 'block';
+      iconOff.style.display = 'none';
+    }
+  });
+  /* ------------------------------------ */
+
   const API_BASE = "http://localhost:9090";
   const LOGIN_ENDPOINT = `${API_BASE}/api/auth/login`;
 
@@ -74,20 +141,38 @@
   const elBtn  = document.getElementById('login-btn');
   const elErr  = document.getElementById('login-error');
 
-  // Utility: try parse various response shapes to extract token
+  function notify(msg, type = 'error') {
+    elErr.textContent = msg;
+    elErr.style.display = 'block';
+
+    if (type === 'success') {
+      elErr.style.color = '#065f46';
+      elErr.style.backgroundColor = '#d1fae5';
+      elErr.style.border = '1px solid #a7f3d0';
+    } else {
+      elErr.style.color = '#b91c1c';
+      elErr.style.backgroundColor = '#fef2f2';
+      elErr.style.border = '1px solid #fecaca';
+      
+      if (msg.toLowerCase().includes('invalid email') || msg.toLowerCase().includes('bad credentials')) {
+        elErr.textContent = 'Email hoặc mật khẩu không chính xác!';
+      } else if (msg.toLowerCase().includes('disabled')) {
+        elErr.textContent = 'Tài khoản này đã bị khóa!';
+      } else if (msg.toLowerCase().includes('not found')) {
+        elErr.textContent = 'Tài khoản không tồn tại!';
+      }
+    }
+  }
+
   function pickToken(obj) {
     if (!obj) return null;
-    // direct shapes
     if (obj.token) return obj.token;
     if (obj.accessToken) return obj.accessToken;
     if (obj.jwt) return obj.jwt;
-    // nested: { data: { token: ... } }
     if (obj.data && (obj.data.token || obj.data.accessToken)) return obj.data.token || obj.data.accessToken;
-    // sometimes axios style: { data: { user, token } }
     return null;
   }
 
-  // canonical setter used by other modules (auth.js may define)
   function canonicalSetToken(token) {
     try {
       if (typeof window.setToken === 'function') {
@@ -98,38 +183,28 @@
     return false;
   }
 
-  // Improved setAuth: save token + user, fire events, add debug logs
   function setAuth({ token, user } = {}, remember = false) {
     if (!token) return;
     try {
-      // try canonical setter first (auth.js)
       const did = canonicalSetToken(token);
       if (!did) {
         const storage = remember ? localStorage : sessionStorage;
         const alt = remember ? sessionStorage : localStorage;
-        // save token in both common keys used by app
         try { storage.setItem('fs_token', token); } catch(e){}
         try { storage.setItem('accessToken', token); } catch(e){}
-        // remove old token from alternative storage
         try { alt.removeItem('fs_token'); } catch(e){}
         try { alt.removeItem('accessToken'); } catch(e){}
       }
-    } catch(e) {
-      console.warn('setAuth token store error', e);
-    }
+    } catch(e) { console.warn('setAuth token store error', e); }
 
     try {
       const storageUser = remember ? localStorage : sessionStorage;
       storageUser.setItem('fs_user', JSON.stringify(user || {}));
-      // keep fs_user in both storages for compatibility
       try { localStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
       try { sessionStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
-    } catch(e) {
-      console.warn('setAuth user store error', e);
-    }
+    } catch(e) { console.warn('setAuth user store error', e); }
 
     try {
-      // explicit user id convenience keys
       const uid = user && (user.userId || user.id || user.user_id) ? String(user.userId || user.id || user.user_id) : null;
       if (uid) {
         try { localStorage.setItem('fs_user_id', uid); } catch(e){}
@@ -139,7 +214,6 @@
       }
     } catch(e){}
 
-    // clear guest cart caches
     try {
       ['fs_cart','cart','shopping_cart','cartItems'].forEach(k=>{
         try{ localStorage.removeItem(k); } catch(_) {}
@@ -147,27 +221,18 @@
       });
     } catch(_){}
 
-    // emit events so other modules (cart-badge, header-auth, etc.) update
     try {
       window.dispatchEvent(new CustomEvent('fs:auth:login', { detail: { user } }));
       window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user } }));
-      // older listeners may expect login:success
       window.dispatchEvent(new CustomEvent('login:success', { detail: user }));
-      // compatible custom alias
       window.dispatchEvent(new CustomEvent('user:login', { detail: user }));
-    } catch(e) {
-      console.warn('emit events error', e);
-    }
-
-    console.debug('setAuth done, tokenLen=', token ? token.length : 0, 'uid=', user ? (user.userId||user.id) : null);
+    } catch(e) { console.warn('emit events error', e); }
   }
 
-  // quick check on page load: if logged in -> redirect away
   try {
     const hasToken = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') ||
-                     localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+                      localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (hasToken) {
-      // optional: you could ping /api/auth/me to confirm, but redirect for now
       window.location.replace('index.html');
       return;
     }
@@ -175,17 +240,25 @@
 
   elForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    elErr.style.display = 'none';
+    elErr.style.display = 'none'; 
+    
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const remember = document.getElementById('remember').checked;
 
-    if (!email || !password) {
-      elErr.textContent = 'Vui lòng nhập email và mật khẩu.'; elErr.style.display = '';
+    if (!email) {
+      notify('Vui lòng nhập địa chỉ Email!');
+      document.getElementById('email').focus();
+      return;
+    }
+    if (!password) {
+      notify('Vui lòng nhập mật khẩu!');
+      document.getElementById('password').focus();
       return;
     }
 
     elBtn.disabled = true; elBtn.textContent = 'Đang đăng nhập...';
+    
     try {
       const res = await fetch(LOGIN_ENDPOINT, {
         method: 'POST',
@@ -194,40 +267,47 @@
       });
 
       if (!res.ok) {
-        // try parse json error first
         let msg = '';
-        try { const txt = await res.text(); msg = txt || msg; } catch(_) {}
-        throw new Error(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra thông tin.');
+        try { 
+            const jsonErr = await res.json();
+            msg = jsonErr.message || jsonErr.error;
+        } catch(_) { 
+            try { msg = await res.text(); } catch(__){}
+        }
+        
+        if (res.status === 401 || res.status === 403) {
+             throw new Error('Invalid email or password'); 
+        } else if (res.status === 404) {
+             throw new Error('User not found');
+        } else {
+             throw new Error(msg || 'Đăng nhập thất bại. Vui lòng kiểm tra lại.');
+        }
       }
 
       const data = await res.json().catch(()=> ({}));
       const token = pickToken(data);
-      // sometimes backend returns { user: {...}, token: '...' } or { token: '...', user: {...} }
       const user = data.user || (data.data && data.data.user) || null;
 
       if (!token) {
-        // debug: show whole response to console to inspect shape
-        console.warn('login response no token, response=', data);
-        throw new Error('Phản hồi từ server không có token (kiểm tra server).');
+        console.warn('login response no token', data);
+        throw new Error('Lỗi hệ thống: Server không trả về token.');
       }
 
       setAuth({ token, user }, remember);
-      // small delay to allow other scripts to react if needed
-      setTimeout(()=> window.location.href = 'index.html', 80);
+      
+      notify('Đăng nhập thành công!', 'success');
+      
+      setTimeout(()=> window.location.href = 'index.html', 800);
+
     } catch (err) {
       console.error('login error', err);
-      elErr.textContent = err.message || 'Có lỗi xảy ra. Vui lòng thử lại.';
-      elErr.style.display = '';
+      notify(err.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
       elBtn.disabled = false; elBtn.textContent = 'Đăng nhập';
     }
   });
 })();
 </script>
 
-<!-- auto-injected: auth core -->
-<!-- auth.js phải load TRƯỚC -->
-<!-- header-auth phụ thuộc vào auth.js -->
-<!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>

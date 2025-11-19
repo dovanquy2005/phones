@@ -24,6 +24,7 @@ import java.util.*;
  */
 @RestController
 @RequestMapping("/api/auth")
+// @CrossOrigin(origins = "*") // <--- THÊM DÒNG NÀY (Cho phép mọi nơi gọi vào)
 public class AuthController {
 
     private final StaffAuthService staffAuthService;   // <— thay vì UserService

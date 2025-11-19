@@ -71,10 +71,10 @@ public class UserController {
         return service.getById(id);
     }
 
-    @PutMapping("/{id}/password")
-    public void changePassword(@PathVariable Long id, @RequestBody PasswordUpdateRequest r) {
-        service.changePassword(id, r.oldPassword(), r.newPassword());
-    }
+    // @PutMapping("/{id}/password")
+    // public void changePassword(@PathVariable Long id, @RequestBody PasswordUpdateRequest r) {
+    //     service.changePassword(id, r.oldPassword(), r.newPassword());
+    // }
 
 }
 

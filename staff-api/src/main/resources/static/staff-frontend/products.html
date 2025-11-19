@@ -89,7 +89,7 @@
         <table class="table table-products">
           <thead>
           <tr>
-            <th>Ảnh</th><th>Tên</th><th>Giá</th><th>Số lượng</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th>
+            <th>Ảnh</th><th>Tên</th><th>Giá</th><th>Số lượng</th><th>Trạng thái</th><th style="text-align:right">Hành động</th>
           </tr>
           </thead>
           <tbody id="rows-products"><tr><td colspan="6" class="empty">Đang tải...</td></tr></tbody>
@@ -205,7 +205,7 @@
 
 <script>
 /* ========= Helpers ========= */
-const API_BASE     = location.origin;
+const API_BASE = 'http://localhost:9090';
 const API_PRODUCTS = API_BASE + '/api/products';
 const API_ASSETS   = API_BASE + '/api/assets/products';
 const API_BRANDS   = API_BASE + '/api/brands';
@@ -639,9 +639,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
       <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
-    <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
-    </footer>
+ 
   </div>
 </div>
 
