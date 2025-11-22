@@ -3,7 +3,7 @@ import lombok.Data;
 @Data
 public class CreateProductRequest {
     private String name;
-    private String slug;
+
     private Long brandId;
     private String description;
     private String specsJson;

@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=Phone_store;encrypt=false;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=Phone_store;encrypt=false;trustServerCertificate=true;socketTimeout=10000
     username: sa
     password: 123456
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

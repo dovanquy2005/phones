@@ -15,4 +15,6 @@ public class UserOrderItemSummaryDTO {
     private Integer qty;
     private BigDecimal unitPrice;
     private BigDecimal lineTotal;
+    private String color;
+    private String capacity;
 }

@@ -62,20 +62,12 @@
         <span class="stock" id="stockPill">—</span>
       </div>
 
-      <!-- SKU hiển thị -->
-      <!-- <div class="sku-line">
-        <div style="font-weight:600;color:var(--muted-clr)">SKU</div>
-        <div id="skuPill">—</div>
-        <div id="skuDebug" class="muted"></div>
-      </div> -->
-
       <div class="row mb-16" style="gap:12px;align-items:center">
         <div class="qty">
           <button id="decBtn" aria-label="Giảm">−</button>
           <input id="qtyInput" aria-label="Số lượng" inputmode="numeric" value="1">
           <button id="incBtn" aria-label="Tăng">+</button>
         </div>
-        <!-- Nút thêm giỏ: sẽ được gán data-* bằng JS sau khi load sản phẩm -->
         <button
           id="addBtn"
           class="btn btn-primary btn-add-cart"
@@ -324,7 +316,7 @@
         });
       }
       localStorage.setItem(key, JSON.stringify(cur));
-      try{ window.dispatchEvent(new CustomEvent('fs:cart:changed', { detail: { action:'add', cart: cur } })); }catch(e){}
+      try{ window.dispatchEvent(new CustomEvent('cart:changed', { detail: { action:'add', cart: cur } })); }catch(e){}
       return cur;
     }catch(e){
       console.error('local guest cart fail', e); return null;
@@ -369,7 +361,8 @@
           console.debug('[FS_CartClient.addToCart] result=', res);
           if (res && res.success) {
             showToast('Đã thêm vào giỏ hàng');
-            try{ window.dispatchEvent(new CustomEvent('fs:cart:changed',{ detail:{ action:'add', productId: pid, qty, cart: res.cart } })); }catch(e){}
+            // [SỬA 1] Đổi tên sự kiện thành 'cart:changed' (bỏ fs:)
+            try{ window.dispatchEvent(new CustomEvent('cart:changed',{ detail:{ count: null } })); }catch(e){}
           } else if (res && res.status === 401) {
             const next = encodeURIComponent(location.pathname + location.search);
             window.location.href = `login.html?next=${next}`;
@@ -377,7 +370,11 @@
           } else {
             console.warn('FS_CartClient.addToCart failed, fallback to local', res);
             const c = addToLocalGuestCart(localProductData, qty);
-            if (c) showToast('Đã thêm (chế độ tạm - offline)'); else showToast('Thêm thất bại');
+            if (c) { 
+                showToast('Đã thêm (chế độ tạm - offline)');
+                // [SỬA 2] Trigger sự kiện cho badge
+                window.dispatchEvent(new CustomEvent('cart:changed')); 
+            } else { showToast('Thêm thất bại'); }
           }
         } else {
           // direct POST fallback (debug-friendly)
@@ -391,7 +388,8 @@
             let j = null;
             try { j = await resp.json(); } catch(_) {}
             showToast('Đã thêm vào giỏ hàng');
-            try{ window.dispatchEvent(new CustomEvent('fs:cart:changed',{ detail:{ action:'add', productId: pid, qty, cart: j } })); }catch(e){}
+            // [SỬA 3] Đổi tên sự kiện thành 'cart:changed'
+            try{ window.dispatchEvent(new CustomEvent('cart:changed',{ detail:{ action:'add', productId: pid, qty, cart: j } })); }catch(e){}
           } else if (resp.status === 401) {
             const next = encodeURIComponent(location.pathname + location.search);
             window.location.href = `login.html?next=${next}`;
@@ -400,13 +398,19 @@
             const txt = await resp.text().catch(()=>`HTTP ${resp.status}`);
             console.warn('BE add to cart failed', resp.status, txt);
             const c = addToLocalGuestCart(localProductData, qty);
-            if (c) showToast('Đã thêm (chế độ tạm - offline)'); else showToast(txt || 'Thêm thất bại');
+            if (c) { 
+                showToast('Đã thêm (chế độ tạm - offline)');
+                window.dispatchEvent(new CustomEvent('cart:changed')); 
+            } else { showToast(txt || 'Thêm thất bại'); }
           }
         }
       } catch (err) {
         console.error('Add to cart exception', err);
         const c = addToLocalGuestCart(localProductData, qty);
-        if (c) showToast('Đã thêm (chế độ tạm - offline)'); else showToast('Lỗi khi thêm giỏ hàng');
+        if (c) { 
+            showToast('Đã thêm (chế độ tạm - offline)');
+            window.dispatchEvent(new CustomEvent('cart:changed')); 
+        } else { showToast('Lỗi khi thêm giỏ hàng'); }
       } finally {
         btn.classList.remove('loading'); btn.disabled = false;
       }
@@ -461,7 +465,6 @@
 })();
 </script>
 
-<!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>
@@ -470,7 +473,6 @@
 <script src="assets/js/core/cart-guard.js"></script>
 <script src="assets/js/core/compat-pid.js"></script>
 <script src="assets/js/core/cart-badge.js"></script>
-<!-- cart-client must be last so bindAddToCart can call FS_CartClient.addToCart -->
 <script type="module" src="assets/js/core/cart-client.js"></script>
 
 </body>

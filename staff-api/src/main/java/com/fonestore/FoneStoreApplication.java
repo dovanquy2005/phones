@@ -18,10 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.fonestore.staff_api.entity"
 })
 public class FoneStoreApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(FoneStoreApplication.class, args);
     }
-
-
 }

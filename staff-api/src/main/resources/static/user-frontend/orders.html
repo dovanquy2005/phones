@@ -5,14 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Đơn hàng của tôi — fonestore</title>
 
-  <!-- CSS tổng từ dự án -->
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
   <link rel="stylesheet" href="assets/css/orders.css">
+  
+  <style>
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #374151;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .page-btn:hover { background: #f9fafb; }
+    .page-btn.active {
+      background: #111827;
+      color: #fff;
+      border-color: #111827;
+    }
+    .page-btn.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
-  <!-- Header chuẩn (base.css + auth-menu.css) -->
   <header class="header">
   <div class="container inner">
     <a class="brand" href="index.html">
@@ -21,8 +52,8 @@
     <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
-      <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
-      <a href="login.html">Đăng nhập</a>
+      <a href="cart.html" class="badge badge-cart" id="navCart">Giỏ hàng</a>
+      <a href="login.html" id="navLogin">Đăng nhập</a>
       <a href="help.html">Hỗ trợ</a>
     </nav>
   </div>
@@ -43,20 +74,11 @@
       </div>
 
       <div id="ordersList" class="mt-16">
-        <!-- Skeleton 3 hàng -->
-        <div class="sk sk-row" aria-hidden="true">
-          <div class="bar s1"></div><div class="bar s2"></div><div class="bar s3"></div>
-          <div class="bar s4"></div><div class="bar s5"></div><div class="bar s6"></div><div class="bar s7"></div>
-        </div>
-        <div class="sk sk-row" aria-hidden="true" style="margin-top:8px">
-          <div class="bar s1"></div><div class="bar s2"></div><div class="bar s3"></div>
-          <div class="bar s4"></div><div class="bar s5"></div><div class="bar s6"></div><div class="bar s7"></div>
-        </div>
-        <div class="sk sk-row" aria-hidden="true" style="margin-top:8px">
-          <div class="bar s1"></div><div class="bar s2"></div><div class="bar s3"></div>
-          <div class="bar s4"></div><div class="bar s5"></div><div class="bar s6"></div><div class="bar s7"></div>
-        </div>
+        <div class="sk sk-row" aria-hidden="true"><div class="bar s1"></div><div class="bar s2"></div><div class="bar s3"></div><div class="bar s4"></div><div class="bar s5"></div><div class="bar s6"></div><div class="bar s7"></div></div>
+        <div class="sk sk-row" aria-hidden="true" style="margin-top:8px"><div class="bar s1"></div><div class="bar s2"></div><div class="bar s3"></div><div class="bar s4"></div><div class="bar s5"></div><div class="bar s6"></div><div class="bar s7"></div></div>
       </div>
+      
+      <div id="pagination" class="pagination"></div>
     </div>
   </main>
 
@@ -69,6 +91,11 @@
 <script>
   (function(){
     const API = "http://localhost:9090";
+    
+    // Cấu hình phân trang
+    const PAGE_SIZE = 10; // Số dòng mỗi trang
+    let allOrders = [];   // Lưu toàn bộ đơn hàng tải về
+    let currentPage = 1;  // Trang hiện tại
 
     // ---- Auth helpers ----
     function getToken(){
@@ -86,11 +113,7 @@
     }
 
     function setUserBadge(nameOrEmail){
-      const ua = document.getElementById('ua');
-      const un = document.getElementById('un');
-      const name = (nameOrEmail||'User').toString();
-      if(un) un.textContent = name;
-      if(ua) ua.textContent = name.trim()[0]?.toUpperCase() || 'U';
+      // Logic badge user nếu cần
     }
 
     const user = getUser();
@@ -99,6 +122,7 @@
 
     const uid = user.userId ?? user.id ?? user.user_id;
     const $list = document.getElementById('ordersList');
+    const $pager = document.getElementById('pagination');
 
     const money = (n) => (n!=null && !isNaN(n)) ? Number(n).toLocaleString('vi-VN') + ' đ' : '';
     const toDate = (v) => {
@@ -129,8 +153,6 @@
       const id = o.orderId ?? o.id ?? o.order_id ?? '';
       const created = toDate(o.createdAt ?? o.created_at ?? o.createdDate);
       const st = String(o.status ?? '').toUpperCase();
-
-      // subtotal may be nested or null — try multiple keys
       const subtotal = money(o.subtotal ?? o.sub_total ?? (o.lines && Array.isArray(o.lines) ? o.lines.reduce((acc,l)=>acc + (Number(l.unitPrice||0) * Number(l.qty||0)),0) : 0));
       const ship = money(o.shippingFee ?? o.shipping_fee ?? 0);
       const total = money(o.total ?? o.grandTotal ?? (Number(o.subtotal||0) + Number(o.shippingFee||o.shipping_fee||0)));
@@ -150,63 +172,97 @@
       `;
     }
 
-    function emptyHTML(){
-      return `<div class="empty">
-        <img src="assets/img/empty-box.svg" alt="" style="width:72px;opacity:.6">
-        <div>Chưa có đơn hàng nào</div>
-      </div>`;
+    // [MỚI] Hàm render danh sách theo trang
+    function renderPage(page) {
+        if (!allOrders || allOrders.length === 0) {
+            $list.innerHTML = `<div class="empty"><img src="assets/img/empty-box.svg" alt="" style="width:72px;opacity:.6"><div>Chưa có đơn hàng nào</div></div>`;
+            $pager.innerHTML = '';
+            return;
+        }
+
+        const totalPages = Math.ceil(allOrders.length / PAGE_SIZE);
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        currentPage = page;
+
+        const start = (page - 1) * PAGE_SIZE;
+        const end = start + PAGE_SIZE;
+        const pageItems = allOrders.slice(start, end);
+
+        $list.innerHTML = pageItems.map(rowHTML).join('');
+        renderPaginationControls(totalPages);
     }
+
+    // [MỚI] Hàm vẽ nút phân trang
+    function renderPaginationControls(totalPages) {
+        if (totalPages <= 1) {
+            $pager.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        // Nút Prev
+        html += `<a class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="window.changePage(${currentPage - 1})">«</a>`;
+
+        // Các trang số
+        for (let i = 1; i <= totalPages; i++) {
+            if (totalPages > 7 && Math.abs(i - currentPage) > 2 && i !== 1 && i !== totalPages) {
+                if (html.endsWith('...</span>')) continue;
+                html += `<span style="padding: 0 4px;">...</span>`;
+                continue;
+            }
+            html += `<a class="page-btn ${i === currentPage ? 'active' : ''}" onclick="window.changePage(${i})">${i}</a>`;
+        }
+
+        // Nút Next
+        html += `<a class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="window.changePage(${currentPage + 1})">»</a>`;
+
+        $pager.innerHTML = html;
+    }
+
+    // [MỚI] Expose hàm đổi trang ra global để gọi từ onclick
+    window.changePage = function(p) {
+        renderPage(p);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     function showError(msg){
       $list.innerHTML = `<div class="alert-inline">${msg}</div>`;
     }
 
-    // build headers: include Authorization if token present
     const headers = {'Accept':'application/json'};
-    const token = getToken();
-    if(token) headers['Authorization'] = 'Bearer ' + token;
+    const tokenStr = getToken();
+    if(tokenStr) headers['Authorization'] = 'Bearer ' + tokenStr;
 
-    // Note: backend controller expects userIdParam (or Authorization). We include both for compatibility.
     const url = `${API}/api/user/orders?userIdParam=${encodeURIComponent(uid)}&t=${Date.now()}`;
+    
     fetch(url, { headers, credentials: 'include' })
       .then(resp => {
-        if(resp.status === 401){ // not authenticated
-          // if token exists but 401, clear & redirect
+        if(resp.status === 401){ 
           ['user','fs_user','fs_token'].forEach(k=>{ localStorage.removeItem(k); sessionStorage.removeItem(k); });
           location.replace('login.html');
           throw new Error('Unauthenticated');
         }
-        if(!resp.ok){
-          throw new Error('HTTP '+resp.status);
-        }
+        if(!resp.ok){ throw new Error('HTTP '+resp.status); }
         return resp.json();
       })
       .then(body => {
-        // backend may return array, or object { items: [...], ... } if paging used previously
         let arr = [];
         if(Array.isArray(body)) arr = body;
         else if(body == null) arr = [];
         else if(Array.isArray(body.items)) arr = body.items;
         else if(Array.isArray(body.data)) arr = body.data;
-        else {
-          // fallback: if object looks like a single order, show single item
-          if(body.orderId || body.id) arr = [body];
-          else arr = [];
-        }
+        else { if(body.orderId || body.id) arr = [body]; else arr = []; }
 
-        if(!Array.isArray(arr) || arr.length === 0){
-          $list.innerHTML = emptyHTML();
-          return;
-        }
-
-        $list.innerHTML = arr.map(rowHTML).join('');
+        // Lưu toàn bộ đơn hàng và render trang 1
+        allOrders = arr;
+        renderPage(1);
       })
       .catch(err => {
         console.error('Load orders failed', err);
         showError('Không tải được danh sách đơn hàng. Vui lòng thử lại sau.');
       });
 
-    // Đăng xuất nhanh
     document.getElementById('logoutBtn')?.addEventListener('click', ()=> {
       ['user','fs_user','fs_token'].forEach(k=>{ localStorage.removeItem(k); sessionStorage.removeItem(k); });
       location.replace('login.html');
@@ -214,7 +270,6 @@
   })();
   </script>
 
-<!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>

@@ -5,7 +5,7 @@ public class ProductDetailDTO {
     private Long id;
     private long skuId;
     private String name;
-    private String slug;
+    
     private Long brandId;
     private String description;
     private String specsJson;

@@ -8,7 +8,6 @@ public record StaffCreateRequest(
     @NotBlank String fullName,
     @NotBlank String role,             // "manager" | "staff"
     @Size(min = 6) String password,    // plaintext -> BE hash
-    String position,
     String phone,
     Boolean isActive,                  // null -> mặc định true
     Boolean sendInvite                 // tuỳ bạn dùng

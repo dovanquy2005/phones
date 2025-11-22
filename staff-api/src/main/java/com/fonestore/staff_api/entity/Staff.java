@@ -30,9 +30,6 @@ public class Staff {
     @Column(nullable = false, length = 16)
     private String role;              // "manager" | "staff" (lowercase)
 
-    @Column(length = 80)
-    private String position;
-
     @Column(length = 20)
     private String phone;             // mới thêm
 

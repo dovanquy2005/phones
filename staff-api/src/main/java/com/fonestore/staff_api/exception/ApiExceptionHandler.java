@@ -27,10 +27,19 @@ public class ApiExceptionHandler {
                 : e.getMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
-
-    // --- 409: Conflict (trùng dữ liệu, unique key) ---
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleConflict(DataIntegrityViolationException e) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body("Brand already exists");
+        // THAY ĐỔI: Lấy thông báo lỗi chi tiết nhất từ Database
+        String detail = e.getMostSpecificCause() != null 
+                    ? e.getMostSpecificCause().getMessage() 
+                    : "Data integrity violation (details unavailable)";
+                    
+        // Trả về thông báo chi tiết
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(detail);
     }
+    // // --- 409: Conflict (trùng dữ liệu, unique key) ---
+    // @ExceptionHandler(DataIntegrityViolationException.class)
+    // public ResponseEntity<?> handleConflict(DataIntegrityViolationException e) {
+    //     return ResponseEntity.status(HttpStatus.CONFLICT).body("Brand already exists");
+    // }
 }

@@ -1,6 +1,5 @@
 package com.fonestore.staff_api.service.product;
 
-
 import com.fonestore.staff_api.dto.product.CreateProductRequest;
 import com.fonestore.staff_api.dto.product.ProductDetailDTO;
 import com.fonestore.staff_api.dto.product.ProductImageDTO;
@@ -33,39 +32,18 @@ public class ProductService {
 
     /* ================= Helpers ================= */
 
-    private static String slugify(String s) {
-        if (s == null) return "";
-        String noDiac = Normalizer.normalize(s, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}+", "");
-        return noDiac.toLowerCase()
-                .replaceAll("[^a-z0-9\\s-]", "")
-                .trim()
-                .replaceAll("\\s+", "-")
-                .replaceAll("-{2,}", "-");
-    }
-
-    /** Tạo slug duy nhất. Nếu đã tồn tại, thêm -2, -3, ... */
-    private String ensureUniqueSlug(String base, Long excludeId) {
-        String slug = base;
-        int k = 2;
-        if (excludeId == null) {
-            while (productRepository.existsBySlug(slug)) {
-                slug = base + "-" + k++;
-                if (k > 500) break;
-            }
-        } else {
-            while (productRepository.existsBySlugAndIdNot(slug, excludeId)) {
-                slug = base + "-" + k++;
-                if (k > 500) break;
-            }
-        }
-        return slug;
-    }
+    // [ĐÃ XÓA] slugify, ensureUniqueSlug
 
     private String genSkuCode(Product p, String color, String capacity) {
-        String base = Optional.ofNullable(p.getSlug())
-                .filter(s -> !s.isBlank())
-                .orElseGet(() -> slugify(p.getName()));
+        // Logic tạo SKU: dùng trực tiếp tên sản phẩm để chuẩn hóa
+        String s = p.getName();
+        String base = (s == null) ? "" : Normalizer.normalize(s, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-");
+
         String cc = (Optional.ofNullable(color).orElse("-") + "-" +
                 Optional.ofNullable(capacity).orElse("-"))
                 .replaceAll("\\s+", "-").toLowerCase();
@@ -154,15 +132,23 @@ public class ProductService {
                 .toList();
 
         String coverImage = images.stream().findFirst().map(ProductImageDTO::getFilePath).orElse(null);
-        // lấy sku của variant đầu tiên (nếu có)
         long skuId = variants.stream()
             .findFirst()
             .map(ProductVariantDTO::getId)
-            .orElse(null);
+            .orElse(0L); 
             
         return new ProductDetailDTO(
-                p.getId(),skuId, p.getName(), p.getSlug(), p.getBrandId(), p.getDescription(),
-                p.getSpecsJson(), p.getIsActive(), coverImage, p.getQuantity(), variants, images
+                p.getId(),
+                skuId, 
+                p.getName(),
+                p.getBrandId(), 
+                p.getDescription(),
+                p.getSpecsJson(), 
+                p.getIsActive(), 
+                coverImage, 
+                p.getQuantity(), 
+                variants, 
+                images
         );
     }
 
@@ -176,15 +162,9 @@ public class ProductService {
             throw new NoSuchElementException("Brand not found");
         }
 
-        // Slug chuẩn & duy nhất
-        String baseSlug = (r.getSlug() != null && !r.getSlug().isBlank())
-                ? slugify(r.getSlug())
-                : slugify(r.getName());
-        String finalSlug = ensureUniqueSlug(baseSlug, null);
-
         Product p = new Product();
         p.setName(r.getName());
-        p.setSlug(finalSlug);
+        // [ĐÃ XÓA] p.setSlug(...)
         p.setBrandId(r.getBrandId());
         p.setDescription(r.getDescription());
         p.setSpecsJson(Optional.ofNullable(r.getSpecsJson()).orElse("{}"));
@@ -226,30 +206,16 @@ public class ProductService {
             p.setBrandId(r.getBrandId());
         }
 
-        // Name & Slug:
-        // - Nếu có slug trong request -> ưu tiên, nhưng vẫn slugify + ensure unique (exclude chính nó)
-        // - Nếu không có slug nhưng có name mới -> slugify(name) + ensure unique (exclude chính nó)
-        if (r.getSlug() != null && !r.getSlug().isBlank()) {
-            String base = slugify(r.getSlug());
-            String unique = ensureUniqueSlug(base, id);
-            p.setSlug(unique);
-        } else if (r.getName() != null && !r.getName().isBlank()) {
-            String base = slugify(r.getName());
-            // nếu base khác slug hiện tại mới cần check unique
-            if (!base.equals(p.getSlug())) {
-                String unique = ensureUniqueSlug(base, id);
-                p.setSlug(unique);
-            }
-        }
+        // [ĐÃ XÓA] Logic cập nhật Slug
 
         if (r.getName() != null)        p.setName(r.getName());
         if (r.getDescription() != null) p.setDescription(r.getDescription());
         if (r.getSpecsJson() != null)   p.setSpecsJson(r.getSpecsJson());
         if (r.getIsActive() != null)    p.setIsActive(r.getIsActive());
         if (r.getQuantity() != null)    p.setQuantity(Math.max(0, r.getQuantity()));
-        productRepository.save(p); // UPDATE (đã có id)
+        productRepository.save(p); 
 
-        /* Biến thể chính (sku nhỏ nhất) — sửa hoặc tạo mới nếu có add* */
+        /* Biến thể chính (sku nhỏ nhất) */
         boolean hasVariantFields =
                 (r.getAddColor() != null && !r.getAddColor().isBlank()) ||
                 (r.getAddCapacity() != null && !r.getAddCapacity().isBlank()) ||

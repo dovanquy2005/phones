@@ -603,6 +603,76 @@
 })();
 </script>
 
+<script>
+// START: role-based sidebar control (robust) + header render hook ensure
+(function(){
+  const getToken = () =>
+    (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
+
+  function decodeJwt(token){
+    try{
+      const p = token.split('.')[1];
+      const json = atob(p.replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    }catch{ return null; }
+  }
+  function __extractRoles(payload){
+    try{
+      let raw = payload?.authorities ?? payload?.roles ?? payload?.role ?? payload?.scope ?? [];
+      let list = Array.isArray(raw) ? raw : String(raw||'').split(/[,\s]+/);
+      list = list
+        .map(x => (x && typeof x === 'object' && x.authority) ? x.authority : x)
+        .map(s => String(s||'').trim().toLowerCase().replace(/^role[_:\-]/, ''));
+      return list.filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function __deriveRole(list){
+    if (list.includes('manager') || list.includes('admin') || list.includes('administrator')) return 'manager';
+    if (list.includes('staff') || list.includes('employee')) return 'staff';
+    if (list.includes('user')) return 'user';
+    return list[0] || 'user';
+  }
+  function __applyRoleUI(role){
+    try{
+      const sys = document.querySelector('.sidebar__group[data-sec="system"]');
+      if (sys && role !== 'manager') sys.remove();
+    }catch(e){}
+  }
+  function initials(s){
+    const t = (s||'').trim(); if(!t) return '--';
+    const parts = t.split(/\s+/);
+    const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||'';
+    return (a+b || t.slice(0,2)).toUpperCase();
+  }
+  function fillProfile({name,email,role}){
+    const avHeader = document.getElementById('avatarImg');
+    if (avHeader) avHeader.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const av = document.getElementById('profileAvatar');
+    if (av) av.src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    const n1 = document.getElementById('profileName');  if (n1) n1.textContent = name;
+    const r1 = document.getElementById('profileRole');
+    if (r1){
+      r1.textContent = role==='manager'?'Manager':(role==='staff'?'Staff':role);
+      r1.className = 'role-badge ' + (role==='manager'?'manager':(role==='staff'?'staff':''));
+    }
+    const iN = document.getElementById('profile_name'); if (iN) iN.value = name;
+    const iE = document.getElementById('profile_email');if (iE) iE.value = email;
+    const iR = document.getElementById('profile_role'); if (iR) iR.value = r1 ? r1.textContent : role;
+  }
+
+  const token = getToken(); if (!token) return;
+  const payload = decodeJwt(token) || {};
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || payload.given_name || payload.sub || 'Người dùng';
+  const email = payload.email || payload.username || '—';
+
+  fillProfile({name,email,role});
+  __applyRoleUI(role);
+
+  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+})();
+</script>
 
 <script>
 /* [SỬA 3] Logic fill Staff/Manager profile - Đồng bộ với giao diện mới */

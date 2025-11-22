@@ -52,7 +52,6 @@ public class StaffService {
                 s.getEmail(),
                 s.getFullName(),
                 s.getRole(),
-                s.getPosition(),
                 s.getPhone(),
                 s.isActive(),
                 s.getCreatedAt(),
@@ -71,7 +70,6 @@ public class StaffService {
         s.setEmail(email);
         s.setFullName(r.fullName().trim());
         s.setRole(normRole(r.role()));
-        s.setPosition(r.position());
         s.setPhone(normPhoneVN(r.phone()));
         s.setActive(normActive(r.isActive()));
 
@@ -118,9 +116,6 @@ public class StaffService {
 
         if (r.role()!=null && !r.role().isBlank())
             s.setRole(normRole(r.role()));
-
-        if (r.position()!=null)
-            s.setPosition(r.position());
 
         if (r.phone()!=null)
             s.setPhone(normPhoneVN(r.phone()));

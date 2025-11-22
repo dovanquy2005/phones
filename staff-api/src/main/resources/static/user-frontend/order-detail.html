@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Chi tiết đơn hàng — fonestore</title>
 
-  <!-- CSS gốc -->
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
@@ -16,7 +15,7 @@
       --sheet-pad: 20px;
       --bg:#f6f7fb;--card:#fff;--bd:#e5e7eb;--ink:#0f172a;--muted:#667085;--brand:#2740ff;
       --shadow:0 4px 14px rgba(17,24,39,.06);
-      --table-head:#fafbfc;
+      --table-head:#fafbfc; /* Màu nền header bảng */
       --tbl-pad:14px;
     }
     .order-page body{background:var(--bg);color:var(--ink)}
@@ -70,12 +69,11 @@
     .order-page .tbl th.ta-r, .order-page .tbl td.ta-r { text-align:right; }
     .order-page .tbl th.ta-c, .order-page .tbl td.ta-c { text-align:center; }
 
-    /* Cột % cố định cho 2 bảng để giàn đều */
-    .order-page .col-method{width:22% !important}
-    .order-page .col-status{width:16% !important}
-    .order-page .col-amount{width:16% !important}
-    .order-page .col-txn{width:22% !important}
-    .order-page .col-time{width:24% !important}
+    /* Cột % cố định cho bảng thanh toán */
+    .order-page .col-method{width:30% !important}
+    .order-page .col-status{width:20% !important}
+    .order-page .col-amount{width:20% !important}
+    .order-page .col-time{width:30% !important}
 
     .order-page .col-carrier{width:16% !important}
     .order-page .col-track{width:18% !important}
@@ -85,7 +83,7 @@
     .order-page .col-updated{width:18% !important}
 
     /* ===== ORDER LINES (thiết kế mới) ===== */
-    .order-page .order-lines{display:flex;flex-direction:column;gap:16px}
+    .order-page .order-lines{display:flex;flex-direction:column}
     .order-page .line{
       display:grid;
       grid-template-columns:72px 1fr 100px 140px 150px; /* img | info | qty | unit | total */
@@ -94,6 +92,23 @@
       padding:12px 0;
       border-bottom:1px solid var(--bd);
     }
+    
+    /* --- HEADER DÒNG SẢN PHẨM (ĐÃ SỬA) --- */
+    .order-page .line.header {
+      font-weight: 750;
+      color: var(--link);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      
+      /* Thêm màu nền và padding giống bảng thanh toán */
+      background: var(--table-head); 
+      border-bottom: 1px solid var(--bd);
+      padding: 12px 10px; /* Padding khớp với dòng nội dung */
+      border-radius: 8px; /* Bo góc nhẹ */
+      margin-bottom: 8px; /* Cách ra một chút với danh sách */
+    }
+
     .order-page .line:last-child{border-bottom:none}
     @media(max-width:840px){
       .order-page .line{grid-template-columns:72px 1fr 70px 100px 110px;font-size:14px}
@@ -133,10 +148,8 @@
   <div class="container-narrow">
     <div style="margin-bottom:16px"><a href="orders.html">← Quay lại danh sách</a></div>
 
-    <!-- 1 CARD DUY NHẤT -->
     <section class="sheet">
 
-      <!-- Header 1 dòng -->
       <div class="order-head">
         <span class="oh-title" id="ohTitle">Đơn hàng #—</span>
         <span class="oh-sep">·</span>
@@ -149,7 +162,6 @@
 
       <div class="divider"></div>
 
-      <!-- Summary strip -->
       <div class="summary">
         <div class="sum-box">
           <h3 class="sum-title">Tổng kết</h3>
@@ -171,58 +183,39 @@
 
       <div class="divider"></div>
 
-      <!-- Sản phẩm (thiết kế mới) -->
       <h3 class="section-title">Sản phẩm</h3>
+      
+      <div class="line header">
+        <div style="grid-column: 1 / span 2">Điện thoại</div> 
+        <div class="ta-c">Số lượng</div>
+        <div class="ta-r">Đơn giá</div>
+        <div class="ta-r">Thành tiền</div>
+      </div>
+
       <div class="order-lines">
-        <div id="lines"><div class="muted">Đang tải…</div></div>
+        <div id="lines"><div class="muted" style="padding:12px">Đang tải…</div></div>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Thanh toán -->
       <h3 class="section-title">Thanh toán</h3>
       <div class="table-wrap">
         <table class="tbl">
           <thead>
             <tr>
               <th class="col-method">Phương thức</th>
-              <th class="col-status">Trạng thái</th>
-              <th class="ta-r col-amount">Số tiền</th>
-              <th class="col-txn">Mã giao dịch</th>
+              <th class="col-status ta-c">Trạng thái</th> <th class="ta-r col-amount">Số tiền</th>
               <th class="col-time">Thời gian</th>
             </tr>
           </thead>
           <tbody id="payments">
-            <tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>
+            <tr><td colspan="4" class="muted">Không có bản ghi.</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="divider"></div>
 
-      <!-- Vận chuyển -->
-      <h3 class="section-title">Vận chuyển</h3>
-      <div class="table-wrap">
-        <table class="tbl">
-          <thead>
-            <tr>
-              <th class="col-carrier">ĐVVC</th>
-              <th class="col-track">Mã vận đơn</th>
-              <th class="col-shipstt">Trạng thái</th>
-              <th class="ta-r col-fee">Phí</th>
-              <th class="col-created">Tạo lúc</th>
-              <th class="col-updated">Cập nhật</th>
-            </tr>
-          </thead>
-          <tbody id="ships">
-            <tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- Ghi chú -->
       <h3 class="section-title">Ghi chú</h3>
       <div id="note" class="muted">—</div>
 
@@ -250,7 +243,13 @@
   };
   const PLACEHOLDER = 'assets/img/placeholder.png';
 
-  // Header
+  const toImg = (path) => {
+    if (!path) return PLACEHOLDER;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    return API + cleanPath;
+  };
+
   $('ohTitle').textContent = `Đơn hàng #${orderId}`;
   $('hdrCode').textContent = `Mã đơn: #${orderId}`;
 
@@ -261,121 +260,93 @@
       const s = String(o.status||'').toUpperCase();
       const sEl = $('hdrStatus');
       sEl.textContent = (s==='PENDING'?'Đang xử lý': s==='CREATED'?'Vừa đặt đơn': 
-                          s==='PAID'?'Đã thanh toán': 
+                         s==='PAID'?'Đã thanh toán': 
                          s==='DELIVERED'?'Đã giao': s==='SHIPPING'?'Đang giao':
                          s==='CANCELED'?'Đã hủy': s==='FAILED'?'Thất bại': (o.status||'—'));
       sEl.className = 'status st--'+s.replace(/\s+/g,'_');
 
-      // Ngày tạo
       const created = o.createdAt ?? o.created_at ?? o.createdDate ?? o.created_on;
       $('hdrCreated').textContent = `Ngày tạo: ${DT(created)}`;
 
-      // ===== SẢN PHẨM (list) =====
-      const lines = Array.isArray(o.lines) ? o.lines : (Array.isArray(o.orderLines)?o.orderLines:[]);
+      // ===== SẢN PHẨM =====
+      const lines = Array.isArray(o.items) ? o.items : (Array.isArray(o.lines) ? o.lines : []);
+      
       $('lines').innerHTML = lines.length ? lines.map(l=>{
         const name = l.productName || l.name || 'Sản phẩm';
-        const pid  = l.productId ?? l.pid ?? l.product_id ?? '';
-        const href = pid ? `product.html?id=${encodeURIComponent(pid)}` : '#';
-        const sku  = l.sku ?? l.skuId ?? l.variantCode ?? '';
-        const img  = l.image || l.thumbnail || l.thumbUrl || l.picture || PLACEHOLDER;
+        const pid  = l.productId ?? ''; 
+        const href = pid ? `product-detail.html?id=${encodeURIComponent(pid)}` : '#';
+        const sku  = l.skuCode ?? l.skuId ?? ''; 
+        const rawImg = l.imagePath || l.image || l.thumbnail;
+        const img = toImg(rawImg);
+        const color = l.color;
+        const capacity = l.capacity; 
 
-        // Thuộc tính biến thể (fallback)
-        const color = l.color || l.variantColor || l.attributes?.color;
-        const ram   = l.ram   || l.variantRam   || l.attributes?.ram;
-        const rom   = l.rom   || l.variantRom   || l.attributes?.rom;
-        const condition = l.condition || l.grade;
-
-        const attrs = [color && `Màu: ${color}`, ram && `RAM ${ram}`, rom && `ROM ${rom}`, condition && `Tình trạng: ${condition}`]
-                      .filter(Boolean).map(v=>`<div class="attr">${v}</div>`).join('');
+        const attrs = [
+            color && `Màu: ${color}`, 
+            capacity && `Dung lượng: ${capacity}`
+        ].filter(Boolean).map(v=>`<div class="attr">${v}</div>`).join('');
 
         const qty  = Number(l.qty ?? l.quantity ?? 0);
-        const unit = Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0);
-        const total= unit * qty;
-        const old  = Number(l.oldPrice ?? l.originalPrice ?? 0);
-
-        // IMEI/Serial
-        let imeis = [];
-        if (Array.isArray(l.imeis)) imeis = l.imeis;
-        else if (typeof l.imei === 'string' && l.imei.trim()) imeis = [l.imei];
-        const imeiBlock = imeis.length ? `<div class="price-meta">IMEI: ${imeis.join(', ')}</div>` : '';
-
-        /* onerror → placeholder để tránh icon vỡ */
-        const imgTag = `<img src="${img}" loading="lazy" class="line-img" alt=""
-                           onerror="this.onerror=null;this.src='${PLACEHOLDER}';">`;
+        const unit = Number(l.unitPrice ?? l.price ?? 0);
+        const total= Number(l.lineTotal ?? (unit * qty));
 
         return `
         <div class="line">
-          ${imgTag}
+          <img src="${img}" loading="lazy" class="line-img" alt="${name}" 
+               onerror="this.onerror=null;this.src='${PLACEHOLDER}';">
           <div class="line-info">
             <div class="line-name"><a href="${href}" target="_blank" rel="noopener">${name}</a></div>
             <div class="sku">SKU #${sku || '—'}</div>
             ${attrs ? `<div class="attrs">${attrs}</div>` : ''}
-            <div class="price-meta">
-              ${old && old>unit ? `<span class="old-price">${old.toLocaleString('vi-VN')} đ</span>` : ''}
-            </div>
-            ${imeiBlock}
           </div>
-          <div class="ta-c">${qty}</div>
-          <div class="ta-r num">${unit.toLocaleString('vi-VN')} đ</div>
-          <div class="ta-r num">${total.toLocaleString('vi-VN')} đ</div>
+          <div class="ta-c">x${qty}</div>
+          <div class="ta-r num">${VND(unit)}</div>
+          <div class="ta-r num" style="font-weight:bold">${VND(total)}</div>
         </div>`;
-      }).join('') : '<div class="muted">Không có sản phẩm.</div>';
+      }).join('') : '<div class="muted" style="padding:12px">Không có sản phẩm.</div>';
 
       // ===== TỔNG KẾT =====
-      const clientSub = lines.reduce((s,l)=> s + Number(l.unitPrice ?? l.price ?? l.unit_price ?? 0) * Number(l.qty ?? l.quantity ?? 0), 0);
-      const subtotal  = (o.subtotal!=null) ? o.subtotal : clientSub;
-      const discount  = o.discount ?? o.promotionDiscount ?? o.voucherDiscount ?? 0;
-      const shipFee   = o.shippingFee ?? o.shipping_fee ?? 0;
-      const total     = (o.total!=null) ? o.total : (subtotal - discount + shipFee);
+      const subtotal  = o.subtotal || 0;
+      const discount  = o.discount || 0;
+      const shipFee   = o.shippingFee || 0;
+      const total     = o.total || (subtotal - discount + shipFee);
 
       $('sumSub').textContent   = VND(subtotal);
       $('sumDis').textContent   = VND(discount);
       $('sumShip').textContent  = VND(shipFee);
       $('sumTotal').textContent = VND(total);
 
-      // ===== Ghi chú =====
+      // ===== Ghi chú & Địa chỉ =====
       $('note').textContent = (o.note && String(o.note).trim()) ? o.note : '—';
 
-      // ===== Địa chỉ =====
       const setAddr = (name, phone, addr) => {
         $('addrName').textContent  = name  || '—';
         $('addrPhone').textContent = phone || '—';
         $('addrLine').textContent  = addr  || '—';
       };
-      let snap = o.addressSnapshot ?? o.shippingAddress ?? o.address;
+      let snap = o.addressSnapshot || o.shippingAddress;
       if(typeof snap === 'string'){
         try{
           const a = JSON.parse(snap);
-          setAddr(a.name||a.fullname||a.fullName, a.phone||a.tel, a.address||[a.line1,a.line2,a.city,a.province,a.postalCode].filter(Boolean).join(', '));
+          setAddr(a.name||a.fullname, a.phone, a.address);
         }catch{ setAddr(null,null,snap); }
       }else if(typeof snap === 'object' && snap){
-        setAddr(snap.name||snap.fullname||snap.fullName, snap.phone||snap.tel, snap.address||[snap.line1,snap.line2,snap.city,snap.province,snap.postalCode].filter(Boolean).join(', '));
+        setAddr(snap.name, snap.phone, snap.address);
       }else{
         setAddr(null,null,null);
       }
 
       // ===== Payments =====
       const payments = Array.isArray(o.payments)? o.payments : [];
-      document.getElementById('payments').innerHTML = payments.length ? payments.map(p=>`
+      const payHtml = payments.length ? payments.map(p=>`
         <tr>
-          <td class="col-method">${p.method || p.provider || '—'}</td>
+          <td class="col-method">${p.method || '—'}</td>
           <td class="col-status ta-c"><span class="pill">${p.status || '—'}</span></td>
           <td class="col-amount num ta-r">${VND(p.amount)}</td>
-          <td class="col-txn">${p.txnRef || p.txnId || p.transactionId || ''}</td>
-          <td class="col-time nowrap">${DT(p.createdAt || p.paidAt)}</td>
-        </tr>`).join('') : '<tr><td colspan="5" class="muted">Không có bản ghi.</td></tr>';
+          <td class="col-time nowrap">${DT(p.createdAt)}</td>
+        </tr>`).join('') : '<tr><td colspan="4" class="muted">Không có thông tin thanh toán.</td></tr>';
+      document.getElementById('payments').innerHTML = payHtml;
 
-      // ===== Shipments =====
-      const ships = Array.isArray(o.shipments)? o.shipments : [];
-      document.getElementById('ships').innerHTML = ships.length ? ships.map(s=>`
-        <tr>
-          <td class="col-carrier">${s.carrier || s.provider || '—'}</td>
-          <td class="col-track">${s.trackingNo || s.tracking || '—'}</td>
-          <td class="col-shipstt ta-c"><span class="pill">${s.status || '—'}</span></td>
-          <td class="col-fee num ta-r">${VND(s.fee)}</td>
-          <td class="col-created nowrap">${DT(s.createdAt)}</td>
-          <td class="col-updated nowrap">${DT(s.updatedAt)}</td>
-        </tr>`).join('') : '<tr><td colspan="6" class="muted">Không có bản ghi.</td></tr>';
     })
     .catch(err=>{
       console.error(err);
@@ -384,15 +355,6 @@
     });
 })();
 </script>
-<!-- auto-injected: auth core -->
-
-
-
-
-
-
-
-<!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>

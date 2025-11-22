@@ -28,28 +28,29 @@ public interface UserOrderItemRepository extends JpaRepository<OrderItem, Long> 
     BigDecimal sumLineTotal(@Param("orderId") Long orderId);     // thêm @Param cho chắc
 
     // === NEW: trả về dòng giỏ có kèm tên & ảnh sản phẩm ===
-// repository snippet (nativeQuery for SQL Server)
 @Query(value = """
-    SELECT
-      i.order_item_id   AS id,
-      i.sku_id          AS skuId,
-      i.qty             AS quantity,
-      i.unit_price      AS unitPrice,
-      COALESCE(p.name, CONCAT('SKU #', i.sku_id)) AS productName,
-      pi.file_path AS imagePath
-    FROM order_items i
-    LEFT JOIN product_variants v ON v.sku_id = i.sku_id
-    LEFT JOIN products p        ON p.product_id = v.product_id
-    OUTER APPLY (
-      SELECT TOP 1 file_path
-      FROM product_images x
-      WHERE x.product_id = p.product_id
-      ORDER BY x.sort_order ASC
-    ) pi
-    WHERE i.order_id = :orderId
-    ORDER BY i.order_item_id ASC
-    """, nativeQuery = true)
-List<CartLineRow> findLinesWithInfo(@Param("orderId") Long orderId);
+        SELECT
+          i.order_item_id   AS id,
+          i.sku_id          AS skuId,
+          i.qty             AS quantity,
+          i.unit_price      AS unitPrice,
+          COALESCE(p.name, CONCAT('SKU #', i.sku_id)) AS productName,
+          pi.file_path      AS imagePath,
+          v.color           AS color,       -- THÊM
+          v.capacity        AS capacity     -- THÊM
+        FROM order_items i
+        LEFT JOIN product_variants v ON v.sku_id = i.sku_id
+        LEFT JOIN products p        ON p.product_id = v.product_id
+        OUTER APPLY (
+          SELECT TOP 1 file_path
+          FROM product_images x
+          WHERE x.product_id = p.product_id
+          ORDER BY x.sort_order ASC
+        ) pi
+        WHERE i.order_id = :orderId
+        ORDER BY i.order_item_id ASC
+        """, nativeQuery = true)
+    List<CartLineRow> findLinesWithInfo(@Param("orderId") Long orderId);
 
 
 }

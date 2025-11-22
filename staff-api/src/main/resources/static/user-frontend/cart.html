@@ -52,9 +52,7 @@
           <tr><td colspan="5" class="muted">Đang tải…</td></tr>
           </tbody>
         </table>
-        <!-- phân trang trang 1.2.3... -->
         <div id="cartPager" class="cart-pager" aria-label="Phân trang giỏ hàng"></div>
-
       </section>
 
       <aside class="cart-summary">
@@ -106,14 +104,13 @@
   const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN') + ' đ';
   const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
 
-  // UID helpers (unchanged)
+  // UID helpers
   function uidFromJWT(){ try{ const t = token(); if(!t || t.split('.').length<2) return 0; const b64 = t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); const json = JSON.parse(atob(b64)); const cand = json.userId ?? json.uid ?? json.id ?? json.sub; return Number(cand)||0;}catch{ return 0; } }
   function getUIDLocal(){ try{ const s1 = localStorage.getItem('fs_uid') || sessionStorage.getItem('fs_uid'); if (s1 && Number(s1)>0) return Number(s1); const u = JSON.parse(localStorage.getItem('auth_user') || sessionStorage.getItem('auth_user') || 'null'); if (u && Number(u.id)>0) return Number(u.id); }catch{} return 0; }
   async function fetchUIDFromAPI(){ const t = token(); if(!t) return 0; const headers = { 'Authorization':'Bearer '+t, 'Accept':'application/json' }; const candidates = ['/api/me','/api/user/me','/api/users/me']; for (const u of candidates){ try{ const r = await fetch(API+u, { headers, credentials: 'same-origin' }); if(!r.ok) continue; const j = await r.json(); const id = Number(j?.id ?? j?.userId ?? j?.uid); if (id>0){ try { localStorage.setItem('fs_uid', String(id)); } catch {} return id; } }catch(_){ } } return 0; }
   async function ensureUID(){ let uid = getUIDLocal(); if (uid>0) return uid; uid = uidFromJWT(); if (uid>0){ try{ localStorage.setItem('fs_uid', String(uid)); }catch{}; return uid; } uid = await fetchUIDFromAPI(); return uid||0; }
   const withUID = (u, uid) => `${u}${u.includes('?') ? '&' : '?'}userId=${uid}`;
 
-  // normalizer (unchanged)
   function normLine(item){
     if(!item) return null;
     const id    = item.id ?? item.itemId ?? null;
@@ -126,7 +123,6 @@
     return { id, skuId, name, img: img||PLACEHOLDER, price, qty, total };
   }
 
-  // fetchWithAuth (unchanged)
   function fetchWithAuth(url, opts = {}) {
     const t = token();
     opts.headers = opts.headers || {};
@@ -139,35 +135,25 @@
     opts.headers['Accept'] = opts.headers['Accept'] || 'application/json';
     return fetch(url, opts);
   }
-// --- fetch full cart DTO from server (items + totals)
-async function apiGetCart() {
-  try {
-    const t = token();
-    const headers = { 'Accept': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) };
-    // prefer authenticated GET /api/cart (server should return CartDTO)
-    const res = await fetch(API + '/api/cart', { method: 'GET', headers, credentials: 'include' });
-    if (res.status === 401) {
-      // if not authed, try anonymous /api/cart endpoint (server may allow)
-      return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
-    }
-    if (!res.ok) {
-      console.error('apiGetCart failed', res.status, await res.text());
-      return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
-    }
-    const cart = await res.json();
-    // Normalize items to lines
-    const lines = Array.isArray(cart?.items) ? cart.items.map(normLine).filter(Boolean) : [];
-    const subtotal = Number(cart?.subtotal ?? cart?.subTotal ?? lines.reduce((s,l)=>s + l.price*l.qty,0));
-    const discount = Number(cart?.discount ?? 0);
-    const shippingFee = Number(cart?.shippingFee ?? cart?.shipping ?? 0);
-    const total = Number(cart?.total ?? subtotal - discount + shippingFee);
-    return { items: lines, subtotal, discount, shippingFee, total, rawCart: cart };
-  } catch (e) {
-    console.error('apiGetCart exception', e);
-    return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
-  }
-}
 
+  async function apiGetCart() {
+    try {
+      const t = token();
+      const headers = { 'Accept': 'application/json', ...(t ? { Authorization: 'Bearer ' + t } : {}) };
+      const res = await fetch(API + '/api/cart', { method: 'GET', headers, credentials: 'include' });
+      if (res.status === 401) return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+      if (!res.ok) return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+      const cart = await res.json();
+      const lines = Array.isArray(cart?.items) ? cart.items.map(normLine).filter(Boolean) : [];
+      const subtotal = Number(cart?.subtotal ?? cart?.subTotal ?? lines.reduce((s,l)=>s + l.price*l.qty,0));
+      const discount = Number(cart?.discount ?? 0);
+      const shippingFee = Number(cart?.shippingFee ?? cart?.shipping ?? 0);
+      const total = Number(cart?.total ?? subtotal - discount + shippingFee);
+      return { items: lines, subtotal, discount, shippingFee, total, rawCart: cart };
+    } catch (e) {
+      return { items: [], subtotal: 0, discount: 0, shippingFee: 0, total: 0 };
+    }
+  }
 
   async function apiUpdateQty(itemId, qty){
     const t = token();
@@ -180,7 +166,6 @@ async function apiGetCart() {
         if (r.ok) return true;
       }catch(_){}
     }
-
     const uid = await ensureUID();
     const r2 = await fetchWithAuth(API+withUID('/api/cart/items/'+encodeURIComponent(itemId), uid), {
       method:'PUT', headers, body: JSON.stringify({ itemId, qty })
@@ -205,16 +190,14 @@ async function apiGetCart() {
     throw new Error('remove failed');
   }
 
-  // ============= state + pagination config =============
-  const PAGE_SIZE = 5; // thay đổi nếu muốn
+  const PAGE_SIZE = 5;
   const cartState = {
-    allLines: [],    // tất cả items (nguồn truth)
+    allLines: [],    
     currentPage: 1,
     summary: { subtotal:0, discount:0, shippingFee:0, total:0 }
   };
   const busyIds = new Set();
 
-  // badge & summary use full set
   function badgeUpdateFromAll(){
     const count = cartState.allLines.reduce((s,l)=>s + (Number(l.qty)||0), 0);
     const elById = document.getElementById('navCart');
@@ -223,62 +206,55 @@ async function apiGetCart() {
     if(n) n.textContent = count>0 ? `Giỏ hàng (${count})` : 'Giỏ hàng';
   }
 
-  function calcAll(lines){
-    const sub = lines.reduce((s,l)=>s + l.price*l.qty, 0);
-    const discount = 0, ship = 0, total = sub - discount + ship;
-    return { sub, discount, ship, total };
-  }
-  // function updateSummaryFromAll(){
-  //   const s = calcAll(cartState.allLines);
-  //   $id('sumSub').textContent   = fmtVND(s.sub);
-  //   $id('sumDis').textContent   = fmtVND(s.discount);
-  //   $id('sumShip').textContent  = s.ship ? fmtVND(s.ship) : 'Tính ở bước sau';
-  //   $id('sumTotal').textContent = fmtVND(s.total);
-  // }
+  // [ĐÃ FIX] Logic cập nhật tổng tiền an toàn
   function updateSummaryFromAll(){
-    // if backend provided summary, use it; otherwise compute locally
-    const s = cartState.summary || {};
-    if (s && (s.total !== undefined)) {
-      $id('sumSub').textContent   = fmtVND(s.subtotal);
-      $id('sumDis').textContent   = fmtVND(s.discount);
-      $id('sumShip').textContent  = s.shippingFee ? fmtVND(s.shippingFee) : 'Tính ở bước sau';
-      $id('sumTotal').textContent = fmtVND(s.total);
-      return;
+    const lines = cartState.allLines || [];
+    const sub = lines.reduce((acc, l) => acc + (Number(l.price) * Number(l.qty)), 0);
+
+    // Nếu giỏ trống -> reset giảm giá về 0
+    if (lines.length === 0) {
+        if (cartState.summary) {
+            cartState.summary.discount = 0;
+            cartState.summary.shippingFee = 0;
+        }
     }
-    // fallback compute from lines
-    const computed = calcAll(cartState.allLines);
-    $id('sumSub').textContent   = fmtVND(computed.sub);
-    $id('sumDis').textContent   = fmtVND(computed.discount);
-    $id('sumShip').textContent  = computed.ship ? fmtVND(computed.ship) : 'Tính ở bước sau';
-    $id('sumTotal').textContent = fmtVND(computed.total);
+
+    const s = cartState.summary || {};
+    let discount = Number(s.discount || 0);
+    const shippingFee = Number(s.shippingFee || 0);
+
+    // [FIX LỖI] Giảm giá không được lớn hơn Tạm tính (tránh bị âm hoặc về 0 vô lý trong lúc chờ server)
+    if (discount > sub) {
+        discount = sub;
+    }
+
+    const total = Math.max(0, sub - discount + shippingFee);
+
+    $id('sumSub').textContent   = fmtVND(sub);
+    $id('sumDis').textContent   = fmtVND(discount);
+    $id('sumShip').textContent  = shippingFee ? fmtVND(shippingFee) : 'Tính ở bước sau';
+    $id('sumTotal').textContent = fmtVND(total);
+
+    cartState.summary.subtotal = sub;
+    cartState.summary.total = total;
   }
 
-
-  // ============= pagination helpers ============
-  function totalPages(){
-    return Math.max(1, Math.ceil((cartState.allLines.length||0) / PAGE_SIZE));
-  }
+  function totalPages(){ return Math.max(1, Math.ceil((cartState.allLines.length||0) / PAGE_SIZE)); }
   function pageSlice(page){
     const p = Math.max(1, Math.min(totalPages(), page));
     const start = (p-1) * PAGE_SIZE;
     return cartState.allLines.slice(start, start + PAGE_SIZE);
   }
-
   function goToPage(page){
     cartState.currentPage = Math.max(1, Math.min(totalPages(), page));
     renderPage();
   }
-
   function renderPagination(){
     const pager = $id('cartPager');
     if(!pager) return;
     const pages = totalPages();
     if (pages <= 1) { pager.innerHTML = ''; return; }
-
-    let html = '';
-    html += `<button class="page-btn" data-page="prev"${cartState.currentPage===1 ? ' disabled':''}>‹</button>`;
-
-    // render up to 7 page buttons (compact with dots)
+    let html = `<button class="page-btn" data-page="prev"${cartState.currentPage===1 ? ' disabled':''}>‹</button>`;
     const maxButtons = 7;
     let start = 1, end = pages;
     if (pages > maxButtons){
@@ -288,16 +264,12 @@ async function apiGetCart() {
       if (end > pages){ end = pages; start = end - maxButtons + 1; }
     }
     if (start > 1) html += `<button class="page-btn" data-page="1">1</button>${start>2?'<span class="dots">…</span>':''}`;
-
     for(let i = start; i <= end; i++){
       html += `<button class="page-btn" data-page="${i}" ${i===cartState.currentPage ? 'aria-current="true"':''}>${i}</button>`;
     }
     if (end < pages) html += `${end<pages-1?'<span class="dots">…</span>':''}<button class="page-btn" data-page="${pages}">${pages}</button>`;
-
     html += `<button class="page-btn" data-page="next"${cartState.currentPage===pages ? ' disabled':''}>›</button>`;
     pager.innerHTML = html;
-
-    // attach events
     pager.querySelectorAll('.page-btn').forEach(btn=>{
       const dp = btn.getAttribute('data-page');
       btn.addEventListener('click', (e)=>{
@@ -310,7 +282,6 @@ async function apiGetCart() {
     });
   }
 
-  // ============= render row / page ============
   function render(lines){
     const body = $id('lines');
     if(!lines || !lines.length){
@@ -322,11 +293,8 @@ async function apiGetCart() {
       return;
     }
     $id('empty').style.display = 'none';
-
     const arr = [...lines];
-    // note: badge/summary use full dataset
     badgeUpdateFromAll();
-
     body.innerHTML = arr.map(l=>`
       <tr data-item="${l.id||''}">
         <td>
@@ -362,7 +330,6 @@ async function apiGetCart() {
         clearTimeout(tmr); tmr = setTimeout(()=> setQty(tr, itemId, v), 300);
       });
       tr.querySelector('[data-action="remove"]').addEventListener('click', ()=> removeLine(tr, itemId));
-
       tr.querySelectorAll('img.thumb').forEach(img=>{
         img.addEventListener('error', () => {
           img.onerror = null;
@@ -370,7 +337,6 @@ async function apiGetCart() {
         });
       });
     });
-
     updateSummaryFromAll();
   }
 
@@ -380,7 +346,6 @@ async function apiGetCart() {
     renderPagination();
   }
 
-  // ============= update helpers (operate on allLines) ============
   const pickLine = itemId => cartState.allLines.find(l => String(l.id) === String(itemId));
 
   async function setQty(tr, itemId, qty){
@@ -388,24 +353,24 @@ async function apiGetCart() {
     if (busyIds.has(itemId)) return;
     busyIds.add(itemId);
     try{
-      // update local master
       line.qty = Math.max(1, Number(qty||1));
       line.total = line.qty * line.price;
-
-      // reflect in UI (current row)
       const input = tr.querySelector('[data-role="qty"]');
       if (input) input.value = line.qty;
       const lineTotalEl = tr.querySelector('[data-role="lineTotal"]');
       if (lineTotalEl) lineTotalEl.textContent = fmtVND(line.total);
-
-      // persist
-      await apiUpdateQty(itemId, line.qty);
-
-      // refresh summary + badge
+      
       updateSummaryFromAll();
       badgeUpdateFromAll();
+
+      await apiUpdateQty(itemId, line.qty);
+      
+      // [FIX] Đồng bộ lại với Server để tính lại Voucher chính xác
+      await load();
+
     } finally { busyIds.delete(itemId); }
   }
+
   function changeQty(tr, itemId, delta){
     setQty(tr, itemId, (pickLine(itemId)?.qty||1) + delta);
   }
@@ -414,20 +379,23 @@ async function apiGetCart() {
     if (busyIds.has(itemId)) return;
     busyIds.add(itemId);
     try{
-      await apiRemoveItem(itemId);
-
-      // remove from master list
       cartState.allLines = cartState.allLines.filter(l => String(l.id) !== String(itemId));
-
-      // if current page now empty and not first page, go back one
       const pages = totalPages();
       if (cartState.currentPage > pages) cartState.currentPage = pages;
+      
+      renderPage(); // Update UI ngay lập tức
 
-      renderPage();
+      await apiRemoveItem(itemId);
+      
+      // [FIX] Đồng bộ lại với Server
+      await load();
+      
+    } catch(e){
+      console.error(e);
+      await load();
     } finally { busyIds.delete(itemId); }
   }
 
-  // ============= load & sync ============
   async function load(){
     try {
       const cartObj = await apiGetCart();
@@ -445,7 +413,7 @@ async function apiGetCart() {
     }
     cartState.currentPage = 1;
     renderPage();
-}
+  }
 
   async function syncLocalCartToServer(){
     try {
@@ -466,14 +434,11 @@ async function apiGetCart() {
         try { localStorage.removeItem('fs_cart'); }catch(_){}
         await load();
         return true;
-      } else {
-        console.warn('merge failed', r.status);
       }
     }catch(err){ console.warn('syncLocalCartToServer error', err); }
     return null;
   }
 
-  // events (unchanged)
   $id('applyVoucher').addEventListener('click', async () => {
     const code = ($id('voucher').value||'').trim();
     if (!code) { $id('note').textContent = 'Vui lòng nhập mã.'; return; }
@@ -492,31 +457,22 @@ async function apiGetCart() {
       });
 
       const payload = await res.json().catch(()=>null);
-
       if (res.status === 401) {
         $id('note').textContent = 'Bạn cần đăng nhập để dùng mã.';
         return;
       }
       if (!res.ok) {
-        // backend trả lỗi kèm message
         const msg = payload && payload.message ? payload.message : `Lỗi server (${res.status})`;
         $id('note').textContent = msg;
-        // nếu backend trả updated cart even on non-200, bạn vẫn có thể load()
         return;
       }
-
-      // success — backend thường trả updated cart hoặc success message.
-      // reload cart từ server để đồng bộ totals
       await load();
-
       $id('note').textContent = (payload && payload.message) ? payload.message : 'Áp dụng mã thành công.';
     } catch (e) {
       console.error('apply voucher error', e);
       $id('note').textContent = 'Lỗi khi áp dụng mã, thử lại sau.';
     }
   });
-
-
 
   $id('btnCheckout').addEventListener('click',(e)=>{
     e.preventDefault();
@@ -525,22 +481,6 @@ async function apiGetCart() {
   });
 
   document.addEventListener('cart:changed', load);
-
-  window.__cartDebug = {
-    cartState,
-    normLine,
-    renderPage,
-    // helper: set raw and render (rawItems can be array)
-    setRawAndRender(rawItems) {
-      try {
-        const arr = Array.isArray(rawItems) ? rawItems : JSON.parse(rawItems);
-        cartState.allLines = arr.map(normLine).filter(Boolean);
-        cartState.currentPage = 1;
-        renderPage();
-        console.info('[cartDebug] rendered', cartState.allLines.length, 'items');
-      } catch (e) { console.error('[cartDebug] parse/render error', e); }
-    }
-  };
 
   (async ()=>{
     if (token()){
@@ -552,7 +492,6 @@ async function apiGetCart() {
 })();
 </script>
 
-<!-- core scripts (kept as in original) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>
@@ -561,6 +500,7 @@ async function apiGetCart() {
 <script src="assets/js/core/cart-guard.js"></script>
 <script src="assets/js/core/compat-pid.js"></script>
 <script type="module" src="assets/js/core/cart-badge.js"></script>
+<script type="module" src="assets/js/core/cart-client.js"></script>
 
 </body>
 </html>

@@ -39,7 +39,7 @@ public class StaffUserController {
     @PutMapping("/{id}")
     public StaffResponse put(@PathVariable("id") Long id, @Valid @RequestBody StaffCreateRequest r){
         // replace: map sang update
-        var u = new StaffUpdateRequest(r.email(), r.fullName(), r.role(), r.password(), r.position(), r.phone(), r.isActive());
+        var u = new StaffUpdateRequest(r.email(), r.fullName(), r.role(), r.password(), r.phone(), r.isActive());
         return staffService.update(id, u);
     }
 

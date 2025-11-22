@@ -54,7 +54,6 @@ public class CartService {
         ProductVariant v = variantRepo.findById(req.skuId())
                 .orElseThrow(() -> new IllegalArgumentException("SKU not found"));
 
-        // Có thể chặn nếu SKU inactive
         if (Boolean.FALSE.equals(v.getIsActive())) {
             throw new IllegalArgumentException("SKU is inactive");
         }
@@ -65,7 +64,6 @@ public class CartService {
                     ni.setOrder(draft);
                     ni.setSkuId(v.getId());
                     ni.setQuantity(0);
-                    // snapshot price từ list_price (Long) -> BigDecimal
                     ni.setUnitPrice(longToMoney(v.getListPrice()));
                     return ni;
                 });
@@ -93,11 +91,9 @@ public class CartService {
         if (req.qty() <= 0) {
             itemRepo.delete(it);
         } else {
-            // Nếu muốn thêm rào inactive/validate SKU:
             variantRepo.findById(it.getSkuId())
                     .orElseThrow(() -> new IllegalArgumentException("SKU not found"));
             it.setQuantity(req.qty());
-            // giữ nguyên unitPrice (snapshot lúc thêm)
             itemRepo.save(it);
         }
         recalc(draft);
@@ -123,7 +119,7 @@ public class CartService {
         Order draft = requireDraft(userId);
         itemRepo.deleteByOrder_Id(draft.getId());
         draft.setSubtotal(ZERO);
-        draft.setDiscount(nullToZero(draft.getDiscount()));
+        draft.setDiscount(BigDecimal.ZERO); // Reset discount
         draft.setShippingFee(nullToZero(draft.getShippingFee()));
         draft.setTotal(calcTotal(draft.getSubtotal(), draft.getDiscount(), draft.getShippingFee()));
         draft.setUpdatedAt(Instant.now());
@@ -137,7 +133,7 @@ public class CartService {
         if (itemRepo.countByOrder_Id(draft.getId()) == 0) {
             throw new IllegalStateException("Cart is empty");
         }
-        draft.setStatus("CREATED"); // khóa giỏ → tạo đơn
+        draft.setStatus("CREATED");
         draft.setUpdatedAt(Instant.now());
         orderRepo.save(draft);
         return toDTO(draft);
@@ -220,60 +216,48 @@ public class CartService {
         if (sub == null) sub = ZERO;
         if (disc == null) disc = ZERO;
         if (ship == null) ship = ZERO;
-        return sub.subtract(disc).add(ship);
+        BigDecimal t = sub.subtract(disc).add(ship);
+        return t.compareTo(ZERO) < 0 ? ZERO : t;
     }
 
- 
-// trong CartService
-private CartDTO toDTO(Order o) {
-    var rows = itemRepo.findLinesWithInfo(o.getId());
+    private CartDTO toDTO(Order o) {
+        var rows = itemRepo.findLinesWithInfo(o.getId());
 
-    var itemDTOs = rows.stream().map(r -> new CartItemDTO(
-            r.getId(),
-            r.getSkuId(),
-            r.getQuantity(),
-            nullToZero(r.getUnitPrice()),
-            nullToZero(r.getUnitPrice()).multiply(java.math.BigDecimal.valueOf(r.getQuantity())),
-            r.getProductName(),
-            r.getImagePath()
-    )).toList();
+        var itemDTOs = rows.stream().map(r -> new CartItemDTO(
+                r.getId(),
+                r.getSkuId(),
+                r.getQuantity(),
+                nullToZero(r.getUnitPrice()),
+                nullToZero(r.getUnitPrice()).multiply(java.math.BigDecimal.valueOf(r.getQuantity())),
+                r.getProductName(),
+                r.getImagePath()
+        )).toList();
 
-    return new CartDTO(
-            o.getId(),
-            o.getStatus(),
-            nullToZero(o.getSubtotal()),
-            nullToZero(o.getDiscount()),
-            nullToZero(o.getShippingFee()),
-            nullToZero(o.getTotal()),
-            itemDTOs
-    );
-}
+        return new CartDTO(
+                o.getId(),
+                o.getStatus(),
+                nullToZero(o.getSubtotal()),
+                nullToZero(o.getDiscount()),
+                nullToZero(o.getShippingFee()),
+                nullToZero(o.getTotal()),
+                itemDTOs
+        );
+    }
 
-    /**
-     * Apply voucher to current user's draft cart.
-     * - Validate voucher locally (active, dates, minOrder, usage limits if usage repo provided)
-     * - Compute discount and persist into Order.discount (BigDecimal, VND)
-     *
-     * NOTE: This implementation DOES NOT call external staff service.
-     * If you want to persist voucher code into Order, add a field order.setVoucherCode(...) in Order entity.
-     */
     @Transactional
     public VoucherApplyResponse applyVoucher(Long userId, VoucherApplyRequest req, String ignoredBearer) {
         if (req == null || req.getCode() == null || req.getCode().trim().isEmpty()) {
             return VoucherApplyResponse.error("Vui lòng nhập mã.");
         }
         String code = req.getCode().trim();
-        // 1) load draft
         Order draft = getOrCreateDraft(userId);
 
-        // 2) find voucher locally (use codeNorm uppercase)
         Optional<Voucher> ov = voucherRepo.findByCodeNorm(code.toUpperCase());
         if (ov.isEmpty()) {
             return VoucherApplyResponse.error("Mã không tồn tại.");
         }
         Voucher v = ov.get();
 
-        // 3) validate active / date window
         if (!v.isActive()) return VoucherApplyResponse.error("Mã đã bị vô hiệu hoá.");
         if (v.getStartsAt() != null && Instant.now().isBefore(v.getStartsAt().toInstant(java.time.ZoneOffset.UTC))) {
             return VoucherApplyResponse.error("Mã chưa bắt đầu.");
@@ -282,17 +266,14 @@ private CartDTO toDTO(Order o) {
             return VoucherApplyResponse.error("Mã đã hết hạn.");
         }
 
-        // 4) compute subtotal in VND (BigDecimal) using existing repo logic
-        recalc(draft); // ensure subtotal up-to-date
+        recalc(draft); 
         BigDecimal subtotal = nullToZero(draft.getSubtotal());
 
-        // 5) check minOrder
         if (v.getMinOrder() != null && subtotal.compareTo(v.getMinOrder()) < 0) {
-            return VoucherApplyResponse.error("Đơn hàng chưa đủ điều kiện tối thiểu: cần tối thiểu " +
-                    v.getMinOrder().setScale(2, RoundingMode.HALF_UP).toPlainString() + " đ.");
+            return VoucherApplyResponse.error("Đơn hàng chưa đủ điều kiện tối thiểu: cần " +
+                    v.getMinOrder().setScale(0, RoundingMode.HALF_UP).toPlainString() + " đ.");
         }
 
-        // 6) usage limits (simple checks) - only if voucherUsageRepo implemented
         if (voucherUsageRepo != null) {
             if (v.getUsageLimit() != null && v.getUsageLimit() > 0) {
                 long usedTotal = voucherUsageRepo.countByVoucherId(v.getVoucherId());
@@ -308,41 +289,30 @@ private CartDTO toDTO(Order o) {
             }
         }
 
-        // 7) compute discount value (BigDecimal VND)
         BigDecimal discount;
         String type = v.getType() == null ? "fixed" : v.getType().trim().toLowerCase();
         if ("percent".equalsIgnoreCase(type)) {
             BigDecimal pct = v.getValue() == null ? BigDecimal.ZERO : v.getValue();
-            // pct is like 10.00 for 10%
             discount = subtotal.multiply(pct).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         } else {
-            // fixed value in v.getValue() (VND)
-            discount = v.getValue() == null ? BigDecimal.ZERO : v.getValue().setScale(2, RoundingMode.HALF_UP);
+            discount = v.getValue() == null ? BigDecimal.ZERO : v.getValue();
         }
 
-        // ensure discount not exceed subtotal
         if (discount.compareTo(subtotal) > 0) discount = subtotal;
 
-        // 8) persist discount into order.discount (existing field)
+        // [FIX] Cập nhật discount và tính lại Total
         draft.setDiscount(discount);
-        draft.setUpdatedAt(Instant.now());
-        orderRepo.save(draft);
+        recalc(draft); 
+        // ----------------------------------------
 
-        // 9) (optional) record usage reservation - if voucherUsageRepo supports it
-        if (voucherUsageRepo != null) {
-            // usageRepo.createReservation(...) - implement as needed
-        }
-
-        // 10) build response DTO (note: return discount in VND as BigDecimal)
         VoucherApplyResponse out = new VoucherApplyResponse();
         out.setOk(true);
         out.setCode(v.getCode());
         out.setType(type);
         if ("percent".equalsIgnoreCase(type)) {
-            out.setDiscountPercent(v.getValue() == null ? 0 : v.getValue().setScale(0, RoundingMode.HALF_UP).intValue());
+            out.setDiscountPercent(v.getValue() == null ? 0 : v.getValue().intValue());
             out.setDiscount(null);
         } else {
-            // send discount in VND (same unit as Order.discount)
             out.setDiscount(draft.getDiscount());
             out.setDiscountPercent(null);
         }
@@ -350,47 +320,29 @@ private CartDTO toDTO(Order o) {
         return out;
     }
 
-    /**
-     * Remove currently applied voucher effect from draft cart.
-     * This implementation only clears Order.discount (does not delete voucher data).
-     */
     @Transactional
     public boolean removeVoucher(Long userId) {
         Order draft = orderRepo.findByUserIdAndStatus(userId, "DRAFT").orElse(null);
         if (draft == null) return false;
+        
+        // [FIX] Reset discount và tính lại Total
         draft.setDiscount(BigDecimal.ZERO);
-        draft.setUpdatedAt(Instant.now());
-        orderRepo.save(draft);
+        recalc(draft); 
+        // -------------------------------------
+        
         return true;
     }
 
-    // --- add to CartService (inside the class) ---
-
-    /**
-     * Ensure the user's draft order exists, recalc totals and persist.
-     * Returns the persisted Order entity (fresh).
-     *
-     * Use when the caller needs entity-level access (e.g. CheckoutService).
-     */
     @Transactional
     public Order refreshDraftAndGetEntity(Long userId) {
-        Order draft = getOrCreateDraft(userId); // existing helper in your service
-        // reuse private recalc(Order) logic which persists totals
+        Order draft = getOrCreateDraft(userId);
         recalc(draft);
-        // re-fetch or return draft (draft should be attached because we are in @Transactional)
         return draft;
     }
 
-    /**
-     * Ensure the user's draft order exists and return a CartDTO snapshot.
-     * Prefer this when controller/service only needs DTO data.
-     */
     @Transactional
-    public com.fonestore.user_api.dto.cart.CartDTO refreshDraftAndGetDto(Long userId) {
+    public CartDTO refreshDraftAndGetDto(Long userId) {
         Order draft = refreshDraftAndGetEntity(userId);
-        // toDTO uses itemRepo.findLinesWithInfo(draft.getId()) which you already have
         return toDTO(draft);
     }
-
-
 }

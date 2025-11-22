@@ -5,31 +5,29 @@ import com.fonestore.staff_api.repository.product.ProductVariantRepository;
 import com.fonestore.user_api.dto.*;
 import com.fonestore.user_api.dto.order.CreateOrderRequest;
 import com.fonestore.user_api.dto.order.UserOrderItemSummaryDTO;
-
 import com.fonestore.user_api.dto.order.PagedOrderResponse;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.OrderItem;
 import com.fonestore.user_api.entity.Payment;
-import com.fonestore.user_api.entity.Shipment;
+// IMPORT QUAN TRỌNG:
 import com.fonestore.user_api.repository.*;
 import com.fonestore.user_api.repository.order.UserOrderRepository;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fonestore.staff_api.repository.product.ProductImageRepository;
+
 @Service("userOrderService")
 @RequiredArgsConstructor
 public class OrderService {
 
-    private static final int SCALE = 0; // VND không lẻ
+    private static final int SCALE = 0;
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(SCALE);
 
     private final com.fonestore.user_api.repository.order.UserOrderItemRepository itemRepo;
@@ -37,10 +35,21 @@ public class OrderService {
     private final ProductVariantRepository variantRepo;
     private final UserProductRepository productRepo;
     private final PaymentRepository paymentRepo;
-    private final ShipmentRepository shipmentRepo;
+    
+    // Inject thêm repo này để lấy ảnh
+    private final ProductImageRepository imageRepo;
 
     private static BigDecimal bd(long v) { return new BigDecimal(v).setScale(SCALE); }
     private static BigDecimal ensure(BigDecimal v) { return v == null ? ZERO : v.setScale(SCALE); }
+
+    // Hàm helper để lấy ảnh bìa từ ProductImageRepository
+    private String getCoverImage(Long productId) {
+        if (productId == null) return null;
+        return imageRepo.findByProductIdOrderBySortOrderAsc(productId)
+                .stream().findFirst()
+                .map(img -> img.getFilePath())
+                .orElse(null);
+    }
 
     // ---------- CREATE ----------
     @Transactional
@@ -82,7 +91,17 @@ public class OrderService {
             oi.setUnitPrice(unit);
             o.getItems().add(oi);
 
-            lines.add(new PagedOrderResponse.Line(v.getId(), qty, unit, p.getName()));
+            // CẬP NHẬT: Truyền đủ 7 tham số (bao gồm ảnh, màu, dung lượng)
+            // Dùng hàm getCoverImage(p.getId()) thay vì p.getImagePath()
+            lines.add(new PagedOrderResponse.Line(
+                v.getId(), 
+                qty, 
+                unit, 
+                p.getName(),
+                getCoverImage(p.getId()), // <--- Đã sửa
+                v.getColor(),     
+                v.getCapacity()   
+            ));
         }
 
         o.setSubtotal(subtotal);
@@ -91,169 +110,131 @@ public class OrderService {
         o.setTotal(subtotal.subtract(discount).add(shipping));
         orderRepo.saveAndFlush(o);
 
-        var pays  = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-        var ships = mapShipments(shipmentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-        return toResponse(o, lines, pays, ships);
+        var pays = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
+        return toResponse(o, lines, pays);
     }
 
-    // ---------- LIST BY USER (no pagination) ----------
+    // ---------- LIST (Sử dụng hàm helper mapOrderToResponse) ----------
     @Transactional(readOnly = true)
     public List<PagedOrderResponse> listOrdersForUser(Long userId, String status) {
         List<Order> orders;
-
         if (status != null && !status.isBlank()) {
-            // nếu client yêu cầu status cụ thể — trả đúng filter đó (có thể là "DRAFT" nếu client muốn)
             orders = orderRepo.findByUserIdAndStatusOrderByCreatedAtDesc(userId, status);
         } else {
-            // default: lịch sử orders — exclude DRAFT
-            List<String> visible = List.of(
-                "CREATED", "PAID", "SHIPPED","SHIPPING", "DELIVERED", "COMPLETED", "CANCELED", "FAILED"
-            );
+            List<String> visible = List.of("CREATED", "PAID", "SHIPPED","SHIPPING", "DELIVERED", "COMPLETED", "CANCELED", "FAILED");
             orders = orderRepo.findByUserIdAndStatusInOrderByCreatedAtDesc(userId, visible);
         }
-
-        return orders.stream().map(o -> {
-            var lines = o.getItems() == null ? List.<PagedOrderResponse.Line>of()
-                : o.getItems().stream().map(it ->
-                    new PagedOrderResponse.Line(
-                        it.getSkuId(),
-                        it.getQuantity(),
-                        ensure(it.getUnitPrice()),
-                        resolveProductName(it.getSkuId())
-                    )
-                ).toList();
-            var pays  = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-            var ships = mapShipments(shipmentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-            return toResponse(o, lines, pays, ships);
-        }).toList();
+        return orders.stream().map(this::mapOrderToResponse).toList();
     }
 
-
-    // ---------- find all for user (existing non-paged method) ----------
     @Transactional(readOnly = true)
     public List<PagedOrderResponse> findByUserId(Long userId) {
         return orderRepo.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(o -> {
-                    var lines = o.getItems() == null ? List.<PagedOrderResponse.Line>of()
-                            : o.getItems().stream().map(it ->
-                                new PagedOrderResponse.Line(
-                                    it.getSkuId(),
-                                    it.getQuantity(),
-                                    ensure(it.getUnitPrice()),
-                                    resolveProductName(it.getSkuId())
-                                )
-                            ).toList();
-                    var pays  = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-                    var ships = mapShipments(shipmentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-                    return toResponse(o, lines, pays, ships);
-                })
-                .toList();
+                .stream().map(this::mapOrderToResponse).toList();
     }
 
-    // ---------- DETAIL ----------
+    // Hàm helper để map Order entity sang PagedOrderResponse cho List view
+    // Hàm helper an toàn hơn để tránh lỗi 500 khi dữ liệu bẩn
+    private PagedOrderResponse mapOrderToResponse(Order o) {
+        var lines = o.getItems() == null ? List.<PagedOrderResponse.Line>of()
+            : o.getItems().stream().map(it -> {
+                Long skuId = it.getSkuId();
+                
+                // 1. Phòng thủ: Nếu skuId trong order_items bị null -> trả về item rỗng
+                if (skuId == null) {
+                    return new PagedOrderResponse.Line(
+                        0L, it.getQuantity(), ensure(it.getUnitPrice()), 
+                        "[Sản phẩm lỗi - Mất SKU]", null, null, null
+                    );
+                }
+
+                // 2. Tìm Variant, nếu không thấy (đã bị xóa) -> trả về null
+                var v = variantRepo.findById(skuId).orElse(null);
+                
+                // 3. Tìm Product, nếu Variant null hoặc Product null -> trả về null
+                var p = (v != null) ? productRepo.findById(v.getProductId()).orElse(null) : null;
+                
+                return new PagedOrderResponse.Line(
+                    skuId,
+                    it.getQuantity(),
+                    ensure(it.getUnitPrice()),
+                    // Nếu Product còn tồn tại thì lấy tên, không thì hiển thị fallback
+                    (p != null) ? p.getName() : "Sản phẩm không tồn tại (ID: " + skuId + ")",
+                    (p != null) ? getCoverImage(p.getId()) : null, 
+                    (v != null) ? v.getColor() : null,     
+                    (v != null) ? v.getCapacity() : null   
+                );
+            }).toList();
+
+        var pays = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
+        return toResponse(o, lines, pays);
+    }
+
+    // ---------- DETAIL (Quan trọng cho trang order-detail.html) ----------
     @Transactional(readOnly = true)
     public PagedOrderResponse getById(Long orderId) {
         var o = orderRepo.findByIdFetchItems(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
-        var lines = o.getItems() == null ? List.<PagedOrderResponse.Line>of()
-                : o.getItems().stream().map(it ->
-                    new PagedOrderResponse.Line(
-                        it.getSkuId(),
-                        it.getQuantity(),
-                        ensure(it.getUnitPrice()),
-                        resolveProductName(it.getSkuId())
-                    )
-                ).toList();
+        // SỬ DỤNG findLinesWithInfo ĐỂ LẤY FULL THÔNG TIN (Ảnh, Màu, Dung lượng)
+        List<CartLineRow> rows = itemRepo.findLinesWithInfo(orderId);
 
-        var pays  = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-        var ships = mapShipments(shipmentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-        return toResponse(o, lines, pays, ships);
+        List<PagedOrderResponse.Line> lines = rows.stream().map(r -> 
+            new PagedOrderResponse.Line(
+                r.getSkuId(),
+                r.getQuantity(),
+                ensure(r.getUnitPrice()),
+                r.getProductName(),
+                r.getImagePath(), // Có ảnh (từ query)
+                r.getColor(),     // Có màu
+                r.getCapacity()   // Có dung lượng
+            )
+        ).toList();
+
+        var pays = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
+        return toResponse(o, lines, pays);
     }
 
-    // ---------- helpers ----------
-    private String resolveProductName(Long skuId) {
-        var v = variantRepo.findById(skuId).orElse(null);
-        if (v == null) return null;
-        var p = productRepo.findById(v.getProductId()).orElse(null);
-        return p != null ? p.getName() : null;
-    }
-
+    // ---------- HELPERS ----------
     private List<PaymentDTO> mapPayments(List<Payment> list) {
         return list.stream().map(p ->
             new PaymentDTO(
-                p.getId(),
-                p.getMethod(),
-                ensure(p.getAmount()),
-                p.getStatus(),
-                p.getTxnRef(),
-                p.getCreatedAt()
+                p.getId(), p.getMethod(), ensure(p.getAmount()),
+                p.getStatus(), p.getTxnRef(), p.getCreatedAt()
             )
         ).toList();
     }
 
-    private List<ShipmentDTO> mapShipments(List<Shipment> list) {
-        return list.stream().map(s ->
-            new ShipmentDTO(
-                s.getId(),
-                s.getCarrier(),
-                s.getTrackingNo(),
-                s.getStatus(),
-                ensure(s.getFee()),
-                s.getCreatedAt(),
-                s.getUpdatedAt()
-            )
-        ).toList();
-    }
-
-    private PagedOrderResponse toResponse(
-            Order o,
-            List<PagedOrderResponse.Line> lines,
-            List<PaymentDTO> pays,
-            List<ShipmentDTO> ships
-    ) {
+    private PagedOrderResponse toResponse(Order o, List<PagedOrderResponse.Line> lines, List<PaymentDTO> pays) {
         return new PagedOrderResponse(
-                o.getId(),
-                o.getStatus(),
-                ensure(o.getSubtotal()),
-                ensure(o.getDiscount()),
-                ensure(o.getShippingFee()),
-                ensure(o.getTotal()),
-                o.getCreatedAt(),
-                o.getAddressSnapshot(),
-                o.getNote(),
-                lines, pays, ships
+            o.getId(), o.getStatus(), ensure(o.getSubtotal()), ensure(o.getDiscount()),
+            ensure(o.getShippingFee()), ensure(o.getTotal()), o.getCreatedAt(),
+            o.getAddressSnapshot(), o.getNote(), lines, pays
         );
     }
 
-    // phương thức thêm vào OrderService
+    // API nội bộ cho User (đã có sẵn, chỉ cập nhật để dùng chung logic nếu cần)
     @Transactional
     public UserOrderDetailDTO getOrderDetail(Long userId, Long orderId) {
-        // đảm bảo order thuộc về user
         var opt = orderRepo.findByIdAndUserIdFetchItems(orderId, userId);
         if (opt.isEmpty()) return null;
         Order o = opt.get();
+        List<CartLineRow> rows = itemRepo.findLinesWithInfo(o.getId());
 
-        // Lấy list OrderItem (fallback nếu bạn không có projection)
-        List<OrderItem> rows = itemRepo.findByOrder_Id(o.getId());
-
-        // Map từng OrderItem -> OrderItemSummaryDTO
         List<UserOrderItemSummaryDTO> items = rows.stream().map(r -> {
             UserOrderItemSummaryDTO it = new UserOrderItemSummaryDTO();
             it.setItemId(r.getId());
-            it.setSkuId(r.getSkuId()); // Assuming OrderItem has getSkuId()
-            // it.setProductName(r.getProductName());
-            // it.setImagePath(r.getImagePath());
+            it.setSkuId(r.getSkuId());
+            it.setProductName(r.getProductName());
+            it.setImagePath(r.getImagePath());
             it.setQty(r.getQuantity());
             it.setUnitPrice(r.getUnitPrice());
-            it.setLineTotal(r.getUnitPrice() != null
-                    ? r.getUnitPrice().multiply(java.math.BigDecimal.valueOf(r.getQuantity()))
-                    : java.math.BigDecimal.ZERO);
+            it.setColor(r.getColor());
+            it.setCapacity(r.getCapacity());
+            it.setLineTotal(r.getUnitPrice() != null ? r.getUnitPrice().multiply(BigDecimal.valueOf(r.getQuantity())) : BigDecimal.ZERO);
             return it;
         }).collect(Collectors.toList());
 
-        // Build OrderDetailDTO
         UserOrderDetailDTO dto = new UserOrderDetailDTO();
         dto.setOrderId(o.getId());
         dto.setStatus(o.getStatus());
@@ -263,26 +244,14 @@ public class OrderService {
         dto.setShippingFee(o.getShippingFee());
         dto.setTotal(o.getTotal());
         dto.setItems(items);
-
-        // optional fields (nếu Order entity có)
-        try { // lấy payments & shipments (nếu cần)
-            List<PaymentDTO> pays = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
-            // set paymentMethod: lấy method của payment đầu tiên (hoặc join tất cả methods nếu bạn muốn)
-            if (pays != null && !pays.isEmpty()) {
-                // option A: chỉ lấy method của payment đầu tiên (thường là order-level payment)
-                dto.setPaymentMethod(pays.get(0).method());
-
-                // option B (nếu muốn một chuỗi tất cả methods): 
-                // dto.setPaymentMethod(pays.stream().map(PaymentDTO::method).collect(Collectors.joining(", ")));
-            } else {
-                dto.setPaymentMethod(null);
-        }} catch (Throwable ignored) {}
+        
+        try {
+             List<PaymentDTO> pays = mapPayments(paymentRepo.findByOrderIdOrderByCreatedAtAsc(o.getId()));
+             if (pays != null && !pays.isEmpty()) dto.setPaymentMethod(pays.get(0).method());
+        } catch (Throwable ignored) {}
         try { dto.setShippingAddress(o.getAddressSnapshot()); } catch (Throwable ignored) {}
         try { dto.setNote(o.getNote()); } catch (Throwable ignored) {}
 
         return dto;
     }
-
-    
-
 }

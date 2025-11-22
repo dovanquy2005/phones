@@ -1,6 +1,7 @@
 package com.fonestore.user_api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fonestore.staff_api.entity.Product; // Import Product
 import com.fonestore.staff_api.entity.ProductVariant;
 import com.fonestore.staff_api.entity.enums.PaymentStatus;
 import com.fonestore.user_api.dto.checkout.CheckoutDTO;
@@ -8,9 +9,8 @@ import com.fonestore.user_api.dto.checkout.CheckoutOrderResponse;
 import com.fonestore.user_api.dto.checkout.PlaceOrderRequest;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.Payment;
-import com.fonestore.user_api.entity.Shipment;
 import com.fonestore.user_api.repository.PaymentRepository;
-import com.fonestore.user_api.repository.ShipmentRepository;
+import com.fonestore.user_api.repository.UserProductRepository; // Import Repo này
 import com.fonestore.user_api.repository.order.UserOrderItemRepository;
 import com.fonestore.user_api.repository.order.UserOrderRepository;
 import com.fonestore.staff_api.repository.product.ProductVariantRepository;
@@ -33,10 +33,8 @@ public class CheckoutService {
     private final UserOrderRepository orderRepo;
     private final UserOrderItemRepository itemRepo;
     private final ProductVariantRepository variantRepo;
-    
-    // Thêm 2 Repo này để lưu thanh toán và vận chuyển
+    private final UserProductRepository productRepo; // 1. Inject thêm cái này
     private final PaymentRepository paymentRepo;
-    private final ShipmentRepository shipmentRepo;
     
     private final ObjectMapper objectMapper;
 
@@ -59,10 +57,14 @@ public class CheckoutService {
         dto.setPayment_methods(List.of("cod","card","bank_transfer"));
 
         List<CheckoutDTO.Warning> warnings = new ArrayList<>();
+        
+        // Validate giá và tồn kho (đã sửa logic lấy tồn kho từ Product)
         cartDto.items().forEach(it -> {
             Optional<ProductVariant> pv = variantRepo.findById(it.skuId());
             if (pv.isPresent()) {
                 ProductVariant cur = pv.get();
+                
+                // Check giá
                 BigDecimal currentPrice = BigDecimal.valueOf(cur.getListPrice());
                 BigDecimal snapshot = it.unitPrice();
                 if (currentPrice.compareTo(snapshot) != 0) {
@@ -73,20 +75,19 @@ public class CheckoutService {
                     w.setNeo(currentPrice.longValue());
                     warnings.add(w);
                 }
-                try {
-                    Object stockObj = cur.getClass().getMethod("getStock").invoke(cur);
-                    if (stockObj instanceof Number) {
-                        long stock = ((Number) stockObj).longValue();
-                        if (it.qty() > stock) {
-                            var w = new CheckoutDTO.Warning();
-                            w.setType("out_of_stock");
-                            w.setSku(String.valueOf(it.skuId()));
-                            w.setReason("available=" + stock);
-                            warnings.add(w);
-                        }
+                
+                // Check tồn kho (SỬA: Lấy từ Product cha)
+                Product p = productRepo.findById(cur.getProductId()).orElse(null);
+                if (p != null) {
+                    long stock = (long) (p.getQuantity() == null ? 0 : p.getQuantity());
+                    if (it.qty() > stock) {
+                        var w = new CheckoutDTO.Warning();
+                        w.setType("out_of_stock");
+                        w.setSku(String.valueOf(it.skuId()));
+                        w.setReason("available=" + stock);
+                        warnings.add(w);
                     }
-                } catch (NoSuchMethodException ignore) {}
-                catch (Exception ex) { /* ignore */ }
+                }
             } else {
                 var w = new CheckoutDTO.Warning();
                 w.setType("sku_not_found"); w.setSku(String.valueOf(it.skuId()));
@@ -110,9 +111,10 @@ public class CheckoutService {
             return CheckoutOrderResponse.conflict("Cart is empty", List.of());
         }
 
-        // validate items
+        // --- 1. VALIDATE LẠI TRƯỚC KHI CHỐT ---
         List<CheckoutDTO.Warning> warnings = new ArrayList<>();
         var rows = itemRepo.findLinesWithInfo(draft.getId());
+        
         for (var r : rows) {
             Long currentSkuId = r.getSkuId();
             if (currentSkuId == null) continue; 
@@ -125,6 +127,8 @@ public class CheckoutService {
                 continue;
             }
             ProductVariant cur = pv.get();
+            
+            // Check giá
             BigDecimal currentPrice = BigDecimal.valueOf(cur.getListPrice());
             BigDecimal snapshot = r.getUnitPrice() == null ? BigDecimal.ZERO : r.getUnitPrice();
             if (currentPrice.compareTo(snapshot) != 0) {
@@ -132,47 +136,47 @@ public class CheckoutService {
                 w.setOld(snapshot.longValue()); w.setNeo(currentPrice.longValue());
                 warnings.add(w);
             }
-            try {
-                Object stockObj = cur.getClass().getMethod("getStock").invoke(cur);
-                if (stockObj instanceof Number) {
-                    long stock = ((Number) stockObj).longValue();
-                    if (r.getQuantity() > stock) {
-                        var w = new CheckoutDTO.Warning(); w.setType("out_of_stock"); w.setSku(String.valueOf(r.getSkuId()));
-                        w.setReason("available=" + stock);
-                        warnings.add(w);
-                    }
+            
+            // Check tồn kho (SỬA: Lấy từ Product cha)
+            Product p = productRepo.findById(cur.getProductId()).orElse(null);
+            if (p != null) {
+                long stock = (long) (p.getQuantity() == null ? 0 : p.getQuantity());
+                if (r.getQuantity() > stock) {
+                    var w = new CheckoutDTO.Warning(); w.setType("out_of_stock"); w.setSku(String.valueOf(r.getSkuId()));
+                    w.setReason("available=" + stock);
+                    warnings.add(w);
                 }
-            } catch (NoSuchMethodException ignore) {}
-            catch (Exception ex) { /* ignore */ }
+            }
         }
 
         if (!warnings.isEmpty()) {
             return CheckoutOrderResponse.conflict("Validation failed", warnings);
         }
 
-        // reduce stock
+        // --- 2. TRỪ TỒN KHO (ĐOẠN QUAN TRỌNG ĐÃ FIX) ---
         for (var r : rows) {
             Optional<ProductVariant> pv = variantRepo.findById(r.getSkuId());
             if (pv.isPresent()) {
                 ProductVariant cur = pv.get();
-                try {
-                    Object stockObj = cur.getClass().getMethod("getStock").invoke(cur);
-                    if (stockObj instanceof Number) {
-                        long stock = ((Number) stockObj).longValue();
-                        long newStock = Math.max(0, stock - r.getQuantity());
-                        try {
-                            var setStock = cur.getClass().getMethod("setStock", stockObj.getClass());
-                            if (stockObj instanceof Integer) setStock.invoke(cur, (int)newStock);
-                            else setStock.invoke(cur, newStock);
-                            variantRepo.save(cur);
-                        } catch (NoSuchMethodException ignore) {}
-                    }
-                } catch (NoSuchMethodException ignore) {}
-                catch (Exception ex) { /* log */ }
+                
+                // Lấy sản phẩm cha
+                Product p = productRepo.findById(cur.getProductId()).orElse(null);
+                
+                if (p != null) {
+                    // Lấy số lượng hiện tại
+                    int currentQty = (p.getQuantity() == null) ? 0 : p.getQuantity();
+                    
+                    // Trừ đi số lượng khách mua (đảm bảo không âm)
+                    int newQty = Math.max(0, currentQty - r.getQuantity());
+                    
+                    // Cập nhật và lưu lại
+                    p.setQuantity(newQty);
+                    productRepo.save(p); // Lưu ý: phải save Product, không phải Variant
+                }
             }
         }
 
-        // 1. Lưu thông tin địa chỉ & ghi chú
+        // 3. Lưu thông tin địa chỉ & ghi chú
         try {
             if (req.getShipping_address() != null) {
                 String jsonAddress = objectMapper.writeValueAsString(req.getShipping_address());
@@ -185,23 +189,15 @@ public class CheckoutService {
             e.printStackTrace();
         }
 
-        // 2. Tạo bản ghi Thanh toán (Payment) khởi tạo
+        // 4. Tạo bản ghi Thanh toán
         Payment p = new Payment();
         p.setOrderId(draft.getId());
         p.setMethod(req.getPayment_method() != null ? req.getPayment_method() : "cod");
         p.setAmount(draft.getTotal());
-        p.setStatus(PaymentStatus.UNPAID); // Mặc định chưa thanh toán
+        p.setStatus(PaymentStatus.UNPAID);
         paymentRepo.save(p);
 
-        // 3. Tạo bản ghi Vận chuyển (Shipment) khởi tạo
-        Shipment s = new Shipment();
-        s.setOrderId(draft.getId());
-        s.setFee(draft.getShippingFee());
-        s.setStatus("PENDING"); // Mặc định chờ xử lý
-        s.setCarrier("Tiêu chuẩn"); // Hoặc lấy từ request nếu có
-        shipmentRepo.save(s);
-
-        // 4. Cập nhật trạng thái đơn hàng
+        // 5. Cập nhật trạng thái đơn hàng
         draft.setStatus("CREATED");
         draft.setUpdatedAt(Instant.now());
         orderRepo.save(draft);

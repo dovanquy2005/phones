@@ -42,9 +42,7 @@
     <aside class="sidebar">
       <div class="filter-group">
         <div class="title">Thương hiệu</div>
-        <!-- CHIPS (ẩn bằng CSS nhưng để lại nếu muốn bật lại) -->
         <div class="chips" id="brandChips"></div>
-        <!-- Checkbox filters (hiển thị chính) -->
         <ul class="muted" id="brand-filters"></ul>
       </div>
 
@@ -127,16 +125,14 @@
   function pickPrice(p){ return p?.minPrice ?? p?.price ?? p?.salePrice ?? p?.finalPrice ?? null; }
 
   // BRAND key helper:
-  // produce a stable key for brand used both in brand list and product matching
   function brandKeyFromObj(b){
     return String(b?.id ?? b?.brandId ?? b?.code ?? b?.slug ?? b?.name ?? '').trim();
   }
   // for product objects, extract same key space
   function pickBrand(p){
-    // Try multiple fields - must match how brand list keys are generated
     return String(
       p?.brandId ??
-      p?.brand ??           // sometimes backend sets brand as text or id
+      p?.brand ??
       p?.brandCode ??
       p?.manufacturer ??
       p?.brandName ??
@@ -325,13 +321,45 @@
   function escapeHtml(s){ if (s==null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function escapeHtmlAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
 
+  // --- FORMAT MONEY INPUTS ---
+  function formatMoneyInput(val) {
+    if (!val) return '';
+    const raw = String(val).replace(/\D/g, '');
+    return raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+  function getRawValue(val) {
+    if (!val) return '';
+    return String(val).replace(/\./g, '');
+  }
+  function attachPriceInputBehavior(el, type) {
+    el.addEventListener('input', (e) => {
+      const formatted = formatMoneyInput(e.target.value);
+      e.target.value = formatted; 
+      if (type === 'min') priceMin = getRawValue(formatted);
+      if (type === 'max') priceMax = getRawValue(formatted);
+    });
+    el.addEventListener('change', () => { page = 1; load(); });
+  }
+
   // events
   sortEl.addEventListener('change', ()=>{ sort = sortEl.value; page = 1; load(); });
   qInput.addEventListener('keydown', (e)=>{ if (e.key === 'Enter'){ q = qInput.value.trim(); page = 1; load(); }});
   if (brandFiltersEl) brandFiltersEl.addEventListener('change', ()=>{ page = 1; load(); });
-  quickChips.forEach(btn => btn.addEventListener('click', ()=>{ priceMin = btn.dataset.min || ''; priceMax = btn.dataset.max || ''; priceMinEl.value = priceMin; priceMaxEl.value = priceMax; page = 1; load(); }));
-  priceMinEl.addEventListener('change', ()=>{ priceMin = priceMinEl.value; page = 1; load(); });
-  priceMaxEl.addEventListener('change', ()=>{ priceMax = priceMaxEl.value; page = 1; load(); });
+  
+  // New Price Logic
+  attachPriceInputBehavior(priceMinEl, 'min');
+  attachPriceInputBehavior(priceMaxEl, 'max');
+
+  quickChips.forEach(btn => btn.addEventListener('click', ()=>{ 
+    const rawMin = btn.dataset.min || ''; 
+    const rawMax = btn.dataset.max || ''; 
+    priceMin = rawMin; 
+    priceMax = rawMax; 
+    priceMinEl.value = formatMoneyInput(rawMin); 
+    priceMaxEl.value = formatMoneyInput(rawMax); 
+    page = 1; 
+    load(); 
+  }));
 
   // initial: ensure brands loaded first so checkboxes exist before first load()
   await loadBrands();
@@ -357,7 +385,6 @@
 })();
 </script>
 
-<!-- core scripts (standardized) -->
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>
 <script type="module" src="assets/js/core/header-auth.js"></script>

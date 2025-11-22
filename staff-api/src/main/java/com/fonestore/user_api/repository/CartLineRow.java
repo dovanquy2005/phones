@@ -10,4 +10,6 @@ public interface CartLineRow {
     BigDecimal getUnitPrice();
     String getProductName();
     String getImagePath();
+    String getColor();
+    String getCapacity();
 }

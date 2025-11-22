@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.fonestore.user_api.dto.PaymentDTO;
-import com.fonestore.user_api.dto.ShipmentDTO;
+
 
 public record PagedOrderResponse(
         Long orderId,
@@ -18,14 +18,16 @@ public record PagedOrderResponse(
         String addressSnapshot,
         String note,
         List<Line> lines,
-        List<PaymentDTO> payments,
-        List<ShipmentDTO> shipments
+        List<PaymentDTO> payments
 ) {
     public record Line(
             Long skuId,
             Integer qty,
             BigDecimal unitPrice,
-            String productName
+            String productName,
+            String image,
+            String color,
+            String capacity
     ) {}
 }
 

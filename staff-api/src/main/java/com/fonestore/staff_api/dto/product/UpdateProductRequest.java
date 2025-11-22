@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class UpdateProductRequest {
     private String name;
-    private String slug;       
+         
     private Long brandId;
     private String description;
     private String specsJson;

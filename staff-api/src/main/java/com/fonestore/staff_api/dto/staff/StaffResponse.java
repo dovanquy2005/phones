@@ -8,7 +8,6 @@ public record StaffResponse(
     String email,
     String fullName,
     String role,
-    String position,
     String phone,
     Boolean isActive,
     LocalDateTime createdAt,

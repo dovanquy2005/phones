@@ -12,7 +12,6 @@
 </head>
 <body>
 
-<!-- Header -->
 <header class="app-header">
   <a class="brand" href="orders.html" aria-label="fonestore">
     <img src="assets/logo.svg" alt="" class="brand__logo"/>
@@ -98,7 +97,6 @@
       <div class="card__footer"><div class="pagination" id="pager"></div></div>
     </section>
 
-    <!-- MODAL: THÊM / SỬA -->
     <div id="modal-create" class="modal" aria-hidden="true">
       <article class="modal__card" role="dialog" aria-modal="true">
         <header class="modal__header">
@@ -109,8 +107,6 @@
           <input type="hidden" id="edit-id"/>
           <div class="grid grid--2">
             <div class="field"><label>Tên</label><input id="c-name" class="input" required/></div>
-            <div class="field hidden-field"><label>Slug</label><input id="c-slug" class="input"/></div>
-
             <div class="field">
               <label>Thương hiệu</label>
               <select id="c-brandSel" class="select" required>
@@ -118,7 +114,6 @@
               </select>
             </div>
 
-            <!-- ĐÃ ĐỔI type="text" + inputmode numeric -->
             <div class="field">
               <label>Giá (VND) – biến thể</label>
               <input id="c-price" class="input" type="text" inputmode="numeric" pattern="[0-9.]*" autocomplete="off" required/>
@@ -162,7 +157,6 @@
       </article>
     </div>
 
-    <!-- MODAL: XEM CHI TIẾT -->
     <div id="modal-view" class="modal" aria-hidden="true">
       <article class="modal__card" role="dialog" aria-modal="true">
         <header class="modal__header">
@@ -172,7 +166,6 @@
         <div class="modal__body">
           <div class="grid grid--2">
             <div class="field"><label>Tên</label><input id="v-name" class="input" disabled/></div>
-            <div class="field"><label>Slug</label><input id="v-slug" class="input" disabled/></div>
             <div class="field"><label>Thương hiệu</label><input id="v-brand" class="input" disabled/></div>
             <div class="field"><label>Trạng thái</label><input id="v-status" class="input" disabled/></div>
             <div class="field"><label>Giá (min)</label><input id="v-price" class="input" disabled/></div>
@@ -186,7 +179,6 @@
       </article>
     </div>
 
-    <!-- MODAL: CHỌN ẢNH -->
     <div id="modal-pick-image" class="modal" aria-hidden="true">
       <article class="modal__card" role="dialog" aria-modal="true" style="max-width:820px">
         <header class="modal__header">
@@ -443,7 +435,7 @@ document.addEventListener('click', async (e)=>{
       const brandName = brandsMap[String(p.brandId ?? '')] || (p.brandName || p.brandId || '');
 
       qs('#v-name').value   = p.name || '';
-      qs('#v-slug').value   = p.slug || '';
+      // Đã xóa field Slug ở đây
       qs('#v-brand').value  = brandName;
       qs('#v-status').value = eff;
       qs('#v-price').value  = (p.variants?.length ? fmtVND(p.variants[0].listPrice) : fmtVND(0));
@@ -466,7 +458,7 @@ document.addEventListener('click', async (e)=>{
       editingId = String(p.productId ?? p.id ?? edit.dataset.edit);
       qs('#m-title').textContent='Sửa sản phẩm';
       qs('#c-name').value  = p.name || '';
-      qs('#c-slug').value  = p.slug || '';
+      // Đã xóa field Slug ở đây
       qs('#c-brandSel').value = String(p.brandId ?? '');
       qs('#c-desc').value  = p.description || '';
       qs('#c-specs').value = (typeof p.specsJson==='string'? p.specsJson : JSON.stringify(p.specsJson||{},null,2));
@@ -531,21 +523,18 @@ document.addEventListener('submit', async (e)=>{
       quantity: Number(qs('#c-quantity').value || 0),
     };
 
-    const slugDraft = qs('#c-slug').value.trim();
     const priceRaw  = rawFromFormatted(qs('#c-price').value);
 
     if (editingId){ // UPDATE
       if (!editingId || editingId === 'undefined' || editingId === 'null') {
         throw new Error('Không xác định được ID sản phẩm để cập nhật');
       }
-      // if (slugDraft) body.slug = slugDraft; // gửi slug nếu muốn BE dùng slug mới
       body.addColor     = color;
       body.addCapacity  = capacity;
       body.addListPrice = Number(priceRaw || 0);
       await updateProd(editingId, body);
       alert('Đã cập nhật!');
     } else { // CREATE
-      if (slugDraft) body.slug = slugDraft;
       body.firstColor     = color;
       body.firstCapacity  = capacity;
       body.firstListPrice = Number(priceRaw || 0);
@@ -558,16 +547,6 @@ document.addEventListener('submit', async (e)=>{
   }catch(err){
     console.error(err);
     alert('Lỗi: '+err.message);
-  }
-});
-
-/* ========= Slug auto (chỉ khi tạo mới) ========= */
-document.addEventListener('input', (e)=>{
-  if (e.target.id === 'c-name' && !editingId){
-    const slug = e.target.value.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-      .replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-');
-    qs('#c-slug').value = slug;
   }
 });
 
@@ -620,7 +599,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 </script>
 
 
-<!-- Profile modal -->
 <div class="modal" id="modal-profile" aria-hidden="true">
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">

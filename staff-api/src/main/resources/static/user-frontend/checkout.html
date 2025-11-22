@@ -251,6 +251,169 @@
 
 })();
 </script>
+<script>
+(() => {
+  const API = 'http://localhost:9090'; 
+  const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
+  const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
+
+  // 1. Hàm MỚI: Lấy thông tin user và điền vào form
+  async function fillUserProfile() {
+    const t = token();
+    if (!t) return; // Chưa đăng nhập thì thôi
+
+    try {
+      const res = await fetch(API + '/api/user/profile', {
+        method: 'GET',
+        headers: { 
+          'Authorization': 'Bearer ' + t,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        
+        // Điền dữ liệu vào input (nếu trong profile có dữ liệu)
+        // Người dùng vẫn có thể sửa lại sau khi điền
+        const nameEl = document.getElementById('name');
+        const emailEl = document.getElementById('email');
+        const phoneEl = document.getElementById('phone');
+        const addrEl = document.getElementById('addr');
+
+        if (user.fullName) nameEl.value = user.fullName;
+        if (user.email)    emailEl.value = user.email;
+        if (user.phone)    phoneEl.value = user.phone;
+        if (user.address)  addrEl.value = user.address;
+      }
+    } catch (e) {
+      console.warn('Không thể tự động điền thông tin:', e);
+    }
+  }
+
+  // --- Các hàm cũ giữ nguyên ---
+
+  // GET /api/checkout -> returns full checkout DTO
+  async function apiGetCheckout() {
+    try {
+      const headers = { 'Accept': 'application/json' };
+      const t = token();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch(API + '/api/checkout', { method: 'GET', headers, credentials: 'include' });
+      if (!res.ok) return { ok:false, status: res.status, body: null };
+      const body = await res.json();
+      return { ok:true, body };
+    } catch (e) {
+      return { ok:false, status:0, body:null };
+    }
+  }
+
+  // POST /api/checkout -> place order
+  async function apiPlaceOrder(payload) {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      const t = token();
+      if (t) headers['Authorization'] = 'Bearer ' + t;
+      const res = await fetch(API + '/api/checkout', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
+      const body = await res.json().catch(()=>({}));
+      return { ok: res.ok, status: res.status, body };
+    } catch (e) {
+      return { ok:false, status:0, body:null };
+    }
+  }
+
+  function renderTotalsFromResponse(body) {
+    const subtotal = Number(body.subtotal ?? 0);
+    const discount = Number(body.discount ?? 0);
+    const shipping = Number(body.shipping_fee ?? body.shipping ?? 0); // Sửa key shipping cho khớp DTO
+    const total = Number(body.total ?? subtotal - discount + shipping);
+    
+    const subEl = document.getElementById('sub');
+    const disEl = document.getElementById('discount');
+    const shipEl = document.getElementById('ship');
+    const totalEl = document.getElementById('total');
+    
+    if (subEl) subEl.textContent = fmt(subtotal);
+    if (disEl) disEl.textContent = (discount>0) ? '−' + fmt(discount) : '0₫';
+    // Nếu ship = 0 có thể là chưa tính hoặc miễn phí, ở đây hiển thị giá trị thật
+    if (shipEl) shipEl.textContent = (shipping > 0) ? fmt(shipping) : '0₫';
+    if (totalEl) totalEl.textContent = fmt(total);
+  }
+
+  async function loadCheckoutTotals() {
+    const note = document.getElementById('checkout-note');
+    if (note) note.textContent = 'Đang tải...';
+    const r = await apiGetCheckout();
+    if (!r.ok) {
+      if (note) note.textContent = 'Lỗi tải giá.';
+      return;
+    }
+    renderTotalsFromResponse(r.body || {});
+    if (Array.isArray(r.body?.warnings) && r.body.warnings.length > 0) {
+      alert('Giỏ hàng có thay đổi. Vui lòng kiểm tra lại.');
+      window.location.href = '/cart.html';
+      return;
+    }
+    if (note) note.textContent = '';
+  }
+
+  async function handleSubmit(ev) {
+    ev.preventDefault();
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const addr = document.getElementById('addr').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const note = document.getElementById('note').value.trim();
+
+    if (!name || !phone || !addr) {
+      document.getElementById('form-error').style.display = 'block';
+      return;
+    } else {
+      document.getElementById('form-error').style.display = 'none';
+    }
+
+    const placeBtn = document.getElementById('placeOrder');
+    placeBtn.disabled = true; placeBtn.textContent = 'Đang xử lý...';
+
+    const payload = {
+      payment_method: document.querySelector('input[name="pay"]:checked').value,
+      note: note,
+      shipping_address: { name, phone, email, address: addr }
+    };
+
+    const res = await apiPlaceOrder(payload);
+    if (!res.ok) {
+      if (res.status === 409 && res.body && res.body.reason) {
+        alert('Không thể đặt hàng: ' + res.body.reason);
+      } else {
+        alert('Đặt hàng thất bại (' + res.status + ').');
+      }
+      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
+      
+      if (res.body?.warnings) {
+        window.location.href = '/cart.html';
+      }
+      return;
+    }
+
+    // Thành công -> chuyển trang
+    const orderId = res.body?.order_id || res.body?.id || '';
+    window.location.href = `/user-frontend/order-success.html?order=${encodeURIComponent(orderId)}`;
+  }
+
+  document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
+
+  // KHỞI CHẠY
+  (async () => {
+    // Gọi song song cả 2 việc: Lấy tổng tiền + Điền thông tin user
+    await Promise.all([
+        loadCheckoutTotals(),
+        fillUserProfile()
+    ]);
+  })();
+
+})();
+</script>
 
 <script src="assets/js/core/fetch-cred-patch.js"></script>
 <script type="module" src="assets/js/core/auth.js"></script>

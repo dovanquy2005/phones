@@ -7,7 +7,6 @@ public record StaffUpdateRequest(
     String fullName,
     String role,         // "manager" | "staff"
     String password,     // nếu có -> hash
-    String position,
     String phone,
     Boolean isActive
 ) {}
