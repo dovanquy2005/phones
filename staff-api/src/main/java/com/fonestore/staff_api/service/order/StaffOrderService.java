@@ -1,14 +1,18 @@
 package com.fonestore.staff_api.service.order;
 
 import com.fonestore.staff_api.dto.order.OrderDetailDTO;
-import com.fonestore.staff_api.dto.order.OrderItemDTO;
 import com.fonestore.staff_api.dto.order.OrderItemDetailDTO;
 import com.fonestore.staff_api.dto.order.OrderListDTO;
+import com.fonestore.staff_api.repository.UserRepository;
 import com.fonestore.staff_api.repository.order.StaffOrderItemRepository;
 import com.fonestore.staff_api.repository.order.StaffOrderRepository;
 import com.fonestore.staff_api.repository.payment.StaffPaymentRepository;
+import com.fonestore.staff_api.entity.User;
 import com.fonestore.user_api.entity.Order;
-import com.fonestore.user_api.entity.OrderItem;
+import com.fonestore.user_api.entity.Payment;
+import com.fonestore.user_api.repository.voucher.UserVoucherUsageRepository;
+import com.fonestore.user_api.entity.VoucherUsage;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -22,7 +26,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 
-
 @Service
 @RequiredArgsConstructor
 public class StaffOrderService {
@@ -30,9 +33,10 @@ public class StaffOrderService {
     private final StaffOrderRepository orderRepo;
     private final StaffOrderItemRepository itemRepo;
     private final StaffPaymentRepository paymentRepo;
+    private final UserRepository userRepo;
+    private final UserVoucherUsageRepository voucherUsageRepo;
 
     /* ===== Helpers ===== */
-
     private String extractField(String json, String key) {
         if (json == null) return null;
         int i = json.indexOf("\"" + key + "\"");
@@ -45,6 +49,7 @@ public class StaffOrderService {
     }
     private String extractName(String snapshot)  { return extractField(snapshot, "name");  }
     private String extractPhone(String snapshot) { return extractField(snapshot, "phone"); }
+    private static BigDecimal bd(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
 
     private Instant startOfDay(String yyyyMMdd) {
         if (yyyyMMdd == null || yyyyMMdd.isBlank()) return null;
@@ -55,98 +60,84 @@ public class StaffOrderService {
         return LocalDate.parse(yyyyMMdd).plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
     }
 
-    private static BigDecimal bd(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
-    private static Integer i(Integer v) { return v == null ? 0 : v; }
-
-    /* ===== mapping ===== */
-
-    // NOTE: OrderListDTO cần có thêm trường cuối: paymentStatus (String)
-    private OrderListDTO toListDTO(Order o, String paymentStatus) {
-        String name = extractName(o.getAddressSnapshot());
-        return new OrderListDTO(
-                o.getId(),
-                o.getCode(),
-                name,
-                o.getStatus(),
-                bd(o.getSubtotal()),
-                bd(o.getShippingFee()),
-                bd(o.getTotal()),
-                o.getCreatedAt(),
-                paymentStatus
-        );
-    }
-
-    private OrderDetailDTO toDetailDTO(Order o, List<OrderItem> items) {
-        String name  = extractName(o.getAddressSnapshot());
-        String phone = extractPhone(o.getAddressSnapshot());
-
-        List<OrderItemDTO> itemDTOs = items.stream().map(it -> {
-            int qty = i(it.getQuantity());
-            BigDecimal unit = bd(it.getUnitPrice());
-            BigDecimal line = unit.multiply(BigDecimal.valueOf(Math.max(qty, 0)));
-            return new OrderItemDTO(it.getId(), it.getSkuId(), qty, unit, line);
-        }).toList();
-
-        return new OrderDetailDTO(
-                o.getId(), o.getCode(), o.getStatus(),
-                name, phone, o.getAddressSnapshot(),
-                itemDTOs,
-                bd(o.getSubtotal()),
-                bd(o.getDiscount()),
-                bd(o.getShippingFee()),
-                bd(o.getTotal()),
-                o.getNote(), o.getCreatedAt(), o.getUpdatedAt()
-        );
-    }
-
     /* ===== Queries ===== */
     @Transactional(readOnly = true)
     public List<OrderListDTO> list(String status, String from, String to, String q) {
         String s = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
         String query = (q == null || q.isBlank()) ? null : q.trim();
-
         List<Order> orders = orderRepo.search(s, startOfDay(from), endExclusive(to), query);
-
-        // Lấy id đơn
-        List<Long> ids = orders.stream()
-                .map(Order::getId)
-                .filter(Objects::nonNull)
-                .toList();
-
-        // Lấy các orderId đã PAID
+        
+        List<Long> ids = orders.stream().map(Order::getId).filter(Objects::nonNull).toList();
         Set<Long> paidIds = new HashSet<>();
-        if (!ids.isEmpty()) {
-            paidIds.addAll(paymentRepo.findPaidOrderIds(ids));
-        }
+        if (!ids.isEmpty()) paidIds.addAll(paymentRepo.findPaidOrderIds(ids));
 
-        return orders.stream()
-                .map(o -> toListDTO(o, paidIds.contains(o.getId()) ? "PAID" : "UNPAID"))
-                .toList();
+        return orders.stream().map(o -> {
+            String name = extractName(o.getAddressSnapshot());
+            // Nếu snapshot không có tên nhưng có tài khoản user
+            if (name == null && o.getUserId() != null) {
+                User u = userRepo.findById(o.getUserId()).orElse(null);
+                if (u != null) name = u.getFullName();
+            }
+            return new OrderListDTO(o.getId(), o.getCode(), name != null ? name : "Khách vãng lai",
+                    o.getStatus(), bd(o.getSubtotal()), bd(o.getShippingFee()), bd(o.getTotal()),
+                    o.getCreatedAt(), paidIds.contains(o.getId()) ? "PAID" : "UNPAID");
+        }).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<OrderItemDetailDTO> getOrderDetails(Long orderId) {
+        return itemRepo.findDetailsByOrderId(orderId).stream().map(OrderItemDetailDTO::from).toList();
+    }
 
+    // --- HÀM DETAIL (QUAN TRỌNG) ---
     @Transactional(readOnly = true)
     public OrderDetailDTO detail(Long id) {
         Order o = orderRepo.findById(id).orElseThrow(NoSuchElementException::new);
-        List<OrderItem> items = itemRepo.findByOrderIdOrderByIdAsc(id);
-        return toDetailDTO(o, items);
+        
+        // 1. Lấy sản phẩm (kèm ảnh, thương hiệu)
+        List<OrderItemDetailDTO> items = getOrderDetails(id);
+
+        // 2. Lấy thông tin khách hàng (Ưu tiên User -> Snapshot -> Fallback)
+        String name = null; String phone = null;
+        if (o.getUserId() != null) {
+            User u = userRepo.findById(o.getUserId()).orElse(null);
+            if (u != null) { name = u.getFullName(); phone = u.getPhone(); }
+        }
+        if (name == null) name = extractName(o.getAddressSnapshot());
+        if (phone == null) phone = extractPhone(o.getAddressSnapshot());
+        if (name == null) name = "Khách vãng lai"; 
+        if (phone == null) phone = "-";
+
+        // 3. Lấy thông tin thanh toán
+        Payment payment = paymentRepo.findByOrderId(id).orElse(null);
+        String payMethod = (payment != null && payment.getMethod() != null) ? payment.getMethod() : "COD";
+        String payStatus = (payment != null && payment.getStatus() != null) ? payment.getStatus().name() : "UNPAID";
+
+        // 4. Lấy thông tin Voucher
+        String voucherCode = null;
+        try {
+            Optional<VoucherUsage> vu = voucherUsageRepo.findByOrderId(id);
+            if (vu.isPresent() && vu.get().getVoucher() != null) {
+                voucherCode = vu.get().getVoucher().getCode();
+            }
+        } catch (Exception e) {
+            // Log lỗi nếu cần, tránh crash API
+        }
+
+        return new OrderDetailDTO(
+                o.getId(), o.getCode(), o.getStatus(), name, phone, o.getAddressSnapshot(),
+                items, 
+                bd(o.getSubtotal()), bd(o.getDiscount()), bd(o.getShippingFee()), bd(o.getTotal()),
+                payMethod, payStatus, 
+                voucherCode, // <-- Truyền mã voucher
+                o.getNote(), o.getCreatedAt(), o.getUpdatedAt()
+        );
     }
 
-    /** Lấy chi tiết item có kèm skuCode + productName (dùng cho hóa đơn / UI bảng). */
-    @Transactional(readOnly = true)
-    public List<OrderItemDetailDTO> getOrderDetails(Long orderId) {
-        return itemRepo.findDetailsByOrderId(orderId)
-                .stream()
-                .map(OrderItemDetailDTO::from)
-                .toList();
-    }
-
-    /* ===== Commands ===== */
-
+    /* ===== Commands & Exports ===== */
     @Transactional
     public OrderDetailDTO updateStatus(Long id, String newStatus, String note) {
-        if (newStatus == null || newStatus.isBlank())
-            throw new IllegalArgumentException("status is required");
+        if (newStatus == null || newStatus.isBlank()) throw new IllegalArgumentException("status is required");
         Order o = orderRepo.findById(id).orElseThrow(NoSuchElementException::new);
         o.setStatus(newStatus.trim().toUpperCase());
         if (note != null) o.setNote(note);
@@ -154,8 +145,6 @@ public class StaffOrderService {
         orderRepo.save(o);
         return detail(id);
     }
-
-    /* ===== Export Invoice (XLSX) ===== */
 
     @Transactional(readOnly = true)
     public byte[] exportInvoiceXlsx(Long id) {
@@ -165,14 +154,18 @@ public class StaffOrderService {
         try (Workbook wb = new XSSFWorkbook(); ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             Sheet sh = wb.createSheet("Invoice");
             int r = 0;
-
             CellStyle bold = wb.createCellStyle();
             Font f = wb.createFont(); f.setBold(true); bold.setFont(f);
 
             Row title = sh.createRow(r++); title.createCell(0).setCellValue("HÓA ĐƠN BÁN HÀNG"); title.getCell(0).setCellStyle(bold);
-
-            sh.createRow(r++).createCell(0).setCellValue("Mã đơn: " + Optional.ofNullable(o.getCode()).orElse("OD-" + String.format("%06d", o.getId())));
-            sh.createRow(r++).createCell(0).setCellValue("Khách: " + Optional.ofNullable(extractName(o.getAddressSnapshot())).orElse("-"));
+            sh.createRow(r++).createCell(0).setCellValue("Mã đơn: " + Optional.ofNullable(o.getCode()).orElse("OD-" + o.getId()));
+            
+            String custName = extractName(o.getAddressSnapshot());
+            if (custName == null && o.getUserId() != null) {
+                 User u = userRepo.findById(o.getUserId()).orElse(null);
+                 if (u != null) custName = u.getFullName();
+            }
+            sh.createRow(r++).createCell(0).setCellValue("Khách: " + Optional.ofNullable(custName).orElse("Khách vãng lai"));
             sh.createRow(r++).createCell(0).setCellValue("Ngày: " + Optional.ofNullable(o.getCreatedAt()).orElse(Instant.now()));
 
             r++;
@@ -190,29 +183,19 @@ public class StaffOrderService {
                 sum = sum.add(line);
 
                 Row row = sh.createRow(r++);
-                row.createCell(0).setCellValue(it.skuCode() + " — " + it.productName());
+                row.createCell(0).setCellValue(it.skuCode() + " - " + it.productName());
                 row.createCell(1).setCellValue(qty);
                 row.createCell(2).setCellValue(unit.doubleValue());
                 row.createCell(3).setCellValue(line.doubleValue());
             }
             r++;
-
-            sh.createRow(r++).createCell(2).setCellValue("Tạm tính:");
-            sh.getRow(r-1).createCell(3).setCellValue(bd(o.getSubtotal()).max(sum).doubleValue());
-
-            sh.createRow(r++).createCell(2).setCellValue("Giảm giá:");
-            sh.getRow(r-1).createCell(3).setCellValue(bd(o.getDiscount()).doubleValue());
-
-            sh.createRow(r++).createCell(2).setCellValue("Phí VC:");
-            sh.getRow(r-1).createCell(3).setCellValue(bd(o.getShippingFee()).doubleValue());
-
+            sh.createRow(r++).createCell(2).setCellValue("Tạm tính:"); sh.getRow(r-1).createCell(3).setCellValue(bd(o.getSubtotal()).max(sum).doubleValue());
+            sh.createRow(r++).createCell(2).setCellValue("Giảm giá:"); sh.getRow(r-1).createCell(3).setCellValue(bd(o.getDiscount()).doubleValue());
+            sh.createRow(r++).createCell(2).setCellValue("Phí VC:");   sh.getRow(r-1).createCell(3).setCellValue(bd(o.getShippingFee()).doubleValue());
+            
             Row total = sh.createRow(r++);
             total.createCell(2).setCellValue("TỔNG CỘNG:"); total.getCell(2).setCellStyle(bold);
-            BigDecimal calc = bd(o.getSubtotal()).max(sum)
-                    .subtract(bd(o.getDiscount()))
-                    .add(bd(o.getShippingFee()));
-            total.createCell(3).setCellValue(bd(o.getTotal()).max(calc).doubleValue());
-            total.getCell(3).setCellStyle(bold);
+            total.createCell(3).setCellValue(bd(o.getTotal()).doubleValue()); total.getCell(3).setCellStyle(bold);
 
             for (int c = 0; c <= 3; c++) sh.autoSizeColumn(c);
             wb.write(bos);

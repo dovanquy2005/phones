@@ -60,7 +60,7 @@ public class VoucherService {
 
     private static VoucherResponse toRes(Voucher v) {
         return new VoucherResponse(
-            v.getVoucherId(), v.getCode(), v.getType(), v.getValue(), v.getMinOrder(),
+            v.getId(), v.getCode(), v.getType(), v.getValue(), v.getMinOrder(),
             v.getUsageLimit(), v.getPerUserLimit(), v.getStartsAt(), v.getEndsAt(),
             v.isActive(), v.getCreatedAt()
         );

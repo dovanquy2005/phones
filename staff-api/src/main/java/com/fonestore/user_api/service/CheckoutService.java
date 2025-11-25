@@ -3,16 +3,20 @@ package com.fonestore.user_api.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fonestore.staff_api.entity.Product; // Import Product
 import com.fonestore.staff_api.entity.ProductVariant;
+import com.fonestore.staff_api.entity.Voucher;
 import com.fonestore.staff_api.entity.enums.PaymentStatus;
 import com.fonestore.user_api.dto.checkout.CheckoutDTO;
 import com.fonestore.user_api.dto.checkout.CheckoutOrderResponse;
 import com.fonestore.user_api.dto.checkout.PlaceOrderRequest;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.Payment;
+import com.fonestore.user_api.entity.VoucherUsage;
 import com.fonestore.user_api.repository.PaymentRepository;
 import com.fonestore.user_api.repository.UserProductRepository; // Import Repo này
 import com.fonestore.user_api.repository.order.UserOrderItemRepository;
 import com.fonestore.user_api.repository.order.UserOrderRepository;
+import com.fonestore.user_api.repository.voucher.UserVoucherRepository;
+import com.fonestore.user_api.repository.voucher.UserVoucherUsageRepository;
 import com.fonestore.staff_api.repository.product.ProductVariantRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -35,8 +39,9 @@ public class CheckoutService {
     private final ProductVariantRepository variantRepo;
     private final UserProductRepository productRepo; // 1. Inject thêm cái này
     private final PaymentRepository paymentRepo;
-    
     private final ObjectMapper objectMapper;
+    private final UserVoucherRepository voucherRepo;       
+    private final UserVoucherUsageRepository usageRepo;
 
     @Transactional
     public CheckoutDTO buildCheckout(Long userId) {
@@ -196,6 +201,29 @@ public class CheckoutService {
         p.setAmount(draft.getTotal());
         p.setStatus(PaymentStatus.UNPAID);
         paymentRepo.save(p);
+
+        // === [THÊM MỚI] 5. GHI NHẬN SỬ DỤNG VOUCHER (NẾU CÓ) ===
+        if (draft.getVoucherId() != null) {
+            // Lấy voucher để đảm bảo tồn tại
+            Optional<Voucher> vOpt = voucherRepo.findById(draft.getVoucherId());
+            
+            if (vOpt.isPresent()) {
+                Voucher v = vOpt.get();
+                
+                // (Tuỳ chọn) Validate lại lần cuối tại thời điểm đặt hàng
+                // Ví dụ: check lại số lượng usage limit để tránh race condition
+                
+                // Lưu lịch sử sử dụng
+                VoucherUsage usage = new VoucherUsage();
+                usage.setUserId(userId);
+                usage.setOrderId(draft.getId());
+                usage.setVoucher(v); // Set entity voucher
+                usage.setUsedAt(Instant.now());
+                
+                usageRepo.save(usage);
+            }
+        }
+        // === [KẾT THÚC THÊM MỚI] ===
 
         // 5. Cập nhật trạng thái đơn hàng
         draft.setStatus("CREATED");

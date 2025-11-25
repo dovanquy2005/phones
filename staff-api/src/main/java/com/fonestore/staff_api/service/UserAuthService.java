@@ -2,7 +2,6 @@ package com.fonestore.staff_api.service;
 
 import com.fonestore.staff_api.config.JwtUtil;
 import com.fonestore.staff_api.dto.auth.LoginResponse;
-import com.fonestore.staff_api.dto.user.TwoFAResponse;
 import com.fonestore.staff_api.dto.user.UserCreateRequest;
 import com.fonestore.staff_api.dto.user.UserResponse;
 import com.fonestore.staff_api.dto.user.UserUpdateRequest;
@@ -17,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.HexFormat;
@@ -27,7 +26,6 @@ public class UserAuthService {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepo;
-    private static final SecureRandom RNG = new SecureRandom();
 
     public UserAuthService(UserRepository userRepo, JwtUtil jwtUtil) {
         this.userRepo = userRepo;
@@ -77,25 +75,25 @@ public class UserAuthService {
         userRepo.deleteById(id);
     }
 
-    @Transactional
-    public TwoFAResponse enable2FA(Long userId, String issuer) {
-        User u = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        String secret = generateBase32Secret(16);
-        u.setTwofaSecret(secret);
-        userRepo.save(u);
+    // @Transactional
+    // public TwoFAResponse enable2FA(Long userId, String issuer) {
+    //     User u = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+    //     String secret = generateBase32Secret(16);
+    //     u.setTwofaSecret(secret);
+    //     userRepo.save(u);
 
-        String label = u.getEmail();
-        String otpauth = "otpauth://totp/" + urlEncode(issuer) + ":" + urlEncode(label)
-                + "?secret=" + secret + "&issuer=" + urlEncode(issuer) + "&algorithm=SHA1&digits=6&period=30";
-        return new TwoFAResponse(u.getId(), secret, otpauth);
-    }
+    //     String label = u.getEmail();
+    //     String otpauth = "otpauth://totp/" + urlEncode(issuer) + ":" + urlEncode(label)
+    //             + "?secret=" + secret + "&issuer=" + urlEncode(issuer) + "&algorithm=SHA1&digits=6&period=30";
+    //     return new TwoFAResponse(u.getId(), secret, otpauth);
+    // }
 
-    @Transactional
-    public void disable2FA(Long userId) {
-        User u = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
-        u.setTwofaSecret(null);
-        userRepo.save(u);
-    }
+    // @Transactional
+    // public void disable2FA(Long userId) {
+    //     User u = userRepo.findById(userId).orElseThrow(() -> new NotFoundException("User not found"));
+    //     u.setTwofaSecret(null);
+    //     userRepo.save(u);
+    // }
 
     private String hashPassword(String plain) {
         if (plain == null) throw new BadRequestException("Password is required");
@@ -112,16 +110,16 @@ public class UserAuthService {
         catch (DateTimeParseException e) { throw new BadRequestException("dob must be yyyy-MM-dd"); }
     }
 
-    private String generateBase32Secret(int len) {
-        final char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".toCharArray();
-        StringBuilder sb = new StringBuilder(len);
-        for (int i = 0; i < len; i++) sb.append(alphabet[RNG.nextInt(alphabet.length)]);
-        return sb.toString();
-    }
+    // private String generateBase32Secret(int len) {
+    //     final char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".toCharArray();
+    //     StringBuilder sb = new StringBuilder(len);
+    //     for (int i = 0; i < len; i++) sb.append(alphabet[RNG.nextInt(alphabet.length)]);
+    //     return sb.toString();
+    // }
 
-    private String urlEncode(String s) {
-        return java.net.URLEncoder.encode(s == null ? "" : s, java.nio.charset.StandardCharsets.UTF_8);
-    }
+    // private String urlEncode(String s) {
+    //     return java.net.URLEncoder.encode(s == null ? "" : s, java.nio.charset.StandardCharsets.UTF_8);
+    // }
 
     private UserResponse toResp(User u) {
         return new UserResponse(
@@ -132,7 +130,7 @@ public class UserAuthService {
                 u.getDob() != null ? u.getDob().toString() : null,
                 u.getGender(),
                 u.getRole(),
-                u.getTwofaSecret() != null,
+                // u.getTwofaSecret() != null,
                 u.getAddress()
         );
     }
@@ -168,6 +166,6 @@ public class UserAuthService {
                 u.getEmail(),
                 java.util.Map.of("uid", u.getId(), "role", "user", "aud", "buyer")
         );
-        return new LoginResponse(u.getId(), u.getEmail(), "user", u.getTwofaSecret() != null, token);
+        return new LoginResponse(u.getId(), u.getEmail(), "user", token);
     }
 }

@@ -33,9 +33,6 @@ public class User {
   @Column(name = "address", length = 255)
   private String address;
 
-  // >>> THÊM FIELD 2FA
-  @Column(name = "twofa_secret", length = 64)
-  private String twofaSecret;
 
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;

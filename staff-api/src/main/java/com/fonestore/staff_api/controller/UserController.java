@@ -57,14 +57,14 @@ public class UserController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) { service.delete(id); }
 
-    @PostMapping("/{id}/2fa/enable")
-    public TwoFAResponse enable2FA(@PathVariable Long id,
-                                   @RequestParam(defaultValue = "PhoneStore") String issuer) {
-        return service.enable2FA(id, issuer);
-    }
+    // @PostMapping("/{id}/2fa/enable")
+    // public TwoFAResponse enable2FA(@PathVariable Long id,
+    //                                @RequestParam(defaultValue = "PhoneStore") String issuer) {
+    //     return service.enable2FA(id, issuer);
+    // }
 
-    @PostMapping("/{id}/2fa/disable")
-    public void disable2FA(@PathVariable Long id) { service.disable2FA(id); }
+    // @PostMapping("/{id}/2fa/disable")
+    // public void disable2FA(@PathVariable Long id) { service.disable2FA(id); }
     
     @GetMapping("/{id}")
     public UserResponse getOne(@PathVariable Long id) {

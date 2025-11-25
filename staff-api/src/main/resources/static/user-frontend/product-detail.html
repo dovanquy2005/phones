@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="vi">
 <head>
@@ -14,6 +15,9 @@
     .price-now.big{font-size:28px;line-height:1.1}
     .stock{font-size:13px;padding:2px 8px;border-radius:999px;background:#f3f4f6}
     .stock.ok{color:#057a55;background:#ecfdf5}.stock.low{color:#92400e;background:#fffbeb}.stock.out{color:#166534;background:#fef2f2}
+    /* Style cho trạng thái ngừng bán */
+    .stock.inactive{color:#b91c1c;background:#fee2e2;border:1px solid #fecaca}
+    
     .qty{display:flex;align-items:center;gap:8px}.qty button{width:36px;height:36px;border-radius:8px;border:1px solid var(--color-border);background:#fff}
     .qty input{width:64px;height:36px;border:1px solid var(--color-border);border-radius:8px;text-align:center}
     .rel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
@@ -24,8 +28,10 @@
     .toast{position:fixed;right:16px;bottom:16px;background:#111827;color:#fff;border-radius:12px;padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.2);display:none;z-index:9999}
     .btn.loading{opacity:0.7;pointer-events:none}
     .sku-line { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
-    /* #skuPill { background:#f3f4f6; padding:4px 8px; border-radius:8px; font-weight:600 } */
     #skuDebug { font-size:12px; color:#6b7280; }
+    
+    /* Style nút disabled */
+    button:disabled, .btn:disabled { opacity: 0.5; cursor: not-allowed; background-color: #e5e7eb; color: #9ca3af; border-color: #e5e7eb; }
   </style>
 </head>
 <body>
@@ -111,7 +117,6 @@
   const getId = () => new URLSearchParams(location.search).get('id');
   const toImg = u => !u? PLACEHOLDER : (u.startsWith('http')||u.startsWith('/'))?u:`/${u}`;
 
-  // robust price picker (unchanged)
   function pickPrice(p){
     const toNum=v=>{
       if(v==null) return null;
@@ -153,7 +158,6 @@
     el.appendChild(frag);
   }
 
-  // try many keys for sku; also check variants/skus arrays
   function pickSkuId(product){
     if(!product) return null;
     const tryKeys = ['sku_id','skuId','defaultSkuId','default_sku_id','variantId','variant_id','id','productSkuId'];
@@ -184,8 +188,6 @@
     return null;
   }
 
-  // If we cannot discover skuId from product JSON, try server endpoint:
-  // GET /api/products/{id}/skus  -> expect [{ skuId, id, sku, ... }, ...]
   async function resolveSkuIdFromServer(productId){
     if(!productId) return null;
     try{
@@ -210,6 +212,8 @@
   }
 
   let stock = 0;
+  // Biến kiểm tra trạng thái kích hoạt
+  let isActive = true;
 
   async function loadProduct(){
     const id = getId();
@@ -217,6 +221,9 @@
     const res = await fetch(`${API}/api/products/${encodeURIComponent(id)}`);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const p = await res.json();
+
+    // Kiểm tra isActive từ dữ liệu trả về (mặc định true nếu không có field này)
+    isActive = (p.isActive !== false && p.is_active !== false && p.active !== false);
 
     const brandVal=(p.brandName??p.brand??p.manufacturer??p?.brand?.name??'').toString().trim();
     $('#bc-name').textContent = p.name || 'Sản phẩm';
@@ -233,19 +240,28 @@
 
     stock = Number(p.quantity ?? p.stock ?? p.available ?? 0);
     const pill = $('#stockPill');
-    if(stock<=0){ pill.textContent='Tạm hết hàng'; pill.className='stock out'; }
-    else if(stock<=5){ pill.textContent=`Còn ${stock}`; pill.className='stock low'; }
-    else { pill.textContent='Còn hàng'; pill.className='stock ok'; }
+    
+    // --- CẬP NHẬT LOGIC HIỂN THỊ ---
+    if (!isActive) {
+        pill.textContent = 'Ngừng kinh doanh';
+        pill.className = 'stock inactive';
+    } else if(stock<=0){ 
+        pill.textContent='Tạm hết hàng'; 
+        pill.className='stock out'; 
+    } else if(stock<=5){ 
+        pill.textContent=`Còn ${stock}`; 
+        pill.className='stock low'; 
+    } else { 
+        pill.textContent='Còn hàng'; 
+        pill.className='stock ok'; 
+    }
 
     renderSpecs(p.specsJson);
 
-    // GẮN DATA-* CHO NÚT THÊM GIỎ (CHỈ những field cần)
     const add = document.getElementById('addBtn');
     const pid = p.productId ?? p.id ?? id;
-    // try to detect sku id locally
     let skuId = pickSkuId(p);
 
-    // If no skuId found locally, try server
     if(!skuId){
       try {
         const serverSku = await resolveSkuIdFromServer(pid);
@@ -261,21 +277,36 @@
     add.dataset['image'] = image || PLACEHOLDER;
     add.dataset['qtyEl'] = '#qtyInput';
 
-    // update UI SKU
-    // const skuEl = document.getElementById('skuPill');
-    // const skuDbg = document.getElementById('skuDebug');
-    // if (skuEl) skuEl.textContent = skuId ? String(skuId) : '—';
-    // if (skuDbg) skuDbg.textContent = skuId ? `(data-sku-id="${add.dataset.skuId}")` : '';
-
+    // Khởi tạo trạng thái nút bấm
     initQty();
   }
 
   function initQty(){
     const el = $('#qtyInput');
-    if((stock||0) <= 0){
-      el.value = 0; el.disabled = true; $('#decBtn').disabled = true; $('#incBtn').disabled = true; $('#addBtn').disabled = true;
+    const decBtn = $('#decBtn');
+    const incBtn = $('#incBtn');
+    const addBtn = $('#addBtn');
+
+    // Vô hiệu hóa nếu ngừng kinh doanh HOẶC hết hàng
+    if (!isActive || (stock||0) <= 0) {
+        el.value = 0;
+        el.disabled = true;
+        decBtn.disabled = true;
+        incBtn.disabled = true;
+        addBtn.disabled = true;
+        
+        if(!isActive) {
+            addBtn.textContent = 'Ngừng kinh doanh';
+        } else {
+            addBtn.textContent = 'Hết hàng';
+        }
     } else {
-      el.value = 1; el.disabled = false; $('#decBtn').disabled = false; $('#incBtn').disabled = false; $('#addBtn').disabled = false;
+        el.value = 1;
+        el.disabled = false;
+        decBtn.disabled = false;
+        incBtn.disabled = false;
+        addBtn.disabled = false;
+        addBtn.textContent = 'Thêm vào giỏ';
     }
   }
 
@@ -323,11 +354,10 @@
     }
   }
 
-  // BIND add-to-cart: ensure we only send { skuId, qty }
   function bindAddToCart(){
     document.addEventListener('click', async (ev) => {
       const btn = ev.target.closest && ev.target.closest('.btn-add-cart');
-      if (!btn) return;
+      if (!btn || btn.disabled) return; // Chặn click nếu disabled
       ev.preventDefault();
 
       const pid = btn.dataset.id || '';
@@ -338,7 +368,6 @@
 
       btn.classList.add('loading'); btn.disabled = true;
 
-      // ensure numeric sku
       const skuNum = skuIdStr ? Number(String(skuIdStr).replace(/[^\d-]/g,'')) : null;
 
       const minimalPayload = { skuId: skuNum, qty: qty };
@@ -347,48 +376,37 @@
         price: Number(btn.dataset.price || 0), image: btn.dataset.image || $('#cover')?.src || PLACEHOLDER, qty
       };
 
-      console.debug('[addToCart] minimalPayload=', minimalPayload, 'rawSku=', skuIdStr, 'typeof skuNum=', typeof skuNum);
-
       try {
         if (!skuNum || !Number.isFinite(skuNum) || skuNum <= 0) {
-          console.warn('Missing/invalid skuId for add-to-cart', { skuIdStr, skuNum, btnDataset: btn.dataset });
           showToast('Không thể thêm: thiếu hoặc sai skuId');
           return;
         }
 
         if (window.FS_CartClient && typeof window.FS_CartClient.addToCart === 'function') {
           const res = await window.FS_CartClient.addToCart(minimalPayload);
-          console.debug('[FS_CartClient.addToCart] result=', res);
           if (res && res.success) {
             showToast('Đã thêm vào giỏ hàng');
-            // [SỬA 1] Đổi tên sự kiện thành 'cart:changed' (bỏ fs:)
             try{ window.dispatchEvent(new CustomEvent('cart:changed',{ detail:{ count: null } })); }catch(e){}
           } else if (res && res.status === 401) {
             const next = encodeURIComponent(location.pathname + location.search);
             window.location.href = `login.html?next=${next}`;
             return;
           } else {
-            console.warn('FS_CartClient.addToCart failed, fallback to local', res);
             const c = addToLocalGuestCart(localProductData, qty);
             if (c) { 
                 showToast('Đã thêm (chế độ tạm - offline)');
-                // [SỬA 2] Trigger sự kiện cho badge
                 window.dispatchEvent(new CustomEvent('cart:changed')); 
             } else { showToast('Thêm thất bại'); }
           }
         } else {
-          // direct POST fallback (debug-friendly)
-          console.debug('[addToCart] posting directly to', `${API}/api/cart/items`, minimalPayload);
           const token = (window.getToken && typeof window.getToken === 'function') ? window.getToken() : (localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '');
           const headers = { 'Content-Type': 'application/json' };
           if (token) headers['Authorization'] = 'Bearer ' + token;
           const resp = await fetch(`${API}/api/cart/items`, { method:'POST', headers, credentials:'include', body: JSON.stringify(minimalPayload) });
-          console.debug('[addToCart] direct POST status=', resp.status);
+          
           if (resp.ok) {
-            let j = null;
-            try { j = await resp.json(); } catch(_) {}
+            let j = null; try { j = await resp.json(); } catch(_) {}
             showToast('Đã thêm vào giỏ hàng');
-            // [SỬA 3] Đổi tên sự kiện thành 'cart:changed'
             try{ window.dispatchEvent(new CustomEvent('cart:changed',{ detail:{ action:'add', productId: pid, qty, cart: j } })); }catch(e){}
           } else if (resp.status === 401) {
             const next = encodeURIComponent(location.pathname + location.search);
@@ -396,7 +414,6 @@
             return;
           } else {
             const txt = await resp.text().catch(()=>`HTTP ${resp.status}`);
-            console.warn('BE add to cart failed', resp.status, txt);
             const c = addToLocalGuestCart(localProductData, qty);
             if (c) { 
                 showToast('Đã thêm (chế độ tạm - offline)');
@@ -405,7 +422,6 @@
           }
         }
       } catch (err) {
-        console.error('Add to cart exception', err);
         const c = addToLocalGuestCart(localProductData, qty);
         if (c) { 
             showToast('Đã thêm (chế độ tạm - offline)');
@@ -446,7 +462,6 @@
     console.error(err);
     const note=document.createElement('div'); note.className='alert'; note.textContent='Không tải được dữ liệu sản phẩm. Kiểm tra backend/API.';
     document.getElementById('main').prepend(note);
-    // fallback minimal dataset so local fallback still works
     try{
       const id = getId();
       const add = document.getElementById('addBtn');
@@ -477,3 +492,4 @@
 
 </body>
 </html>
+}

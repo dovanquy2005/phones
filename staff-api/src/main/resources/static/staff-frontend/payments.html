@@ -35,36 +35,88 @@
     .pager .btn[disabled]{opacity:.45;cursor:not-allowed}
     .pager .page{min-width:34px;text-align:center}
     .pager .is-active{background:#111827;color:#fff;border-color:#111827}
-    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:#fff}
-    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .header-spacer{flex:1}
-    
-    .dropdown{position:absolute;right:0;top:calc(100% + 8px);min-width:180px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:6px;display:none;z-index:50}
-    .avatar-menu{position:relative}
-    .avatar-menu[open] .dropdown{display:block}
     
     .toast{position:fixed;right:16px;bottom:16px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;font-size:14px}
     .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
     .status-toggle[disabled]{opacity:.45;cursor:not-allowed}
     .status-select[disabled]{opacity:.75}
 
-    /* Role badge (profile modal) */
+    /* Modal Styles */
+    .modal {
+      position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 60;
+    }
+    .modal.is-open { display: flex; }
+    .modal__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.35); }
+    .modal__card {
+      position: relative; z-index: 10; background: #fff; border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25); display: flex; flex-direction: column;
+      max-height: 92vh; width: min(500px, 92vw);
+    }
+    .modal__header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal__title { margin: 0; font-size: 18px; font-weight: 700; }
+    .modal__body { padding: 20px; overflow-y: auto; }
+    .modal__footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .modal__close { text-decoration: none; font-size: 20px; color: #6b7280; cursor: pointer; }
+
+    /* Role badge */
     .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
     .role-badge.manager{background:#dcfce7;color:#166534}
     .role-badge.staff{background:#e5e7eb;color:#111827}
-  </style>
-  <style>
+
     .search-inline{display:flex;align-items:center;gap:8px;margin:8px 0 12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px 12px}
     .search-inline input{flex:1;border:none;outline:none;background:transparent;font-size:14px}
+
+    /* === UNIFIED HEADER CSS === */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    
+    .avatar-menu{position:relative !important; display: inline-block !important; z-index: 9999;}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    
+    .dropdown {
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        z-index: 2147483646 !important; 
+        min-width: 180px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.08);
+        padding: 6px;
+        display: none;
+    }
+    .avatar-menu[open] .dropdown{display:block !important}
+    
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+    .dropdown a:hover{background:#f3f4f6}
   </style>
 </head>
 <body>
 <header class="app-header">
-  <a class="brand" href="orders.html"><img src="assets/logo.svg" alt="" class="brand__logo"/><span class="brand__text">fonestore</span></a>
+  <a class="brand" href="orders.html">
+    <img src="assets/logo.svg" alt="" class="brand__logo"/>
+    <span class="brand__text">fonestore</span>
+  </a>
   <div class="header-spacer"></div>
-  <details class="avatar-menu"><summary class="avatar"><img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/></summary>
-    <nav class="dropdown"><a href="#modal-profile">Thông tin tài khoản</a><a id="btn-logout" href="auth-login.html">Đăng xuất</a></nav>
-  </details>
+  <div class="header-actions">
+    <details class="avatar-menu" id="avatarMenu">
+      <summary class="avatar" aria-label="Tài khoản">
+        <img id="avatarImg" src="https://api.dicebear.com/9.x/initials/svg?seed=--" alt=""/>
+      </summary>
+      <nav class="dropdown" aria-label="Tài khoản">
+        <a href="#modal-profile" id="open-profile">Thông tin tài khoản</a>
+        <a id="btn-logout" href="auth-login.html">Đăng xuất</a>
+      </nav>
+    </details>
+  </div>
 </header>
 
 <div class="app-shell">
@@ -74,7 +126,6 @@
       <a class="sidebar__link" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link sidebar__link--active" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -86,7 +137,6 @@
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        
     </div>
   </aside>
 
@@ -377,7 +427,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 </script>
 
-<!-- Profile modal -->
 <div class="modal" id="modal-profile" aria-hidden="true">
   <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
     <header class="modal__header">
@@ -396,15 +445,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
       <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
       <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
     </div>
-    <!-- <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
-    </footer> -->
   </div>
 </div>
 
-
 <script>
-// START: role-based sidebar control (robust) + header render hook ensure
+/* 🔥🔥 START: UNIFIED PROFILE LOGIC (SỬA LỖI CLICK) 🔥🔥 */
 (function(){
   const getToken = () =>
     (typeof window.getToken === 'function' ? window.getToken() : localStorage.getItem('accessToken') || '');
@@ -469,6 +514,23 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
   fillProfile({name,email,role});
   __applyRoleUI(role);
+
+  // 🔥 SỰ KIỆN CLICK MỞ MODAL 🔥
+  document.getElementById('open-profile')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const m = document.getElementById('modal-profile');
+      m.classList.add('is-open');
+      m.setAttribute('aria-hidden', 'false');
+      document.getElementById('avatarMenu').removeAttribute('open'); // Đóng dropdown
+  });
+
+  // 🔥 SỰ KIỆN ĐÓNG MODAL 🔥
+  document.querySelectorAll('[data-close], .modal__close, .modal__backdrop').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+          const m = e.target.closest('.modal');
+          if(m) { m.classList.remove('is-open'); m.setAttribute('aria-hidden', 'true'); }
+      });
+  });
 
   document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 })();

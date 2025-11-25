@@ -76,7 +76,7 @@ public class StaffAuthService {
                 )
         );
 
-        return new LoginResponse(staff.getStaffId(), staff.getEmail(), roleLower, false, token);
+        return new LoginResponse(staff.getStaffId(), staff.getEmail(), roleLower, token);
     }
 
     // ===== helpers =====

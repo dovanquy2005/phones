@@ -8,6 +8,6 @@ public record UserResponse(
         String dob,
         String gender,
         String role,
-        boolean twofaEnabled,
+
         String address
 ) {}

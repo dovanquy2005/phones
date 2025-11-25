@@ -53,24 +53,94 @@
     .pager .page{min-width:34px;text-align:center}
     .pager .is-active{background:#111827;color:#fff;border-color:#111827}
 
-    /* header (simple) */
-    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);background:#fff}
-    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-    .header-spacer{flex:1}
-    /* .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid var(--border);display:inline-block} */
-    .sidebar__link--active{background:#11182710;border-radius:10px;color:#111827;} 
-
     /* toast */
     .toast{position:fixed;right:16px;bottom:16px;z-index:60;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;font-size:14px}
     .toast.show{opacity:1;pointer-events:auto;transform:translateY(0)}
-    /* Role badge (profile modal) */
-    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
-    .role-badge.manager{background:#dcfce7;color:#166534}
-    .role-badge.staff{background:#e5e7eb;color:#111827}
-    .table thead th, .table tbody td {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
+    
+    .btn--sm { padding: 4px 10px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; }
+    .btn--sm:hover { background: #f3f4f6; }
+
+    /* --- MODAL STYLES (Chung cho Profile & Order Detail) --- */
+    .modal, .modal-overlay {
+        position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 60;
     }
+    .modal.is-open, .modal-overlay.show { display: flex; } /* Hiển thị flex để căn giữa */
+    
+    /* Backdrop */
+    .modal__backdrop, .modal-overlay::before {
+        content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.35); z-index: -1;
+    }
+    
+    /* Card Modal */
+    .modal__card, .modal-content-detail {
+        position: relative; z-index: 10;
+        background: #fff; border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        display: flex; flex-direction: column;
+        max-height: 92vh; overflow-y: auto;
+    }
+    
+    /* Order Detail specific overrides */
+    .modal-content-detail { width: 800px; max-width: 95%; padding: 24px; gap: 16px; }
+    .detail-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .detail-title h3 { margin: 0 0 4px 0; font-size: 18px; }
+    .close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #6b7280; }
+    .detail-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .info-group h4 { margin: 0 0 8px 0; font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+    .info-val { font-weight: 500; text-align: right; }
+    .detail-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+    .detail-table th { text-align: left; padding: 8px 0; border-bottom: 1px solid var(--border); color: #6b7280; font-weight: 500; }
+    .detail-table td { padding: 12px 0; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    .detail-table td:last-child { text-align: right; }
+    .detail-table th:last-child { text-align: right; }
+    .detail-total { display: flex; justify-content: flex-end; gap: 20px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 16px; font-weight: 700; color: #111827; }
+
+    /* Profile Modal specific overrides */
+    .modal__card { width: min(500px, 92vw); }
+    .modal__header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal__title { margin: 0; font-size: 18px; font-weight: 700; }
+    .modal__body { padding: 20px; overflow-y: auto; }
+    .modal__footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+    .modal__close { text-decoration: none; font-size: 20px; color: #6b7280; cursor: pointer; }
+
+    /* === 🔥 START: UNIFIED HEADER CSS (ĐỒNG BỘ) 🔥 === */
+    .app-header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #e5e7eb;background:#fff}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .header-spacer{flex:1}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    
+    /* Avatar Menu & Dropdown Fix */
+    .avatar-menu{position:relative !important; display: inline-block !important; z-index: 9999;}
+    .avatar-menu > summary{list-style:none;cursor:pointer}
+    .avatar{width:36px;height:36px;border-radius:50%;overflow:hidden;border:1px solid #e5e7eb;display:inline-block}
+    .avatar img{width:100%;height:100%;display:block}
+    
+    .dropdown {
+        position: absolute !important;
+        top: calc(100% + 8px) !important;
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        z-index: 2147483646 !important; /* Layer siêu cao */
+        min-width: 180px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.08);
+        padding: 6px;
+        display: none;
+    }
+    .avatar-menu[open] .dropdown{display:block !important}
+    
+    .dropdown a{display:block;padding:8px 10px;border-radius:8px;color:#111827;text-decoration:none;font-size:14px}
+    .dropdown a:hover{background:#f3f4f6}
+    
+    .role-badge{font-size:12px;padding:2px 8px;border-radius:999px}
+    .role-badge.manager{background:#dcfce7;color: #166534}
+    .role-badge.staff{background:#dcfce7;color: #166534}
+    /* === END: UNIFIED HEADER CSS === */
   </style>
 </head>
 <body>
@@ -101,7 +171,6 @@
       <a class="sidebar__link sidebar__link--active" href="orders.html">Đơn hàng</a>
       <a class="sidebar__link" href="payments.html">Thanh toán</a>
       <a class="sidebar__link" href="customers.html">Khách hàng</a>
-       
     </div>
     <div class="sidebar__group" data-sec="catalog">
       <p class="sidebar__heading">Hàng hóa</p>
@@ -113,14 +182,12 @@
       <p class="sidebar__heading">Hệ thống</p>
       <a class="sidebar__link" href="staff.html">Nhân viên</a>
       <a class="sidebar__link" href="reports.html">Báo cáo</a>
-        
     </div>
   </aside>
 
   <main class="content">
     <section class="toolbar"><h1 class="page-title">Đơn hàng</h1></section>
 
-    <!-- Search -->
     <div class="search-inline" role="search" aria-label="Tìm kiếm đơn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke-linecap="round"/>
@@ -158,7 +225,7 @@
       <div class="card__body table-wrap">
         <table class="table" aria-describedby="pgsum">
           <thead>
-            <tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>TT đơn</th><th>Thanh toán</th><th>Ngày</th><th style="width:150px;text-align:right">Hành động</th></tr>
+            <tr><th>Mã</th><th>Khách</th><th>Tổng</th><th>TT đơn</th><th>Thanh toán</th><th>Ngày</th><th style="width:200px;text-align:right">Hành động</th></tr>
           </thead>
           <tbody id="rows"><tr><td colspan="7" class="empty">Đang tải…</td></tr></tbody>
         </table>
@@ -171,8 +238,78 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<div id="modal-order-detail" class="modal-overlay">
+    <div class="modal-content-detail">
+        <div class="detail-header">
+            <div class="detail-title">
+                <h3>Đơn hàng <span id="dt-code">#OD-000000</span></h3>
+                <span id="dt-date" style="font-size:13px;color:#6b7280">20/11/2025 15:30</span>
+            </div>
+            <button onclick="closeDetailModal()" class="close-btn">&times;</button>
+        </div>
+
+        <div class="detail-info-grid">
+            <div class="info-group">
+                <h4>Thông tin khách hàng</h4>
+                <div class="info-row"><span>Tên:</span> <span class="info-val" id="dt-cust-name">-</span></div>
+                <div class="info-row"><span>SĐT:</span> <span class="info-val" id="dt-cust-phone">-</span></div>
+                <div class="info-row"><span>Địa chỉ:</span> <div class="info-val" id="dt-address" style="max-width:200px;text-align:right">-</div></div>
+            </div>
+            <div class="info-group">
+                <h4>Trạng thái</h4>
+                <div class="info-row"><span>Đơn hàng:</span> <span class="info-val" id="dt-status">-</span></div>
+                <div class="info-row"><span>Thanh toán:</span> <span class="info-val" id="dt-pay-status">-</span></div>
+                <div class="info-row"><span>Phương thức:</span> <span class="info-val" id="dt-pay-method">-</span></div>
+                </div>
+        </div>
+
+        <div class="info-group">
+            <h4>Danh sách sản phẩm</h4>
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Ảnh</th>
+                        <th>Sản phẩm</th>
+                        <th>Thương hiệu</th> <th>Đơn giá</th>
+                        <th>SL</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody id="dt-items">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="detail-total">
+            <span>Tổng cộng:</span>
+            <span id="dt-total" style="color:#d70018">0₫</span>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-profile" aria-hidden="true">
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+    <header class="modal__header">
+      <h3 id="profileTitle" class="modal__title">Thông tin tài khoản</h3>
+      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
+    </header>
+    <div class="modal__body grid grid--2" id="profile-view">
+      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
+        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
+        <div>
+          <div id="profileName" style="font-weight:600">—</div>
+          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
+        </div>
+      </div>
+      <div class="field"><label>Họ tên</label><input class="input" id="profile_name" disabled/></div>
+      <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
+      <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ===== Helpers ===== */
+/* ===== START: LOGIC XỬ LÝ ĐƠN HÀNG ===== */
 const API = location.origin;
 const API_ORDERS = API + '/api/orders';
 
@@ -180,6 +317,8 @@ const qs = s=>document.querySelector(s);
 const qsa = s=>Array.from(document.querySelectorAll(s));
 const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.') + '₫';
 const fmtDate = s => { if(!s) return ''; const d=new Date(s); if(isNaN(d)) return s; return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); };
+const fmtDateTime = s => { if(!s) return ''; const d=new Date(s); if(isNaN(d)) return s; return d.toLocaleString('vi-VN'); };
+
 const token = ()=>localStorage.getItem('accessToken')||'';
 if(!token()) location.href='/staff-frontend/auth-login.html';
 
@@ -190,7 +329,6 @@ async function apiFetch(url,opts={}){
   if(!r.ok){
     if(r.status===401){localStorage.removeItem('accessToken');location.href='/staff-frontend/auth-login.html';}
     let msg=''; try{const j=await r.json(); msg=j.message||j.error||'';}catch{}
-    // ném theo đúng mã để catch() xử lý 409 đẹp hơn
     const err = new Error(msg||`HTTP ${r.status}`);
     err.status = r.status;
     throw err;
@@ -201,19 +339,17 @@ async function apiFetch(url,opts={}){
 let state={orders:[], q:'', st:'', pay:'', from:null, to:null, page:1, per:10, pages:1};
 const ORDER_OPTS = ['PENDING','SHIPPING','DELIVERED','CANCELED'];
 
-/* Ma trận chuyển trạng thái hợp lệ (FE) */
 const ALLOWED = {
   CREATED: paid => new Set(['CREATED', 'PENDING', 'SHIPPING', 'CANCELED']),
   PENDING  : paid => new Set(['PENDING','SHIPPING','CANCELED', ...(paid?['DELIVERED']:[])]),
   SHIPPING : paid => new Set(['SHIPPING', ...(paid?['DELIVERED']:[])]),
-  DELIVERED: _    => new Set(['DELIVERED']),            // trạng thái cuối
-  CANCELED : _    => new Set(['CANCELED'])              // trạng thái cuối
+  DELIVERED: _    => new Set(['DELIVERED']),
+  CANCELED : _    => new Set(['CANCELED'])
 };
 const canTransition = (from,to,paid) => (ALLOWED[from]??(_=>new Set()))(paid).has(to);
 
 function toast(m,t=1600){ const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t); }
 
-/* badges */
 function payBadge(v){ v=String(v||'').toUpperCase(); return v==='PAID' ? '<span class="badge badge--pay-paid">Đã thanh toán</span>' : '<span class="badge badge--pay-unpaid">Chưa thanh toán</span>'; }
 function stBadge(v){
   v=String(v||'').toUpperCase();
@@ -225,22 +361,51 @@ function stBadge(v){
   return `<span class="badge">${v||'-'}</span>`;
 }
 
-/* parse snapshot safe */
-function pickCustomer(o){
-  if (o.customerName) return o.customerName;
-  const snap = o.addressSnapshot ?? o.address_snapshot;
-  if (!snap) return '';
-  try{
-    if (typeof snap === 'string') {
-      const s = JSON.parse(snap);
-      return (s && typeof s==='object') ? (s.name||'') : '';
-    }
-    if (typeof snap === 'object') return snap.name || '';
-  }catch{}
-  return '';
+/* --- HELPERS: TÌM DỮ LIỆU --- */
+
+function resolveCustomerName(data) {
+    if (data.customerName) return data.customerName;
+    if (data.user && data.user.fullName) return data.user.fullName;
+    if (data.customer && data.customer.fullName) return data.customer.fullName;
+    try {
+        const snap = data.addressSnapshot || data.shippingAddress;
+        if(snap && snap.includes('{')) {
+             const j = JSON.parse(snap);
+             return j.name || j.fullName || j.receiverName || 'Khách vãng lai';
+        }
+    } catch {}
+    return 'Khách vãng lai';
 }
 
-/* Map order row */
+function resolveCustomerPhone(data) {
+    if (data.customerPhone) return data.customerPhone;
+    if (data.user && data.user.phone) return data.user.phone;
+    if (data.customer && data.customer.phone) return data.customer.phone;
+    try {
+        const snap = data.addressSnapshot || data.shippingAddress;
+        if(snap && snap.includes('{')) {
+             const j = JSON.parse(snap);
+             return j.phone || j.phoneNumber || '-';
+        }
+    } catch {}
+    return '-';
+}
+
+function resolveAddress(data) {
+    try {
+        const snap = data.addressSnapshot || data.shippingAddress;
+        if(snap && snap.includes('{')) {
+             const j = JSON.parse(snap);
+             if (j.fullAddress) return j.fullAddress;
+             if (j.address) return j.address;
+             return `${j.houseNumber||''} ${j.street||''} ${j.ward||''} ${j.district||''} ${j.city||''}`;
+        }
+        return snap || 'Tại cửa hàng';
+    } catch { return 'Tại cửa hàng'; }
+}
+
+/* --- MAIN LOGIC --- */
+
 function mapOrder(o){
   const stRaw = (o.status ?? o.orderStatus ?? '').toString().toUpperCase();
   let payRaw = (o.paymentStatus ?? o.payStatus ?? ((o.paid===true)?'PAID':(o.paid===false?'UNPAID':''))).toString().toUpperCase();
@@ -253,14 +418,12 @@ function mapOrder(o){
   if (!orderSt) orderSt = 'PENDING';
   if (!payRaw)  payRaw  = 'UNPAID';
 
-  const total = (o.total != null)
-    ? o.total
-    : (Number(o.subtotal)||0) - (Number(o.discount)||0) + (Number(o.shippingFee ?? o.shipping_fee)||0);
+  const total = (o.total != null) ? o.total : 0;
 
   return {
     id:        o.id ?? o.orderId,
     code:      o.code || `OD-${String(o.orderId ?? o.id).padStart(6,'0')}`,
-    customer:  pickCustomer(o),
+    customer:  resolveCustomerName(o),
     total,
     createdAt: o.createdAt ?? o.created_at,
     status:    orderSt,
@@ -268,7 +431,6 @@ function mapOrder(o){
   };
 }
 
-/* Load */
 async function load(){
   qs('#rows').innerHTML = `<tr><td colspan="7" class="empty">Đang tải…</td></tr>`;
   let url=API_ORDERS, p=new URLSearchParams();
@@ -314,7 +476,7 @@ function render(){
       return `<option value="${v}" ${v===o.status?'selected':''} ${dis}>${label}</option>`;
     }).join('');
 
-    const printLabel = paid ? 'In hóa đơn' : 'In phiếu giao hàng';
+    const printLabel = paid ? 'Hóa đơn' : 'Phiếu giao';
     const printMode  = paid ? 'invoice'   : 'proforma';
 
     return `<tr data-id="${o.id}">
@@ -331,12 +493,12 @@ function render(){
       <td>${payBadge(o.paymentStatus)}</td>
       <td>${fmtDate(o.createdAt)}</td>
       <td style="text-align:right">
-        <button class="btn btn--sm" data-print="${o.id}" data-mode="${printMode}">${printLabel}</button>
+        <button class="btn btn--sm" style="margin-right:4px;color:#111827" onclick="openOrderDetail(${o.id})">Chi tiết</button>
+        <button class="btn btn--sm" data-print="${o.id}" data-mode="${printMode}">In ${printLabel}</button>
       </td>
     </tr>`;
   }).join('');
 
-  // pager
   const pages=[]; const n=5; let s=Math.max(1,state.page-Math.floor(n/2)); let e=s+n-1; if(e>state.pages){e=state.pages; s=Math.max(1,e-n+1);}
   for(let i=s;i<=e;i++) pages.push(i);
   qs('#pager').innerHTML = `
@@ -345,7 +507,6 @@ function render(){
     <button class="btn" data-page="next" ${state.page>=state.pages?'disabled':''}>››</button>`;
 }
 
-/* Update Order status (theo ma trận ALLOWED + fallback 409) */
 async function updateOrderStatus(id, val){
   if(!ORDER_OPTS.includes(val)) return alert('Trạng thái không hợp lệ');
   const row = state.orders.find(o=>o.id==id); if(!row) return;
@@ -357,7 +518,7 @@ async function updateOrderStatus(id, val){
     } else {
       alert(`Không thể chuyển từ “${from}” → “${val}”.`);
     }
-    render(); // trả UI về đúng allowed/disabled
+    render(); 
     return;
   }
 
@@ -384,12 +545,118 @@ async function updateOrderStatus(id, val){
   }
 }
 
+async function openOrderDetail(id){
+    try {
+        const data = await apiFetch(`/api/orders/${id}`);
+        if(!data) throw new Error("Không có dữ liệu");
+
+        // 1. Điền thông tin chung
+        qs('#dt-code').textContent = data.code || `OD-${data.id}`;
+        qs('#dt-date').textContent = fmtDateTime(data.createdAt);
+        qs('#dt-cust-name').textContent = resolveCustomerName(data);
+        qs('#dt-cust-phone').textContent = resolveCustomerPhone(data);
+        qs('#dt-address').textContent = resolveAddress(data);
+        
+        qs('#dt-status').innerHTML = stBadge(data.status);
+        qs('#dt-pay-status').innerHTML = payBadge(data.paymentStatus);
+        qs('#dt-pay-method').textContent = (data.paymentMethod || (data.payment ? data.payment.method : "COD"));
+
+        // --- HIỂN THỊ VOUCHER (MỚI) ---
+        const payInfoGroup = qsa('.info-group')[1]; // Cột bên phải
+        const oldVoucherRow = payInfoGroup.querySelector('.voucher-row');
+        if(oldVoucherRow) oldVoucherRow.remove();
+
+        if (data.voucherCode || (data.discount && data.discount > 0)) {
+             const vCode = data.voucherCode || "Đã dùng mã";
+             const vDisc = fmtVND(data.discount);
+             
+             const html = `
+                <div class="info-row voucher-row" style="margin-top:8px; padding-top:8px; border-top:1px dashed #eee">
+                    <span style="color:#d97706; font-weight:600">🎟 Voucher:</span> 
+                    <span class="info-val">
+                        <span class="badge" style="background:#fffbeb; color:#b45309; border:1px solid #fcd34d; font-size:11px">${vCode}</span>
+                        <span style="color:#d70018; margin-left:4px; font-weight:bold">(-${vDisc})</span>
+                    </span>
+                </div>
+             `;
+             payInfoGroup.insertAdjacentHTML('beforeend', html);
+        }
+
+        // 3. Render Bảng Sản Phẩm (FIXED)
+        const tbody = qs('#dt-items');
+        const items = data.items || [];
+        
+        if (items.length === 0) {
+             tbody.innerHTML = '<tr><td colspan="6" class="empty">Không có sản phẩm</td></tr>';
+        } else {
+            tbody.innerHTML = items.map(item => {
+                let imgName = item.imageUrl || item.image || '';
+                let imgSrc = '/staff-frontend/assets/logo.svg';
+                
+                if (imgName) {
+                    if (imgName.startsWith('http') || imgName.startsWith('data:')) {
+                        imgSrc = imgName;
+                    } else if (imgName.includes('/') || imgName.includes('\\')) {
+                        imgSrc = imgName.startsWith('/') ? imgName : '/' + imgName;
+                    } else {
+                        imgSrc = `/staff-frontend/assets/products/${imgName}`;
+                    }
+                }
+                
+                const name = item.productName || "Sản phẩm";
+                const brand = item.brandName || "---";
+                const price = item.unitPrice ?? item.price ?? 0;
+                const qty = item.quantity ?? item.qty ?? 0;
+                const subtotal = item.subtotal ?? (price * qty);
+
+                // Fix biến thể
+                let variantText = (item.variantInfo || '').trim();
+                if (name.includes(variantText)) { variantText = ''; }
+
+                return `
+                <tr>
+                    <td style="width:60px; text-align:center; vertical-align:middle">
+                        <img src="${imgSrc}" 
+                             style="width:48px; height:48px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb"
+                             onerror="this.src='/staff-frontend/assets/logo.svg'">
+                    </td>
+                    <td style="vertical-align:middle">
+                        <div style="font-weight:600; color:#111827">${name}</div>
+                        ${variantText ? `<div style="font-size:12px; color:#6b7280; margin-top:2px">Phân loại: ${variantText}</div>` : ''}
+                        <div style="font-size:11px; color:#9ca3af">SKU: ${item.skuCode || '—'}</div>
+                    </td>
+                    <td style="vertical-align:middle">
+                        <span style="display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:600; background:#eff6ff; color:#1d4ed8; border:1px solid #dbeafe">
+                            ${brand}
+                        </span>
+                    </td>
+                    <td style="vertical-align:middle">${fmtVND(price)}</td>
+                    <td style="vertical-align:middle; font-weight:bold; text-align:center">x${qty}</td>
+                    <td style="vertical-align:middle; font-weight:bold; color:#d70018; text-align:right">${fmtVND(subtotal)}</td>
+                </tr>
+            `}).join('');
+        }
+
+        qs('#dt-total').textContent = fmtVND(data.total || data.totalAmount);
+        qs('#modal-order-detail').classList.add('show');
+
+    } catch(e) {
+        console.error(e);
+        alert("Lỗi hiển thị: " + e.message);
+    }
+}
+
+function closeDetailModal(){
+    qs('#modal-order-detail').classList.remove('show');
+}
+window.addEventListener('click', e => {
+    if(e.target === qs('#modal-order-detail')) closeDetailModal();
+});
+
 /* ===== Events ===== */
 document.addEventListener('DOMContentLoaded', async ()=>{
-  // logout
   document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
 
-  // chips
   qs('#chips-status').addEventListener('click', e=>{
     const b=e.target.closest('.chip'); if(!b) return;
     qsa('#chips-status .chip').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active');
@@ -401,12 +668,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     state.pay=b.dataset.v||''; state.page=1; render();
   });
 
-  // search/date
   qs('#q').addEventListener('input', e=>{ state.q=e.target.value||''; state.page=1; render(); });
   qs('#from').addEventListener('change', e=>{ state.from=e.target.value||null; state.page=1; render(); });
   qs('#to').addEventListener('change', e=>{ state.to=e.target.value||null; state.page=1; render(); });
 
-  // open editor & print
   document.addEventListener('click', e=>{
     const row=e.target.closest('tr[data-id]'); if(!row) return;
 
@@ -429,7 +694,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     }
   });
 
-  // change order status
   document.addEventListener('change', e=>{
     const sel=e.target.closest('.status-select'); if(!sel) return;
     const id = e.target.closest('tr[data-id]').dataset.id;
@@ -438,7 +702,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     sel.closest('.status-cell')?.classList.remove('is-open');
   });
 
-  // pager
   qs('#pager').addEventListener('click', e=>{
     const b=e.target.closest('[data-page]'); if(!b) return;
     const v=b.dataset.page;
@@ -452,31 +715,66 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 });
 </script>
 
+<script>
+/* ===== Unified Profile & Avatar Logic (Được thêm để xử lý nút "Thông tin tài khoản") ===== */
+(function(){
+  const getToken = () => localStorage.getItem('accessToken') || '';
+  function decodeJwt(token){ try{ const p = token.split('.')[1]; const json = atob(p.replace(/-/g,'+').replace(/_/g,'/')); return JSON.parse(decodeURIComponent(escape(json))); }catch{ return null; } }
+  function __extractRoles(payload){ try{ let raw = payload?.authorities ?? payload?.roles ?? []; let list = Array.isArray(raw) ? raw : String(raw).split(/[,\s]+/); return list.map(s => String(s).trim().toLowerCase().replace(/^role[_:\-]/, '')).filter(Boolean); }catch{ return []; } }
+  function __deriveRole(list){ if (list.includes('manager')) return 'manager'; if (list.includes('staff')) return 'staff'; return 'user'; }
+  function initials(s){ const t = (s||'').trim(); if(!t) return '--'; const parts = t.split(/\s+/); const a = (parts[0]||'')[0]||'', b = (parts[parts.length-1]||'')[0]||''; return (a+b).toUpperCase(); }
+  
+  function fillProfile({name,email,role}){
+    document.getElementById('avatarImg').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileAvatar').src = `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(initials(name))}`;
+    document.getElementById('profileName').textContent = name;
+    
+    const rLabel = document.getElementById('profileRoleLabel'); // có thể không tồn tại ở layout này
+    const rRole = document.getElementById('profile_role'); 
+    
+    if(rRole) { rRole.value = role==='manager'?'Manager':'Staff'; }
+    // Update role badge (nếu có trong modal)
+    if(document.querySelector('#profileRole')) {
+        const el = document.querySelector('#profileRole');
+        el.textContent = role==='manager'?'Manager':'Staff';
+        el.className = `role-badge ${role}`;
+    }
+    
+    document.getElementById('profile_name').value = name;
+    document.getElementById('profile_email').value = email;
+  }
 
-<!-- Profile modal -->
-<div class="modal" id="modal-profile" aria-hidden="true">
-  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
-    <header class="modal__header">
-      <h3 id="profileTitle" style="margin:0">Thông tin tài khoản</h3>
-      <a class="modal__close" href="#" aria-label="Đóng">✕</a>
-    </header>
-    <div class="modal__body grid grid--2" id="profile-view">
-      <div class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:12px">
-        <img id="profileAvatar" alt="AV" style="width:48px;height:48px;border-radius:50%;border:1px solid #e5e7eb"/>
-        <div>
-          <div id="profileName" style="font-weight:600">—</div>
-          <div id="profileRole" class="role-badge" style="display:inline-block;margin-top:4px">—</div>
-        </div>
-      </div>
-      <div class="field"><label>Họ tên</label><input class="input" id="profile_name" disabled/></div>
-      <div class="field"><label>Email</label><input class="input" id="profile_email" disabled/></div>
-      <div class="field"><label>Vai trò</label><input class="input" id="profile_role" disabled/></div>
-    </div>
-    <!-- <footer class="modal__footer" style="display:flex;justify-content:flex-end;gap:8px">
-      <a class="btn" href="#">Đóng</a>
-    </footer> -->
-  </div>
-</div>
+  const token = getToken(); if (!token) return;
+  const payload = decodeJwt(token) || {};
+  const roles = __extractRoles(payload);
+  const role  = __deriveRole(roles);
+  const name  = payload.name || payload.fullName || 'Người dùng';
+  const email = payload.email || '—';
+  fillProfile({name,email,role});
+
+  // [QUAN TRỌNG] Sự kiện click mở Modal Profile
+  document.getElementById('open-profile')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const m = document.getElementById('modal-profile');
+      if(m) {
+          m.classList.add('is-open');
+          m.setAttribute('aria-hidden', 'false');
+          document.getElementById('avatarMenu').removeAttribute('open'); // Đóng dropdown
+      }
+  });
+  
+  // Đóng Modal (Profile & Order)
+  document.querySelectorAll('[data-close], .modal__close, .modal__backdrop').forEach(el => {
+      el.addEventListener('click', (e) => {
+          const m = e.target.closest('.modal');
+          if(m) { m.classList.remove('is-open'); m.setAttribute('aria-hidden', 'true'); }
+      });
+  });
+  
+  // Logout
+  document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken'));
+})();
+</script>
 
 
 <script>
@@ -550,12 +848,10 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 })();
 </script>
 
+
 </body>
 </html>
 
-
-
 <!-- 
-
 <script> /* ===== Helpers ===== */ const API = location.origin; const API_ORDERS = API + '/api/orders'; const qs = s=>document.querySelector(s); const qsa = s=>Array.from(document.querySelectorAll(s)); const fmtVND = n => (Number(n)||0).toLocaleString('vi-VN').replace(/,/g,'.') + '₫'; const fmtDate = s => { if(!s) return ''; const d=new Date(s); if(isNaN(d)) return s; return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }; const token = ()=>localStorage.getItem('accessToken')||''; if(!token()) location.href='/staff-frontend/auth-login.html'; async function apiFetch(url,opts={}){ const h=new Headers(opts.headers||{}); if(token()) h.set('Authorization','Bearer '+token()); if(opts.body && !(opts.body instanceof FormData) && !h.has('Content-Type')) h.set('Content-Type','application/json'); const r=await fetch(url,{...opts,headers:h}); if(!r.ok){ if(r.status===401){localStorage.removeItem('accessToken');location.href='/staff-frontend/auth-login.html';} let msg=''; try{const j=await r.json(); msg=j.message||j.error||'';}catch{} throw new Error(HTTP ${r.status}${msg?': '+msg:''}); } return r.status===204?null:r.json(); } let state={orders:[], q:'', st:'', pay:'', from:null, to:null, page:1, per:10, pages:1}; const ORDER_OPTS = ['PENDING','SHIPPING','DELIVERED','CANCELED']; function toast(m,t=1600){ const el=qs('#toast'); el.textContent=m; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),t); } /* badges */ function payBadge(v){ v=String(v||'').toUpperCase(); return v==='PAID' ? '<span class="badge badge--pay-paid">Đã thanh toán</span>' : '<span class="badge badge--pay-unpaid">Chưa thanh toán</span>'; } function stBadge(v){ v=String(v||'').toUpperCase(); if(v==='PENDING') return '<span class="badge badge--warn">Chờ giao</span>'; if(v==='SHIPPING') return '<span class="badge badge--neutral">Đang giao</span>'; if(v==='DELIVERED') return '<span class="badge badge--success">Đã giao</span>'; if(v==='CANCELED') return '<span class="badge badge--danger">Hủy</span>'; return <span class="badge">${v||'-'}</span>; } /* parse snapshot safe */ function pickCustomer(o){ if (o.customerName) return o.customerName; const snap = o.addressSnapshot ?? o.address_snapshot; if (!snap) return ''; try{ if (typeof snap === 'string') { const s = JSON.parse(snap); return (s && typeof s==='object') ? (s.name||'') : ''; } if (typeof snap === 'object') return snap.name || ''; }catch{} return ''; } /* Map order row (gộp paymentStatus nếu BE lẫn vào status) */ function mapOrder(o){ const stRaw = (o.status ?? o.orderStatus ?? '').toString().toUpperCase(); let payRaw = (o.paymentStatus ?? o.payStatus ?? ((o.paid===true)?'PAID':(o.paid===false?'UNPAID':''))).toString().toUpperCase(); let orderSt = stRaw; if ((stRaw==='PAID' || stRaw==='UNPAID') && !payRaw){ payRaw = stRaw; orderSt = (stRaw==='PAID') ? 'DELIVERED' : 'PENDING'; } if (!orderSt) orderSt = 'PENDING'; if (!payRaw) payRaw = 'UNPAID'; const total = (o.total != null) ? o.total : (Number(o.subtotal)||0) - (Number(o.discount)||0) + (Number(o.shippingFee ?? o.shipping_fee)||0); return { id: o.id ?? o.orderId, code: o.code || OD-${String(o.orderId ?? o.id).padStart(6,'0')}, customer: pickCustomer(o), total, createdAt: o.createdAt ?? o.created_at, status: orderSt, paymentStatus: payRaw }; } /* Load (không gửi pay vì BE payment chưa làm) */ async function load(){ qs('#rows').innerHTML = <tr><td colspan="7" class="empty">Đang tải…</td></tr>; let url=API_ORDERS, p=new URLSearchParams(); if(state.st) p.set('status',state.st); if(state.q) p.set('q',state.q); if(state.from) p.set('from',state.from); if(state.to) p.set('to',state.to); if([...p.keys()].length) url+='?'+p.toString(); const raw=await apiFetch(url); const arr=Array.isArray(raw)?raw:(Array.isArray(raw?.content)?raw.content:(Array.isArray(raw?.items)?raw.items:[])); state.orders = arr.map(mapOrder); state.page=1; render(); } function filtered(){ return state.orders.filter(o=>{ const q=state.q.trim().toLowerCase(); const okSt = !state.st || o.status===state.st; const okPay= !state.pay || o.paymentStatus===state.pay; // FE filter const okQ = !q || o.code.toLowerCase().includes(q) || String(o.customer||'').toLowerCase().includes(q); let okD = true; if(state.from) okD = okD && new Date(o.createdAt)>=new Date(state.from+'T00:00:00'); if(state.to) okD = okD && new Date(o.createdAt)<=new Date(state.to+'T23:59:59'); return okSt && okPay && okQ && okD; }); } function render(){ const data=filtered(); const total=data.length; state.pages=Math.max(1,Math.ceil(total/state.per)); if(state.page>state.pages) state.page=state.pages; const start=(state.page-1)*state.per, end=start+state.per, items=data.slice(start,end); qs('#pgsum').textContent = total?Hiển thị ${start+1}–${Math.min(end,total)} / ${total}:''; if(!items.length){ qs('#rows').innerHTML=<tr><td colspan="7" class="empty">Không có đơn</td></tr>; qs('#pager').innerHTML=''; return; } qs('#rows').innerHTML = items.map(o=>{ const canDeliver = (o.paymentStatus === 'PAID') || (o.status === 'DELIVERED'); const opts = ORDER_OPTS.map(v=>{ const label = v==='PENDING'?'Chờ giao':v==='SHIPPING'?'Đang giao':v==='DELIVERED'?'Đã giao':'Hủy'; const dis = (v==='DELIVERED' && !canDeliver) ? 'disabled' : ''; return <option value="${v}" ${v===o.status?'selected':''} ${dis}>${label}</option>; }).join(''); const printLabel = (o.paymentStatus==='PAID') ? 'In hóa đơn' : 'In phiếu giao hàng'; const printMode = (o.paymentStatus==='PAID') ? 'invoice' : 'proforma'; return <tr data-id="${o.id}"> <td>${o.code}</td> <td>${o.customer||'-'}</td> <td>${fmtVND(o.total)}</td> <td class="status-cell"> ${stBadge(o.status)} <button class="status-toggle" data-toggle="order" aria-label="Đổi trạng thái đơn"> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg> </button> <select class="status-select" aria-label="Chỉnh trạng thái đơn">${opts}</select> </td> <td>${payBadge(o.paymentStatus)}</td> <td>${fmtDate(o.createdAt)}</td> <td style="text-align:right"> <button class="btn btn--sm" data-print="${o.id}" data-mode="${printMode}">${printLabel}</button> </td> </tr>; }).join(''); // pager const pages=[]; const n=5; let s=Math.max(1,state.page-Math.floor(n/2)); let e=s+n-1; if(e>state.pages){e=state.pages; s=Math.max(1,e-n+1);} for(let i=s;i<=e;i++) pages.push(i); qs('#pager').innerHTML = <button class="btn" data-page="prev" ${state.page<=1?'disabled':''}>Prev</button> ${pages.map(i=><button class="btn page ${i===state.page?'is-active':''}" data-page="${i}">${i}</button>).join('')} <button class="btn" data-page="next" ${state.page>=state.pages?'disabled':''}>Next</button>; } /* Update Order status (chặn DELIVERED nếu chưa PAID) */ async function updateOrderStatus(id, val){ if(!ORDER_OPTS.includes(val)) return alert('Trạng thái không hợp lệ'); const row = state.orders.find(o=>o.id==id); if(!row) return; if (val==='DELIVERED' && row.paymentStatus!=='PAID') { alert('Đơn COD chưa thu tiền → không thể chuyển "Đã giao". Vào trang Thanh toán để đánh dấu ĐÃ THU.'); render(); return; } const prev = row.status; state.orders = state.orders.map(o=>o.id==id?{...o,status:val}:o); render(); try{ const up = await apiFetch(${location.origin}/api/orders/${id}/status, { method:'PATCH', body:JSON.stringify({status:val}) }); if(up && (up.id||up.orderId)){ const nid = up.id ?? up.orderId; const st = String(up.status??val).toUpperCase(); const pay = String(up.paymentStatus ?? up.payStatus ?? '').toUpperCase(); state.orders = state.orders.map(o=>o.id==nid?{...o,status:st,paymentStatus:pay||o.paymentStatus}:o); render(); } toast('Đã cập nhật trạng thái đơn'); }catch(e){ state.orders = state.orders.map(o=>o.id==id?{...o,status:prev}:o); render(); alert('Cập nhật thất bại: '+e.message); } } /* ===== Events ===== */ document.addEventListener('DOMContentLoaded', async ()=>{ // logout document.getElementById('btn-logout')?.addEventListener('click', ()=> localStorage.removeItem('accessToken')); // chips qs('#chips-status').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; qsa('#chips-status .chip').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); state.st=b.dataset.v||''; state.page=1; render(); }); qs('#chips-pay').addEventListener('click', e=>{ const b=e.target.closest('.chip'); if(!b) return; qsa('#chips-pay .chip').forEach(x=>x.classList.remove('is-active')); b.classList.add('is-active'); state.pay=b.dataset.v||''; state.page=1; render(); // FE filter }); // search/date qs('#q').addEventListener('input', e=>{ state.q=e.target.value||''; state.page=1; render(); }); qs('#from').addEventListener('change', e=>{ state.from=e.target.value||null; state.page=1; render(); }); qs('#to').addEventListener('change', e=>{ state.to=e.target.value||null; state.page=1; render(); }); // open editor & print document.addEventListener('click', e=>{ const row=e.target.closest('tr[data-id]'); if(!row) return; const printBtn=e.target.closest('[data-print]'); if(printBtn){ const id=printBtn.dataset.print; const mode=printBtn.dataset.mode||'invoice'; window.open(/staff-frontend/invoice.html?orderId=${encodeURIComponent(id)}&mode=${mode},'_blank'); return; } const toggle=e.target.closest('[data-toggle="order"]'); if(toggle){ const cell=toggle.closest('.status-cell'); const open=cell.classList.contains('is-open'); qsa('.status-cell.is-open').forEach(c=>c.classList.remove('is-open')); if(!open){ cell.classList.add('is-open'); cell.querySelector('select').focus(); toast('Chọn trạng thái đơn'); } }else{ qsa('.status-cell.is-open').forEach(c=>{ if(!c.contains(e.target)) c.classList.remove('is-open'); }); } }); // change order status document.addEventListener('change', e=>{ const sel=e.target.closest('.status-select'); if(!sel) return; const id = e.target.closest('tr[data-id]').dataset.id; const val= sel.value; updateOrderStatus(id,val); sel.closest('.status-cell')?.classList.remove('is-open'); }); // pager qs('#pager').addEventListener('click', e=>{ const b=e.target.closest('[data-page]'); if(!b) return; const v=b.dataset.page; if(v==='prev'&&state.page>1) state.page--; else if(v==='next'&&state.page<state.pages) state.page++; else if(!isNaN(+v)) state.page=+v; render(); }); await load(); }); </script>
 -->

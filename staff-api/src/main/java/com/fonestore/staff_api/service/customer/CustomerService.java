@@ -60,7 +60,7 @@ public class CustomerService {
                 u.getDob() != null ? u.getDob().toString() : null,
                 u.getGender(),
                 u.getRole(),
-                u.getTwofaSecret() != null,
+                // u.getTwofaSecret() != null,
                 u.getAddress()
         );
         // Lưu ý: Nếu UserResponse thiếu field 'address', bạn có thể cần update DTO UserResponse 

@@ -10,4 +10,8 @@ public interface OrderItemDetailView {
     BigDecimal getUnitPrice();
     String getSkuCode();
     String getProductName();
-}
+    String getImageUrl();
+    String getVariantInfo();
+    String getBrandName();
+    
+}   

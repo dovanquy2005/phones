@@ -95,205 +95,37 @@
 <footer class="footer">
   <div class="container section"><div class="copyright">© 2025 fonestore</div></div>
 </footer>
-
 <script>
 (() => {
-  const API = 'http://localhost:9090'; // chỉnh nếu khác
+  const API = 'http://localhost:9090';
   const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
   const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
 
-  // GET /api/checkout -> returns full checkout DTO (server-side recalc)
-  async function apiGetCheckout() {
-    try {
-      const headers = { 'Accept': 'application/json' };
-      const t = token();
-      if (t) headers['Authorization'] = 'Bearer ' + t;
-      const res = await fetch(API + '/api/checkout', { method: 'GET', headers, credentials: 'include' });
-      if (!res.ok) {
-        console.error('apiGetCheckout failed', res.status);
-        return { ok:false, status: res.status, body: null };
-      }
-      const body = await res.json();
-      return { ok:true, body };
-    } catch (e) {
-      console.error('apiGetCheckout err', e);
-      return { ok:false, status:0, body:null };
-    }
-  }
-
-  // POST /api/checkout -> place order
-  async function apiPlaceOrder(payload) {
-    try {
-      const headers = { 'Content-Type': 'application/json' };
-      const t = token();
-      if (t) headers['Authorization'] = 'Bearer ' + t;
-      const res = await fetch(API + '/api/checkout', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
-      const body = await res.json().catch(()=>({}));
-      return { ok: res.ok, status: res.status, body };
-    } catch (e) {
-      console.error('apiPlaceOrder err', e);
-      return { ok:false, status:0, body:null };
-    }
-  }
-
-  // render totals into UI (we only show totals)
-  function renderTotalsFromResponse(body) {
-    const subtotal = Number(body.subtotal ?? body.subTotal ?? body.totals?.subtotal ?? 0);
-    const discount = Number(body.discount ?? body.discountAmount ?? body.totals?.discount ?? 0);
-    const shipping = Number(body.shipping ?? body.shippingFee ?? body.totals?.shipping ?? 0);
-    const total = Number(body.total ?? body.grand_total ?? body.totals?.grand_total ?? subtotal - discount + shipping);
-    const subEl = document.getElementById('sub');
-    const disEl = document.getElementById('discount');
-    const shipEl = document.getElementById('ship');
-    const totalEl = document.getElementById('total');
-    if (subEl) subEl.textContent = fmt(subtotal);
-    if (disEl) disEl.textContent = (discount>0) ? '−' + fmt(discount) : '−0₫';
-    if (shipEl) shipEl.textContent = (shipping>0) ? fmt(shipping) : 'Tính ở bước sau';
-    if (totalEl) totalEl.textContent = fmt(total);
-  }
-
-  // load checkout totals (called on page load)
-  async function loadCheckoutTotals() {
-    const note = document.getElementById('checkout-note');
-    if (note) note.textContent = 'Đang tải tổng tiền...';
-    const r = await apiGetCheckout();
-    if (!r.ok) {
-      if (note) note.textContent = 'Không thể lấy tổng tiền. Vui lòng thử lại.';
-      renderTotalsFromResponse({});
-      return;
-    }
-    const body = r.body || {};
-    renderTotalsFromResponse(body);
-
-    // if warnings exist, redirect user back to cart (simple UX)
-    if (Array.isArray(body.warnings) && body.warnings.length > 0) {
-      alert('Có thay đổi trong giỏ hàng (ví dụ: giá, mã giảm, hoặc hết hàng). Bạn sẽ được chuyển về Giỏ hàng để kiểm tra lại.');
-      window.location.href = '/cart.html';
-      return;
-    }
-    if (note) note.textContent = '';
-  }
-
-  // form submit: re-check then place order
-  async function handleSubmit(ev) {
-    ev.preventDefault();
-    const name = document.getElementById('name').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const addr = document.getElementById('addr').value.trim();
-    const email = document.getElementById('email').value.trim();
-    // ▼ LẤY GIÁ TRỊ GHI CHÚ ▼
-    const note = document.getElementById('note').value.trim();
-
-    if (!name || !phone || !addr) {
-      document.getElementById('form-error').style.display = 'block';
-      return;
-    } else {
-      document.getElementById('form-error').style.display = 'none';
-    }
-
-    const placeBtn = document.getElementById('placeOrder');
-    placeBtn.disabled = true; placeBtn.textContent = 'Đang kiểm tra...';
-
-    // re-check server-side
-    const check = await apiGetCheckout();
-    if (!check.ok) {
-      alert('Không thể kiểm tra tổng tiền. Thử lại sau.');
-      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
-      return;
-    }
-    if (Array.isArray(check.body?.warnings) && check.body.warnings.length > 0) {
-      alert('Phát hiện thay đổi trong giỏ hàng. Bạn sẽ được chuyển về Giỏ hàng để kiểm tra lại.');
-      window.location.href = '/cart.html';
-      return;
-    }
-
-    // build payload (server reads cart/voucher from server-side cart)
-    const payload = {
-      payment_method: document.querySelector('input[name="pay"]:checked').value,
-      note: note, // ▼ GỬI GHI CHÚ LÊN SERVER ▼
-      shipping_address: { name, phone, email, address: addr }
-    };
-
-    placeBtn.textContent = 'Đang đặt...';
-    const res = await apiPlaceOrder(payload);
-    if (!res.ok) {
-      // expected: 409 with reason or validation error
-      if (res.status === 409 && res.body && res.body.reason) {
-        alert('Không thể đặt hàng: ' + res.body.reason);
-      } else {
-        alert('Đặt hàng thất bại. Vui lòng thử lại.');
-      }
-      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
-      // if server returned warnings or updated totals, reload totals for user
-      if (res.body?.warnings) {
-        alert('Có thay đổi trong giỏ hàng — chuyển về giỏ để kiểm tra.');
-        window.location.href = '/cart.html';
-      } else {
-        // refresh totals in case server adjusted something
-        await loadCheckoutTotals();
-      }
-      return;
-    }
-
-    // success
-    const orderId = res.body?.order_id || res.body?.id || '';
-    // Chuyển hướng sang trang thành công
-    window.location.href = `/user-frontend/order-success.html?order=${encodeURIComponent(orderId)}`;
-  }
-
-  // bind
-  document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
-
-  // init on load
-  (async () => {
-    await loadCheckoutTotals();
-  })();
-
-})();
-</script>
-<script>
-(() => {
-  const API = 'http://localhost:9090'; 
-  const fmt = n => (Number(n)||0).toLocaleString('vi-VN') + ' ₫';
-  const token = () => localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') || '';
-
-  // 1. Hàm MỚI: Lấy thông tin user và điền vào form
+  // --- 1. Hàm lấy thông tin user và điền form (MỚI) ---
   async function fillUserProfile() {
     const t = token();
-    if (!t) return; // Chưa đăng nhập thì thôi
-
+    if (!t) return;
     try {
       const res = await fetch(API + '/api/user/profile', {
-        method: 'GET',
-        headers: { 
-          'Authorization': 'Bearer ' + t,
-          'Accept': 'application/json'
-        }
+        headers: { 'Authorization': 'Bearer ' + t, 'Accept': 'application/json' }
       });
-
       if (res.ok) {
         const user = await res.json();
+        const elName = document.getElementById('name');
+        const elEmail = document.getElementById('email');
+        const elPhone = document.getElementById('phone');
+        const elAddr = document.getElementById('addr');
         
-        // Điền dữ liệu vào input (nếu trong profile có dữ liệu)
-        // Người dùng vẫn có thể sửa lại sau khi điền
-        const nameEl = document.getElementById('name');
-        const emailEl = document.getElementById('email');
-        const phoneEl = document.getElementById('phone');
-        const addrEl = document.getElementById('addr');
-
-        if (user.fullName) nameEl.value = user.fullName;
-        if (user.email)    emailEl.value = user.email;
-        if (user.phone)    phoneEl.value = user.phone;
-        if (user.address)  addrEl.value = user.address;
+        // Chỉ điền nếu ô input đang trống (tránh ghi đè nếu user đang nhập)
+        if (user.fullName && !elName.value) elName.value = user.fullName;
+        if (user.email && !elEmail.value)    elEmail.value = user.email;
+        if (user.phone && !elPhone.value)    elPhone.value = user.phone;
+        if (user.address && !elAddr.value)   elAddr.value = user.address;
       }
-    } catch (e) {
-      console.warn('Không thể tự động điền thông tin:', e);
-    }
+    } catch (e) { console.warn('Auto-fill profile failed', e); }
   }
 
-  // --- Các hàm cũ giữ nguyên ---
-
-  // GET /api/checkout -> returns full checkout DTO
+  // --- 2. Các hàm API Checkout ---
   async function apiGetCheckout() {
     try {
       const headers = { 'Accept': 'application/json' };
@@ -301,14 +133,10 @@
       if (t) headers['Authorization'] = 'Bearer ' + t;
       const res = await fetch(API + '/api/checkout', { method: 'GET', headers, credentials: 'include' });
       if (!res.ok) return { ok:false, status: res.status, body: null };
-      const body = await res.json();
-      return { ok:true, body };
-    } catch (e) {
-      return { ok:false, status:0, body:null };
-    }
+      return { ok:true, body: await res.json() };
+    } catch (e) { return { ok:false, status:0, body:null }; }
   }
 
-  // POST /api/checkout -> place order
   async function apiPlaceOrder(payload) {
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -317,27 +145,25 @@
       const res = await fetch(API + '/api/checkout', { method: 'POST', headers, credentials: 'include', body: JSON.stringify(payload) });
       const body = await res.json().catch(()=>({}));
       return { ok: res.ok, status: res.status, body };
-    } catch (e) {
-      return { ok:false, status:0, body:null };
-    }
+    } catch (e) { return { ok:false, status:0, body:null }; }
   }
 
-  function renderTotalsFromResponse(body) {
+  // --- 3. Render và Load ---
+  function renderTotals(body) {
     const subtotal = Number(body.subtotal ?? 0);
     const discount = Number(body.discount ?? 0);
-    const shipping = Number(body.shipping_fee ?? body.shipping ?? 0); // Sửa key shipping cho khớp DTO
-    const total = Number(body.total ?? subtotal - discount + shipping);
-    
-    const subEl = document.getElementById('sub');
-    const disEl = document.getElementById('discount');
-    const shipEl = document.getElementById('ship');
-    const totalEl = document.getElementById('total');
-    
-    if (subEl) subEl.textContent = fmt(subtotal);
-    if (disEl) disEl.textContent = (discount>0) ? '−' + fmt(discount) : '0₫';
-    // Nếu ship = 0 có thể là chưa tính hoặc miễn phí, ở đây hiển thị giá trị thật
-    if (shipEl) shipEl.textContent = (shipping > 0) ? fmt(shipping) : '0₫';
-    if (totalEl) totalEl.textContent = fmt(total);
+    const shipping = Number(body.shipping_fee ?? body.shipping ?? 0);
+    const total    = Number(body.total ?? (subtotal - discount + shipping));
+
+    const elSub = document.getElementById('sub');
+    const elDis = document.getElementById('discount');
+    const elShip = document.getElementById('ship');
+    const elTotal = document.getElementById('total');
+
+    if(elSub) elSub.textContent = fmt(subtotal);
+    if(elDis) elDis.textContent = (discount > 0) ? '−' + fmt(discount) : '0₫';
+    if(elShip) elShip.textContent = (shipping > 0) ? fmt(shipping) : '0₫'; // Đã sửa hiển thị 0đ nếu free
+    if(elTotal) elTotal.textContent = fmt(total);
   }
 
   async function loadCheckoutTotals() {
@@ -348,15 +174,16 @@
       if (note) note.textContent = 'Lỗi tải giá.';
       return;
     }
-    renderTotalsFromResponse(r.body || {});
+    renderTotals(r.body || {});
     if (Array.isArray(r.body?.warnings) && r.body.warnings.length > 0) {
-      alert('Giỏ hàng có thay đổi. Vui lòng kiểm tra lại.');
-      window.location.href = '/cart.html';
+      alert('Giỏ hàng có thay đổi. Bạn sẽ được chuyển về giỏ để kiểm tra.');
+      window.location.href = 'cart.html';
       return;
     }
     if (note) note.textContent = '';
   }
 
+  // --- 4. Xử lý Submit (CHỈ 1 LẦN) ---
   async function handleSubmit(ev) {
     ev.preventDefault();
     const name = document.getElementById('name').value.trim();
@@ -373,7 +200,17 @@
     }
 
     const placeBtn = document.getElementById('placeOrder');
-    placeBtn.disabled = true; placeBtn.textContent = 'Đang xử lý...';
+    if (placeBtn.disabled) return; // Chặn double-click thủ công
+    placeBtn.disabled = true; 
+    placeBtn.textContent = 'Đang xử lý...';
+
+    // Kiểm tra lại giá lần cuối
+    const check = await apiGetCheckout();
+    if (!check.ok || (check.body?.warnings?.length > 0)) {
+        alert('Giỏ hàng có thay đổi. Vui lòng kiểm tra lại.');
+        window.location.href = 'cart.html';
+        return;
+    }
 
     const payload = {
       payment_method: document.querySelector('input[name="pay"]:checked').value,
@@ -388,24 +225,20 @@
       } else {
         alert('Đặt hàng thất bại (' + res.status + ').');
       }
-      placeBtn.disabled = false; placeBtn.textContent = 'Đặt hàng';
-      
-      if (res.body?.warnings) {
-        window.location.href = '/cart.html';
-      }
+      placeBtn.disabled = false;
+      placeBtn.textContent = 'Đặt hàng';
       return;
     }
 
-    // Thành công -> chuyển trang
+    // Thành công
     const orderId = res.body?.order_id || res.body?.id || '';
-    window.location.href = `/user-frontend/order-success.html?order=${encodeURIComponent(orderId)}`;
+    window.location.href = `order-success.html?order=${encodeURIComponent(orderId)}`;
   }
 
+  // --- 5. Init ---
   document.getElementById('checkout-form').addEventListener('submit', handleSubmit);
-
-  // KHỞI CHẠY
+  
   (async () => {
-    // Gọi song song cả 2 việc: Lấy tổng tiền + Điền thông tin user
     await Promise.all([
         loadCheckoutTotals(),
         fillUserProfile()

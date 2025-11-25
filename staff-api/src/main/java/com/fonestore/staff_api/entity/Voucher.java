@@ -16,11 +16,10 @@ public class Voucher {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "voucher_id")
-    private Long voucherId;
+    private Long id;
 
-    @Column(name = "code", nullable = false)
+    @Column(name = "code",unique = true, nullable = false)
     private String code;
-
 
     @Column(name = "code_norm", insertable = false, updatable = false)
     private String codeNorm;

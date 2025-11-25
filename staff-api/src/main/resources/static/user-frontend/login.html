@@ -4,6 +4,9 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Đăng nhập — fonestore</title>
+  
+  <link rel="shortcut icon" href="#">
+
   <link rel="stylesheet" href="assets/css/base.css"/>
   <link rel="stylesheet" href="assets/css/components.css"/>
   <style>
@@ -13,16 +16,16 @@
     .auth-sub{color:var(--muted);text-align:center;margin-bottom:16px}
     .error-box{display:none;margin-top:16px;text-align:center;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:8px}
 
-    /* --- CSS ĐÃ SỬA: Căn chỉnh ô nhập mật khẩu và con mắt --- */
+    /* --- CSS Căn chỉnh ô nhập mật khẩu và con mắt --- */
     .password-wrapper {
       position: relative;
-      width: 100%; /* Wrapper chiếm hết chiều rộng */
+      width: 100%;
     }
     
     .password-wrapper input {
-      width: 100%;              /* Input dài ra bằng container */
-      padding-right: 40px;      /* Chừa chỗ cho icon mắt */
-      box-sizing: border-box;   /* Đảm bảo padding không làm vỡ layout */
+      width: 100%;
+      padding-right: 40px;
+      box-sizing: border-box;
     }
     
     .btn-eye {
@@ -38,7 +41,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* Bo góc bên phải để khớp với border của input */
       border-top-right-radius: 8px; 
       border-bottom-right-radius: 8px;
     }
@@ -47,7 +49,6 @@
       color: var(--text);
       background-color: rgba(0,0,0,0.03);
     }
-    /* --- HẾT CSS MỚI --- */
   </style>
   <link rel="stylesheet" href="assets/css/auth-menu.css"/>
   <script src="/assets/js/fs_compat.js"></script>
@@ -58,7 +59,7 @@
     <a class="brand" href="index.html">
       <img src="assets/img/logo.svg" alt="fonestore logo"><span>fonestore</span>
     </a>
-    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại... (placeholder)" aria-label="Search"></div>
+    <div class="search"><input id="q" class="input" placeholder="Tìm điện thoại..." aria-label="Search"></div>
     <nav class="nav">
       <a href="products.html">Sản phẩm</a>
       <a href="cart.html" class="badge badge-cart">Giỏ hàng</a>
@@ -91,11 +92,6 @@
         </div>
       </div>
 
-      <div class="row mt-16" style="justify-content:space-between;width:100%">
-        <label class="row"><input id="remember" type="checkbox"> <span>Ghi nhớ tôi</span></label>
-        <a class="muted" href="#">Quên mật khẩu?</a>
-      </div>
-      
       <button id="login-btn" class="btn btn-primary btn-block mt-24" type="submit">Đăng nhập</button>
 
       <div id="login-error" class="error-box"></div>
@@ -113,7 +109,7 @@
 
 <script>
 (() => {
-  /* --- [MỚI] Logic ẩn hiện mật khẩu --- */
+  /* --- Logic ẩn hiện mật khẩu --- */
   const toggleBtn = document.getElementById('toggle-password');
   const passInput = document.getElementById('password');
   const iconEye = toggleBtn.querySelector('.icon-eye');
@@ -123,7 +119,6 @@
     const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
     passInput.setAttribute('type', type);
     
-    // Đổi icon
     if (type === 'text') {
       iconEye.style.display = 'none';
       iconOff.style.display = 'block';
@@ -132,8 +127,8 @@
       iconOff.style.display = 'none';
     }
   });
-  /* ------------------------------------ */
 
+  /* --- Cấu hình API --- */
   const API_BASE = "http://localhost:9090";
   const LOGIN_ENDPOINT = `${API_BASE}/api/auth/login`;
 
@@ -183,34 +178,33 @@
     return false;
   }
 
-  function setAuth({ token, user } = {}, remember = false) {
+  // Hàm setAuth đã bỏ tham số remember, mặc định là false
+  function setAuth({ token, user } = {}) {
     if (!token) return;
     try {
       const did = canonicalSetToken(token);
       if (!did) {
-        const storage = remember ? localStorage : sessionStorage;
-        const alt = remember ? sessionStorage : localStorage;
-        try { storage.setItem('fs_token', token); } catch(e){}
-        try { storage.setItem('accessToken', token); } catch(e){}
-        try { alt.removeItem('fs_token'); } catch(e){}
-        try { alt.removeItem('accessToken'); } catch(e){}
+        // Mặc định luôn dùng sessionStorage vì đã bỏ chức năng "Remember me"
+        try { sessionStorage.setItem('fs_token', token); } catch(e){}
+        try { sessionStorage.setItem('accessToken', token); } catch(e){}
+        // Xóa sạch localStorage để tránh xung đột cũ
+        try { localStorage.removeItem('fs_token'); } catch(e){}
+        try { localStorage.removeItem('accessToken'); } catch(e){}
       }
     } catch(e) { console.warn('setAuth token store error', e); }
 
     try {
-      const storageUser = remember ? localStorage : sessionStorage;
-      storageUser.setItem('fs_user', JSON.stringify(user || {}));
-      try { localStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
-      try { sessionStorage.setItem('fs_user', JSON.stringify(user || {})); } catch(e){}
+      sessionStorage.setItem('fs_user', JSON.stringify(user || {}));
+      try { localStorage.removeItem('fs_user'); } catch(e){}
     } catch(e) { console.warn('setAuth user store error', e); }
 
     try {
       const uid = user && (user.userId || user.id || user.user_id) ? String(user.userId || user.id || user.user_id) : null;
       if (uid) {
-        try { localStorage.setItem('fs_user_id', uid); } catch(e){}
         try { sessionStorage.setItem('fs_user_id', uid); } catch(e){}
+        try { localStorage.removeItem('fs_user_id'); } catch(e){}
       } else {
-        try { localStorage.removeItem('fs_user_id'); sessionStorage.removeItem('fs_user_id'); } catch(e){}
+        try { sessionStorage.removeItem('fs_user_id'); } catch(e){}
       }
     } catch(e){}
 
@@ -231,7 +225,7 @@
 
   try {
     const hasToken = localStorage.getItem('fs_token') || sessionStorage.getItem('fs_token') ||
-                      localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+                     localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (hasToken) {
       window.location.replace('index.html');
       return;
@@ -244,7 +238,8 @@
     
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
-    const remember = document.getElementById('remember').checked;
+    
+    // Đã xóa logic lấy giá trị checkbox remember
 
     if (!email) {
       notify('Vui lòng nhập địa chỉ Email!');
@@ -293,7 +288,8 @@
         throw new Error('Lỗi hệ thống: Server không trả về token.');
       }
 
-      setAuth({ token, user }, remember);
+      // Gọi setAuth không cần tham số remember nữa
+      setAuth({ token, user });
       
       notify('Đăng nhập thành công!', 'success');
       

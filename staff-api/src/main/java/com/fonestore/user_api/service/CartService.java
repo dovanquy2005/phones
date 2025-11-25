@@ -1,5 +1,6 @@
 package com.fonestore.user_api.service;
 
+import com.fonestore.staff_api.entity.Product;
 import com.fonestore.staff_api.entity.ProductVariant;
 import com.fonestore.staff_api.entity.Voucher;
 import com.fonestore.staff_api.repository.product.ProductVariantRepository;
@@ -8,6 +9,7 @@ import com.fonestore.user_api.dto.voucher.VoucherApplyRequest;
 import com.fonestore.user_api.dto.voucher.VoucherApplyResponse;
 import com.fonestore.user_api.entity.Order;
 import com.fonestore.user_api.entity.OrderItem;
+import com.fonestore.user_api.repository.UserProductRepository; // [MỚI] Import Repo Product
 import com.fonestore.user_api.repository.order.UserOrderItemRepository;
 import com.fonestore.user_api.repository.order.UserOrderRepository;
 import com.fonestore.user_api.repository.voucher.UserVoucherRepository;
@@ -33,6 +35,7 @@ public class CartService {
     private final UserOrderRepository orderRepo;
     private final UserOrderItemRepository itemRepo;
     private final ProductVariantRepository variantRepo;
+    private final UserProductRepository productRepo; // [MỚI] Inject thêm repo này
     private final UserVoucherRepository voucherRepo;
     private final UserVoucherUsageRepository voucherUsageRepo;
 
@@ -51,12 +54,24 @@ public class CartService {
         }
         Order draft = getOrCreateDraft(userId);
 
+        // 1. Tìm SKU (Variant)
         ProductVariant v = variantRepo.findById(req.skuId())
                 .orElseThrow(() -> new IllegalArgumentException("SKU not found"));
 
+        // 2. Kiểm tra Variant có active không
         if (Boolean.FALSE.equals(v.getIsActive())) {
-            throw new IllegalArgumentException("SKU is inactive");
+            throw new IllegalArgumentException("Sản phẩm (SKU) này tạm ngừng kinh doanh");
         }
+
+        // [FIX LOGIC] 3. Kiểm tra Product cha có active không
+        // Đây là đoạn code chặn lỗi bạn gặp phải
+        Product p = productRepo.findById(v.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+        
+        if (Boolean.FALSE.equals(p.getIsActive())) {
+            throw new IllegalArgumentException("Sản phẩm này đã ngừng kinh doanh");
+        }
+        // [FIX END]
 
         OrderItem item = itemRepo.findByOrder_IdAndSkuId(draft.getId(), v.getId())
                 .orElseGet(() -> {
@@ -70,6 +85,9 @@ public class CartService {
 
         int newQty = item.getQuantity() + req.qty();
         if (newQty <= 0) throw new IllegalArgumentException("qty must be > 0");
+
+        // (Optional) Kiểm tra tồn kho ngay lúc add nếu muốn chặt chẽ hơn
+        // if (p.getQuantity() < newQty) throw new IllegalArgumentException("Không đủ số lượng tồn kho");
 
         item.setQuantity(newQty);
         itemRepo.save(item);
@@ -91,8 +109,15 @@ public class CartService {
         if (req.qty() <= 0) {
             itemRepo.delete(it);
         } else {
-            variantRepo.findById(it.getSkuId())
+            ProductVariant v = variantRepo.findById(it.getSkuId())
                     .orElseThrow(() -> new IllegalArgumentException("SKU not found"));
+            
+            // [FIX LOGIC] Check lại status khi update số lượng
+            Product p = productRepo.findById(v.getProductId()).orElse(null);
+            if (p == null || Boolean.FALSE.equals(p.getIsActive()) || Boolean.FALSE.equals(v.getIsActive())) {
+                 throw new IllegalArgumentException("Sản phẩm đã ngừng kinh doanh, vui lòng xóa khỏi giỏ");
+            }
+
             it.setQuantity(req.qty());
             itemRepo.save(it);
         }
@@ -148,7 +173,12 @@ public class CartService {
             if (x == null || x.skuId() == null || x.qty() == null || x.qty() <= 0) continue;
 
             ProductVariant v = variantRepo.findById(x.skuId()).orElse(null);
+            // Check Variant active
             if (v == null || Boolean.FALSE.equals(v.getIsActive())) continue;
+
+            // [FIX LOGIC] Check Product cha active
+            Product p = productRepo.findById(v.getProductId()).orElse(null);
+            if (p == null || Boolean.FALSE.equals(p.getIsActive())) continue;
 
             OrderItem item = itemRepo.findByOrder_IdAndSkuId(draft.getId(), v.getId())
                     .orElseGet(() -> {
@@ -276,13 +306,13 @@ public class CartService {
 
         if (voucherUsageRepo != null) {
             if (v.getUsageLimit() != null && v.getUsageLimit() > 0) {
-                long usedTotal = voucherUsageRepo.countByVoucherId(v.getVoucherId());
+                long usedTotal = voucherUsageRepo.countByVoucherId(v.getId());
                 if (usedTotal >= v.getUsageLimit()) {
                     return VoucherApplyResponse.error("Mã đã đạt giới hạn sử dụng.");
                 }
             }
             if (v.getPerUserLimit() != null && v.getPerUserLimit() > 0) {
-                long usedByUser = voucherUsageRepo.countByVoucherIdAndUserId(v.getVoucherId(), userId);
+                long usedByUser = voucherUsageRepo.countByVoucherIdAndUserId(v.getId(), userId);
                 if (usedByUser >= v.getPerUserLimit()) {
                     return VoucherApplyResponse.error("Bạn đã dùng mã này quá số lần cho phép.");
                 }
@@ -300,10 +330,11 @@ public class CartService {
 
         if (discount.compareTo(subtotal) > 0) discount = subtotal;
 
-        // [FIX] Cập nhật discount và tính lại Total
         draft.setDiscount(discount);
+        // [SỬA LỖI] Lưu lại ID voucher vào đơn hàng
+        draft.setVoucherId(v.getId());
+        
         recalc(draft); 
-        // ----------------------------------------
 
         VoucherApplyResponse out = new VoucherApplyResponse();
         out.setOk(true);
@@ -325,10 +356,10 @@ public class CartService {
         Order draft = orderRepo.findByUserIdAndStatus(userId, "DRAFT").orElse(null);
         if (draft == null) return false;
         
-        // [FIX] Reset discount và tính lại Total
         draft.setDiscount(BigDecimal.ZERO);
+        // [SỬA LỖI] Xóa ID voucher
+        draft.setVoucherId(null);
         recalc(draft); 
-        // -------------------------------------
         
         return true;
     }

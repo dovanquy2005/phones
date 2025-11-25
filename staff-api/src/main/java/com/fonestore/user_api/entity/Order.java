@@ -19,6 +19,9 @@ public class Order {
 
     @Column(name = "user_id")
     private Long userId;
+    
+    @Column(name = "voucher_id")
+    private Long voucherId;
 
     @Column(name = "status")
     private String status;
